@@ -3,7 +3,7 @@
 [![Issues count][issues-badge]][issues-since]
 [![Comits since release][commits-since-badge]][commits-since]
 [![Chat on discord][discord-badge]][discord]
-[![Follow on twitter][twitter-badge]][gitter]
+[![Follow on twitter][twitter-badge]][twitter]
 
 # SU SRS Dashboards
 
@@ -40,7 +40,7 @@ Will be addded one a later date
 [release-version]: https://github.com/SCCM-Zone/CM-SRS-Dashboards/releases
 [release-date-badge]: https://img.shields.io/github/release-date-pre/SCCM-ZONE/CM-SRS-Dashboards
 [release-date]: https://github.com/SCCM-Zone/CM-SRS-Dashboards/releases
-[Issues-badge]: https://img.shields.io/github/issues/SCCM-Zone/CM-SRS-Dashboards
+[issues-badge]: https://img.shields.io/github/issues/SCCM-Zone/CM-SRS-Dashboards
 [issues]: https://github.com/SCCM-Zone/CM-SRS-Dashboards/issues?q=is%3Aopen+is%3Aissue
 [commits-since-badge]: https://img.shields.io/github/commits-since/SCCM-Zone/CM-SRS-Dashboards/v1.0.1-beta
 [commits-since]: https://github.com/SCCM-Zone/CM-SRS-Dashboards/commits/master
