@@ -46,5 +46,5 @@ Will be addded one a later date
 [commits-since]: https://github.com/SCCM-Zone/CM-SRS-Dashboards/commits/master
 [discord-badge]: https://img.shields.io/discord/666618982844989460?logo=discord
 [discord]: https://discord.gg/ZCkVcmP
-[twitter-badge]: https://img.shields.io/twitter/follow/ioanpopovici?style=social&logo=twitter?label=follow%20on%20twitter
+[twitter-badge]: https://img.shields.io/twitter/follow/ioanpopovici?style=social&logo=twitter
 [twitter]: https://twitter.com/intent/follow?screen_name=ioanpopovici
