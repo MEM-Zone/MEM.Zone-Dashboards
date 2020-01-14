@@ -15,3 +15,8 @@
 * Added more documentation and reorganized folder structure
 * Readme is now added to src folder
 * Implemented releases in git
+
+## 1.0.2-beta - 2020-01-13
+
+* Git badges to README.MD
+* Added discord channel
