@@ -1,6 +1,6 @@
 [![Release version][release-version-badge]][release-version]
 [![Release date][release-date-badge]][release-date]
-[![Issues count][issues-badge]][issues-since]
+[![Issues count][issues-badge]][issues]
 [![Comits since release][commits-since-badge]][commits-since]
 [![Chat on discord][discord-badge]][discord]
 [![Follow on twitter][twitter-badge]][twitter]
