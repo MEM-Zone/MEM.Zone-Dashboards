@@ -34,7 +34,7 @@ Will be addded one a later date
 
 ## Preview
 
-![Dashboard Preview](https://s3.ioan.in/Screen-Recording-2020-01-14-18-35-44/Screen-Recording-2020-01-14-18-35-44.gif)
+![Dashboard Preview](https://s3.ioan.in/Screen-Recording-2020-01-14-18-26-17/Screen-Recording-2020-01-14-18-26-17.mp4)
 
 [release-version-badge]: https://img.shields.io/github/v/release/SCCM-ZONE/CM-SRS-Dashboards?include_prereleases
 [release-version]: https://github.com/SCCM-Zone/CM-SRS-Dashboards/releases

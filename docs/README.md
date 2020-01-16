@@ -6,7 +6,7 @@ See [releases](https://SCCM.Zone/CM-SRS-Dashboards-RELEASES).
 
 ## Project Tree
 
-Will be addded one a later date
+Will be added one a later date
 
 ## Dashboards and Reports
 
