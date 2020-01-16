@@ -11,9 +11,11 @@
 '.NOTES
 '    Created by Ioan Popovici.
 '.LINK
-'    https://SCCM.Zone
+'    https://SCCM.Zone/
 '.LINK
-'    https://SCCM.Zone/Issues
+'    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+'.LINK
+'    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
 '
 '/*##=============================================*/
 '/*## SCRIPT BODY                                 */

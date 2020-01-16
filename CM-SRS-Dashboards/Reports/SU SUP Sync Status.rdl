@@ -45,6 +45,12 @@ SELECT dbo.fn_rbac_GetAdminIDsfromUserSIDs (@UserTokenSIDs) AS UserSIDs</Command
 .NOTES
     Requires SELECT access on dbo.vSMS_SUPSyncStatus for smsschm_users (SCCM Reporting).
     Part of a report should not be run separately.
+.LINK
+    https://SCCM.Zone/
+.LINK
+    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+.LINK
+    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
 */
 
 /*##=============================================*/
@@ -81,29 +87,29 @@ SELECT
     , StatusMessageDetails.InsString9
     , StatusMessageDetails.InsString10
 FROM vSMS_SUPSyncStatus AS SUPSyncStatus
-CROSS APPLY (
-    SELECT
-        StatusMessage.Severity
-        , ModuleNames.MsgDLLName
-        , StatusMessage.Time
-        , StatusMessage.SiteCode
-        , StatusMessageStrings.InsString1
-        , StatusMessageStrings.InsString2
-        , StatusMessageStrings.InsString3
-        , StatusMessageStrings.InsString4
-        , StatusMessageStrings.InsString5
-        , StatusMessageStrings.InsString6
-        , StatusMessageStrings.InsString7
-        , StatusMessageStrings.InsString8
-        , StatusMessageStrings.InsString9
-        , StatusMessageStrings.InsString10
-    FROM fn_rbac_StatusMessage(@UserSIDs) AS StatusMessage
-        JOIN fn_rbac_StatMsgWithInsStrings(@UserSIDs) AS StatusMessageStrings ON StatusMessageStrings.RecordID = StatusMessage.RecordID
-        JOIN fn_rbac_StatMsgModuleNames(@UserSIDs) AS ModuleNames ON ModuleNames.ModuleName = StatusMessage.ModuleName
-    WHERE StatusMessage.MessageID = SUPSyncStatus.LastSyncState
-        AND StatusMessage.Time &gt;= DATEADD(MINUTE, -2, SUPSyncStatus.LastSyncStateTime) -- Workaround for the time difference between StatusMessage.Time and SUPSyncStatus.LastSyncStateTime (Should be equal in a perfect world)
-        AND StatusMessage.SiteCode = SUPSyncStatus.SiteCode
-) AS StatusMessageDetails
+    CROSS APPLY (
+        SELECT
+            StatusMessage.Severity
+            , ModuleNames.MsgDLLName
+            , StatusMessage.Time
+            , StatusMessage.SiteCode
+            , StatusMessageStrings.InsString1
+            , StatusMessageStrings.InsString2
+            , StatusMessageStrings.InsString3
+            , StatusMessageStrings.InsString4
+            , StatusMessageStrings.InsString5
+            , StatusMessageStrings.InsString6
+            , StatusMessageStrings.InsString7
+            , StatusMessageStrings.InsString8
+            , StatusMessageStrings.InsString9
+            , StatusMessageStrings.InsString10
+        FROM fn_rbac_StatusMessage(@UserSIDs) AS StatusMessage
+            JOIN fn_rbac_StatMsgWithInsStrings(@UserSIDs) AS StatusMessageStrings ON StatusMessageStrings.RecordID = StatusMessage.RecordID
+            JOIN fn_rbac_StatMsgModuleNames(@UserSIDs) AS ModuleNames ON ModuleNames.ModuleName = StatusMessage.ModuleName
+        WHERE StatusMessage.MessageID = SUPSyncStatus.LastSyncState
+            AND StatusMessage.Time &gt;= DATEADD(MINUTE, -2, SUPSyncStatus.LastSyncStateTime) -- Workaround for the time difference between StatusMessage.Time and SUPSyncStatus.LastSyncStateTime (Should be equal in a perfect world)
+            AND StatusMessage.SiteCode = SUPSyncStatus.SiteCode
+    ) AS StatusMessageDetails
 
 /* #endregion */
 /*##=============================================*/
@@ -2112,6 +2118,6 @@ CROSS APPLY (
     <CodeModule>SrsResources, Culture=neutral</CodeModule>
   </CodeModules>
   <rd:ReportUnitType>Cm</rd:ReportUnitType>
-  <rd:ReportServerUrl></rd:ReportServerUrl>
+  <rd:ReportServerUrl>http://ulb-cm-sql-01a/ReportServer</rd:ReportServerUrl>
   <rd:ReportID>6fbd236a-d836-4950-8788-14b828deb616</rd:ReportID>
 </Report>

@@ -5,6 +5,12 @@
     Summarizes the software update group compliance for a Collection in SCCM.
 .NOTES
     Part of a report should not be run separately.
+.LINK
+    https://SCCM.Zone/
+.LINK
+    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+.LINK
+    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
 */
 
 /*##=============================================*/
@@ -13,9 +19,9 @@
 /* #region QueryBody */
 
 /* Testing variables !! Need to be commented for Production !! */
---DECLARE @UserSIDs     AS NVARCHAR(10) = 'Disabled';
---DECLARE @CollectionID AS NVARCHAR(10) = 'ULB00022';
---DECLARE @Locale       AS INT          = 2;
+-- DECLARE @UserSIDs     AS NVARCHAR(10) = 'Disabled';
+-- DECLARE @CollectionID AS NVARCHAR(10) = 'ULB00022';
+-- DECLARE @Locale       AS INT          = 2;
 
 /* Variable declaration */
 DECLARE @LCID         AS INT = dbo.fn_LShortNameToLCID(@Locale);

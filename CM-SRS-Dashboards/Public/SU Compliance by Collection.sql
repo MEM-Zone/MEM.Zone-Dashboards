@@ -8,6 +8,12 @@
     Requires ufn_CM_GetNextMaintenanceWindow sql helper function in order to display the next maintenance window.
     Requires SELECT access on vSMS_AutoDeployments for smsschm_users (SCCM Reporting).
     Part of a report should not be run separately.
+.LINK
+    https://SCCM.Zone/
+.LINK
+    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+.LINK
+    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
 */
 
 /*##=============================================*/
@@ -16,15 +22,15 @@
 /* #region QueryBody */
 
 /* Testing variables !! Need to be commented for Production !! */
---DECLARE @UserSIDs              AS NVARCHAR(10)  = 'Disabled';
---DECLARE @CollectionID          AS NVARCHAR(10)  = 'SMS00001';
---DECLARE @Locale                AS INT           = 2;
---DECLARE @Categories            AS NVARCHAR(250) = 'Tools';
---DECLARE @Compliant             AS INT           = 0;
---DECLARE @Targeted              AS INT           = 1;
---DECLARE @Superseded            AS INT           = 0;
---DECLARE @ArticleID             AS NVARCHAR(10)  = '';--'4481252';
---DECLARE @ExcludeArticleIDs     AS NVARCHAR(250) = '';
+-- DECLARE @UserSIDs              AS NVARCHAR(10)  = 'Disabled';
+-- DECLARE @CollectionID          AS NVARCHAR(10)  = 'SMS00001';
+-- DECLARE @Locale                AS INT           = 2;
+-- DECLARE @Categories            AS NVARCHAR(250) = 'Tools';
+-- DECLARE @Compliant             AS INT           = 0;
+-- DECLARE @Targeted              AS INT           = 1;
+-- DECLARE @Superseded            AS INT           = 0;
+-- DECLARE @ArticleID             AS NVARCHAR(10)  = '';
+-- DECLARE @ExcludeArticleIDs     AS NVARCHAR(250) = '';
 
 /* Variable declaration */
 DECLARE @LCID                  AS INT = dbo.fn_LShortNameToLCID(@Locale);
@@ -93,7 +99,7 @@ IF @HelperFunctionExists = 1
             FROM vSMS_ServiceWindow AS ServiceWindow
                 JOIN fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers ON CollectionMembers.CollectionID = ServiceWindow.SiteID
                 JOIN fn_rbac_Collection(@UserSIDs) AS Collections ON Collections.CollectionID = CollectionMembers.CollectionID
-                    AND Collections.CollectionType = 2                           --Device Collections
+                    AND Collections.CollectionType = 2                           -- Device Collections
                 CROSS APPLY ufn_CM_GetNextMaintenanceWindow(ServiceWindow.Schedules, ServiceWindow.RecurrenceType) AS NextServiceWindow
             WHERE  NextServiceWindow.NextServiceWindow IS NOT NULL
         )
@@ -116,24 +122,24 @@ AS (
         , Missing       = COUNT(*)
     FROM fn_rbac_R_System(@UserSIDs) AS Systems
         JOIN fn_rbac_UpdateComplianceStatus(@UserSIDs) AS ComplianceStatus ON ComplianceStatus.ResourceID = Systems.ResourceID
-            AND ComplianceStatus.Status = 2                                      --Filter on 'Required' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
+            AND ComplianceStatus.Status = 2                                      -- Filter on 'Required' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
         JOIN fn_rbac_ClientCollectionMembers(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = ComplianceStatus.ResourceID
         JOIN fn_rbac_UpdateInfo(@LCID, @UserSIDs) AS UpdateCIs ON UpdateCIs.CI_ID = ComplianceStatus.CI_ID
             AND UpdateCIs.IsSuperseded IN (@Superseded)
-            AND UpdateCIs.CIType_ID IN (1, 8)                                    --Filter on 1 Software Updates, 8 Software Update Bundle (v_CITypes)
-            AND UpdateCIs.ArticleID NOT IN (                                     --Filter on ArticleID csv list
+            AND UpdateCIs.CIType_ID IN (1, 8)                                    -- Filter on 1 Software Updates, 8 Software Update Bundle (v_CITypes)
+            AND UpdateCIs.ArticleID NOT IN (                                     -- Filter on ArticleID csv list
                 SELECT VALUE FROM STRING_SPLIT(@ExcludeArticleIDs, ',')
             )
-            AND UpdateCIs.Title NOT LIKE (                                       --Filter Preview updates
+            AND UpdateCIs.Title NOT LIKE (                                       -- Filter Preview updates
                 '[1-9][0-9][0-9][0-9]-[0-9][0-9]_Preview_of_%'
             )
         JOIN fn_rbac_CICategoryInfo_All(@LCID, @UserSIDs) AS CICategory ON CICategory.CI_ID = ComplianceStatus.CI_ID
             AND CICategory.CategoryTypeName = 'UpdateClassification'
-            AND CICategory.CategoryInstanceName IN (@Categories)                 --Filter on Selected Update Classification Categories
+            AND CICategory.CategoryInstanceName IN (@Categories)                 -- Filter on Selected Update Classification Categories
         LEFT JOIN fn_rbac_CITargetedMachines(@UserSIDs) AS Targeted ON Targeted.ResourceID = ComplianceStatus.ResourceID
             AND Targeted.CI_ID = ComplianceStatus.CI_ID
     WHERE CollectionMembers.CollectionID = @CollectionID
-        AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted)                --Filter on 'Targeted' or 'NotTargeted'
+        AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted)                -- Filter on 'Targeted' or 'NotTargeted'
         AND IIF(UpdateCIs.ArticleID = @ArticleID, 1, 0) = IIF(@ArticleID <> '', 1, 0)
     GROUP BY
         Systems.ResourceID
@@ -147,7 +153,7 @@ SELECT
     , HealthStates      = (
         IIF(CombinedResources.IsClient != 1, POWER(1, 1), 0)
         +
-        IIF (
+        IIF(
             ClientSummary.ClientStateDescription = 'Inactive/Pass'
             OR
             ClientSummary.ClientStateDescription = 'Inactive/Fail'
@@ -155,20 +161,20 @@ SELECT
             ClientSummary.ClientStateDescription = 'Inactive/Unknown'
             , POWER(2, 1), 0)
         +
-        IIF (
+        IIF(
             ClientSummary.ClientStateDescription = 'Active/Fail'
             OR
             ClientSummary.ClientStateDescription = 'Inactive/Fail'
             , POWER(4, 1), 0
         )
         +
-        IIF (CombinedResources.ClientState != 0, POWER(8, 1), 0)
+        IIF(CombinedResources.ClientState != 0, POWER(8, 1), 0)
         +
-        IIF (UpdateScan.LastErrorCode != 0, POWER(16, 1), 0)
+        IIF(UpdateScan.LastErrorCode != 0, POWER(16, 1), 0)
         +
         IIF(UpdateScan.LastScanTime < (SELECT DATEADD(dd, -14, CURRENT_TIMESTAMP)), POWER(32, 1), 0)
         +
-        IIF(ISNULL(NextServiceWindow, 0) = 0, POWER(64, 1), 0)
+        IIF(ISNULL(NextServiceWindow, 0) = 0 AND @HelperFunctionExists = 1, POWER(64, 1), 0)
         +
         IIF(NextServiceWindow > (SELECT DATEADD(dd, 30, CURRENT_TIMESTAMP)), POWER(128, 1), 0)
     )
@@ -178,8 +184,8 @@ SELECT
         CASE
             WHEN OperatingSystem.Caption0 != '' THEN
                 CONCAT(
-                    REPLACE(OperatingSystem.Caption0, 'Microsoft ', ''),         --Remove 'Microsoft ' from OperatingSystem
-                    REPLACE(OperatingSystem.CSDVersion0, 'Service Pack ', ' SP') --Replace 'Service Pack ' with ' SP' in OperatingSystem
+                    REPLACE(OperatingSystem.Caption0, 'Microsoft ', ''),          -- Remove 'Microsoft ' from OperatingSystem
+                    REPLACE(OperatingSystem.CSDVersion0, 'Service Pack ', ' SP')  -- Replace 'Service Pack ' with ' SP' in OperatingSystem
                 )
             ELSE (
 
@@ -251,10 +257,10 @@ FROM fn_rbac_R_System(@UserSIDs) AS Systems
     JOIN fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = Systems.ResourceID
 WHERE CollectionMembers.CollectionID = @CollectionID
     AND (
-        CASE                                                                     --Compliant (0 = No, 1 = Yes, 2 = Unknown)
-            WHEN Missing = 0 OR (Missing IS NULL AND Systems.Client0 = 1) THEN 1 --Yes
-            WHEN Missing > 0 AND Missing IS NOT NULL                      THEN 0 --No
-            ELSE 2                                                               --Unknown
+        CASE                                                                     -- Compliant (0 = No, 1 = Yes, 2 = Unknown)
+            WHEN Missing = 0 OR (Missing IS NULL AND Systems.Client0 = 1) THEN 1 -- Yes
+            WHEN Missing > 0 AND Missing IS NOT NULL                      THEN 0 -- No
+            ELSE 2                                                               -- Unknown
         END
     ) IN (@Compliant)
 

@@ -6,6 +6,12 @@
 .NOTES
     Requires SQL 2012 R2.
     Part of a report should not be run separately.
+.LINK
+    https://SCCM.Zone/
+.LINK
+    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+.LINK
+    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
 */
 
 /*##=============================================*/
@@ -14,13 +20,13 @@
 /* #region QueryBody */
 
 /* Testing variables !! Need to be commented for Production !! */
---DECLARE @UserSIDs          AS NVARCHAR(10)  = 'Disabled';
---DECLARE @CollectionID      AS NVARCHAR(10)  = 'SMS00001';
---DECLARE @Locale            AS INT           = 2;
---DECLARE @Categories        AS NVARCHAR(250) = 'Tools';
---DECLARE @Targeted          AS INT           = 1;
---DECLARE @Superseded        AS INT           = 0;
---DECLARE @ExcludeArticleIDs AS NVARCHAR(250) = '';
+-- DECLARE @UserSIDs          AS NVARCHAR(10)  = 'Disabled';
+-- DECLARE @CollectionID      AS NVARCHAR(10)  = 'SMS00001';
+-- DECLARE @Locale            AS INT           = 2;
+-- DECLARE @Categories        AS NVARCHAR(250) = 'Tools';
+-- DECLARE @Targeted          AS INT           = 1;
+-- DECLARE @Superseded        AS INT           = 0;
+-- DECLARE @ExcludeArticleIDs AS NVARCHAR(250) = '';
 
 /* Perform cleanup */
 IF OBJECT_ID('tempdb..#SummarizationInfo', 'U') IS NOT NULL
@@ -37,7 +43,7 @@ DECLARE @TotalDevices   AS INT = (
     SELECT COUNT(ResourceID)
     FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembership
     WHERE CollectionMembership.CollectionID = @CollectionID
-        AND CollectionMembership.ResourceType = 5                        --Select devices only
+        AND CollectionMembership.ResourceType = 5                        -- Select devices only
 )
 DECLARE @Unmanaged AS INT      = @TotalDevices - @Clients
 
@@ -71,25 +77,25 @@ WITH SummarizationInfo_CTE AS (
 
  FROM fn_rbac_R_System(@UserSIDs) AS Systems
         JOIN fn_rbac_UpdateComplianceStatus(@UserSIDs) AS ComplianceStatus ON ComplianceStatus.ResourceID = Systems.ResourceID
-            AND ComplianceStatus.Status = 2                              --Filter on 'Required' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
+            AND ComplianceStatus.Status = 2                              -- Filter on 'Required' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
         JOIN fn_rbac_ClientCollectionMembers(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = ComplianceStatus.ResourceID
         JOIN fn_ListUpdateCIs(@LCID) AS UpdateCIs ON UpdateCIs.CI_ID = ComplianceStatus.CI_ID
             AND UpdateCIs.IsExpired = 0
             AND UpdateCIs.IsSuperseded IN (@Superseded)
-            AND UpdateCIs.CIType_ID IN (1, 8)                            --Filter on 1 Software Updates, 8 Software Update Bundle (v_CITypes)
-            AND UpdateCIs.ArticleID NOT IN (                             --Filter on ArticleID csv list
+            AND UpdateCIs.CIType_ID IN (1, 8)                            -- Filter on 1 Software Updates, 8 Software Update Bundle (v_CITypes)
+            AND UpdateCIs.ArticleID NOT IN (                             -- Filter on ArticleID csv list
                 SELECT VALUE FROM STRING_SPLIT(@ExcludeArticleIDs, ',')
             )
-            AND UpdateCIs.DisplayName NOT LIKE (                         --Filter Preview updates
+            AND UpdateCIs.DisplayName NOT LIKE (                         -- Filter Preview updates
                 '[1-9][0-9][0-9][0-9]-[0-9][0-9]_Preview_of_%'
             )
         JOIN fn_rbac_CICategoryInfo_All(@LCID, @UserSIDs) AS CICategory ON CICategory.CI_ID = ComplianceStatus.CI_ID
             AND CICategory.CategoryTypeName = 'UpdateClassification'
-            AND CICategory.CategoryInstanceName IN (@Categories)         --Filter on Selected Update Classification Categories
+            AND CICategory.CategoryInstanceName IN (@Categories)         -- Filter on Selected Update Classification Categories
         LEFT JOIN fn_rbac_CITargetedMachines(@UserSIDs) AS Targeted ON Targeted.ResourceID = ComplianceStatus.ResourceID
             AND Targeted.CI_ID = ComplianceStatus.CI_ID
     WHERE CollectionMembers.CollectionID = @CollectionID
-        AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted)        --Filter on 'Targeted' or 'NotTargeted'
+        AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted)        -- Filter on 'Targeted' or 'NotTargeted'
 )
 
 /* Insert into SummarizationInfo */
@@ -114,7 +120,7 @@ GROUP BY
     , NonCompliant
 
 /* Display summarized result */
-IF (SELECT COUNT(1) FROM #SummarizationInfo) = 0                         --If compliant (null result)
+IF (SELECT COUNT(1) FROM #SummarizationInfo) = 0                         -- If compliant (null result)
     BEGIN
         SELECT
             ArticleID                 = NULL

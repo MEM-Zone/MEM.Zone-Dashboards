@@ -6,6 +6,12 @@
 .NOTES
     Requires SELECT access on dbo.vSMS_SUPSyncStatus for smsschm_users (SCCM Reporting).
     Part of a report should not be run separately.
+.LINK
+    https://SCCM.Zone/
+.LINK
+    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+.LINK
+    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
 */
 
 /*##=============================================*/

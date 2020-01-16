@@ -6,6 +6,12 @@
 .NOTES
     Requires SQL 2012 R2.
     Part of a report should not be run separately.
+.LINK
+    https://SCCM.Zone/
+.LINK
+    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+.LINK
+    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
 */
 
 /*##=============================================*/
@@ -14,15 +20,15 @@
 /* #region QueryBody */
 
 /* Testing variables !! Need to be commented for Production !! */
---DECLARE @UserSIDs          AS NVARCHAR(10)  = 'Disabled';
---DECLARE @Locale            AS INT           = 2;
---DECLARE @NameOrResourceID  AS NVARCHAR(50)  = 'BCU-SRV-LIBERTY';
---DECLARE @Categories        AS NVARCHAR(250) = 'Updates';
---DECLARE @Status            AS INT           = 2;
---DECLARE @Targeted          AS INT           = 1;
---DECLARE @Superseded        AS INT           = 0;
---DECLARE @ArticleID         AS NVARCHAR(10)  = '';--'4481252';
---DECLARE @ExcludeArticleIDs AS NVARCHAR(250) = '';
+-- DECLARE @UserSIDs          AS NVARCHAR(10)  = 'Disabled';
+-- DECLARE @Locale            AS INT           = 2;
+-- DECLARE @NameOrResourceID  AS NVARCHAR(50)  = 'BCU-SRV-LIBERTY';
+-- DECLARE @Categories        AS NVARCHAR(250) = 'Updates';
+-- DECLARE @Status            AS INT           = 2;
+-- DECLARE @Targeted          AS INT           = 1;
+-- DECLARE @Superseded        AS INT           = 0;
+-- DECLARE @ArticleID         AS NVARCHAR(10)  = '';
+-- DECLARE @ExcludeArticleIDs AS NVARCHAR(250) = '';
 
 /* Variable declaration */
 DECLARE @LCID              AS INT           = dbo.fn_LShortNameToLCID (@Locale);
@@ -80,16 +86,16 @@ SELECT
 FROM fn_rbac_UpdateComplianceStatus(@UserSIDs) AS ComplianceStatus
     JOIN fn_rbac_UpdateInfo(@LCID, @UserSIDs) AS UpdateCIs ON UpdateCIs.CI_ID = ComplianceStatus.CI_ID
         AND UpdateCIs.IsSuperseded IN (@Superseded)
-        AND UpdateCIs.CIType_ID IN (1, 8)                             --Filter on 1 Software Updates, 8 Software Update Bundle (v_CITypes)
-        AND UpdateCIs.ArticleID NOT IN (                              --Filter on ArticleID csv list
+        AND UpdateCIs.CIType_ID IN (1, 8)                             -- Filter on 1 Software Updates, 8 Software Update Bundle (v_CITypes)
+        AND UpdateCIs.ArticleID NOT IN (                              -- Filter on ArticleID csv list
             SELECT VALUE FROM STRING_SPLIT(@ExcludeArticleIDs, ',')
         )
-        AND UpdateCIs.Title NOT LIKE (                                --Filter Preview Updates
+        AND UpdateCIs.Title NOT LIKE (                                -- Filter Preview Updates
             '[1-9][0-9][0-9][0-9]-[0-9][0-9]_Preview_of_%'
         )
     JOIN fn_rbac_CICategoryInfo_All(@LCID, @UserSIDs) AS Category ON Category.CI_ID = UpdateCIs.CI_ID
         AND Category.CategoryTypeName = 'UpdateClassification'
-        AND Category.CategoryInstanceName IN (@Categories)            --Filter on Selected Update Classification Categories
+        AND Category.CategoryInstanceName IN (@Categories)            -- Filter on Selected Update Classification Categories
     LEFT JOIN fn_rbac_CITargetedMachines(@UserSIDs) AS Targeted ON Targeted.CI_ID = UpdateCIs.CI_ID
         AND Targeted.ResourceID = ComplianceStatus.ResourceID
     OUTER APPLY (
@@ -99,8 +105,8 @@ FROM fn_rbac_UpdateComplianceStatus(@UserSIDs) AS ComplianceStatus
                 AND AssignmentToCI.CI_ID = UpdateCIs.CI_ID
     ) AS EnforcementDeadline
 WHERE ComplianceStatus.ResourceID = @ResourceID
-    AND ComplianceStatus.Status IN (@Status)                          --Filter on 'Unknown', 'Required' or 'Installed' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
-    AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted)         --Filter on 'Targeted' or 'NotTargeted'
+    AND ComplianceStatus.Status IN (@Status)                          -- Filter on 'Unknown', 'Required' or 'Installed' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
+    AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted)         -- Filter on 'Targeted' or 'NotTargeted'
     AND IIF(UpdateCIs.ArticleID = @ArticleID, 1, 0) = IIF(@ArticleID <> '', 1, 0)
 
 /* #endregion */

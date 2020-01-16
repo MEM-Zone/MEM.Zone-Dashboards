@@ -6,6 +6,12 @@
 .NOTES
     Requires SQL 2012 R2.
     Part of a report should not be run separately.
+.LINK
+    https://SCCM.Zone/
+.LINK
+    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+.LINK
+    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
 */
 
 /*##=============================================*/
@@ -14,11 +20,11 @@
 /* #region QueryBody */
 
 /* Testing variables !! Need to be commented for Production !! */
---DECLARE @UserSIDs              AS NVARCHAR(10)  = 'Disabled';
---DECLARE @CollectionID          AS NVARCHAR(10)  = 'SMS00001';
---DECLARE @Locale                AS INT           = '2';
---DECLARE @UpdateClassifications AS NVARCHAR(250) = 'Security Updates';
---DECLARE @ExcludeArticleIDs     AS NVARCHAR(250) = '' --('915597,2267602,2461484') --AV Definitions;
+-- DECLARE @UserSIDs              AS NVARCHAR(10)  = 'Disabled';
+-- DECLARE @CollectionID          AS NVARCHAR(10)  = 'SMS00001';
+-- DECLARE @Locale                AS INT           = '2';
+-- DECLARE @UpdateClassifications AS NVARCHAR(250) = 'Security Updates';
+-- DECLARE @ExcludeArticleIDs     AS NVARCHAR(250) = '' --('915597,2267602,2461484') -- AV Definitions;
 
 /* Variable declaration */
 DECLARE @LCID AS INT = dbo.fn_LShortNameToLCID (@Locale)
@@ -40,16 +46,16 @@ AS (
         , Classification = CICategory.CategoryInstanceName
     FROM fn_rbac_R_System(@UserSIDs) AS Systems
         JOIN v_UpdateComplianceStatus AS ComplianceStatus ON ComplianceStatus.ResourceID = Systems.ResourceID
-            AND ComplianceStatus.Status IN (0, 2)                         --Unknown Required
+            AND ComplianceStatus.Status IN (0, 2)                           -- Unknown Required
         JOIN v_ClientCollectionMembers AS CollectionMembers ON CollectionMembers.ResourceID = ComplianceStatus.ResourceID
         JOIN fn_ListUpdateCIs(@LCID) AS UpdateCIs ON UpdateCIs.CI_ID = ComplianceStatus.CI_ID
-            AND UpdateCIs.CIType_ID IN (1, 8)                               --1 Software Updates, 8 Software Update Bundle (v_CITypes)
-            AND UpdateCIs.ArticleID NOT IN (                                --Exclude Updates based on ArticleID
+            AND UpdateCIs.CIType_ID IN (1, 8)                               -- 1 Software Updates, 8 Software Update Bundle (v_CITypes)
+            AND UpdateCIs.ArticleID NOT IN (                                -- Exclude Updates based on ArticleID
                 SELECT VALUE FROM STRING_SPLIT(@ExcludeArticleIDs, ',')
             )
         JOIN v_CICategoryInfo_All AS CICategory ON CICategory.CI_ID = ComplianceStatus.CI_ID
             AND CICategory.CategoryTypeName = 'UpdateClassification'
-            AND CICategory.CategoryInstanceName IN (@UpdateClassifications) --Join only selected Update Classifications
+            AND CICategory.CategoryInstanceName IN (@UpdateClassifications) -- Join only selected Update Classifications
         LEFT JOIN v_CITargetedMachines AS Targeted ON Targeted.ResourceID = ComplianceStatus.ResourceID
             AND Targeted.CI_ID = ComplianceStatus.CI_ID
     WHERE CollectionMembers.CollectionID = @CollectionID
@@ -67,8 +73,8 @@ SELECT TOP 100
         CASE
             WHEN OperatingSystem.Caption0 != '' THEN
                 CONCAT(
-                    REPLACE(OperatingSystem.Caption0, 'Microsoft ', ''),                     --Remove 'Microsoft ' from OperatingSystem
-                    REPLACE(OperatingSystem.CSDVersion0, 'Service Pack ', ' SP')             --Replace 'Service Pack ' with ' SP' in OperatingSystem
+                    REPLACE(OperatingSystem.Caption0, 'Microsoft ', ''),         -- Remove 'Microsoft ' from OperatingSystem
+                    REPLACE(OperatingSystem.CSDVersion0, 'Service Pack ', ' SP') -- Replace 'Service Pack ' with ' SP' in OperatingSystem
                 )
             ELSE (
 

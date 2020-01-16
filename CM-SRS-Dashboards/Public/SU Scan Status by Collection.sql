@@ -2,10 +2,16 @@
 .SYNOPSIS
     Gets the update scan status for a MEMCM Collection.
 .DESCRIPTION
-    Gets the windows update scan status for a MEMCM Collection by Scan State.
+    Gets the windows update agent scan status for a MEMCM Collection by Scan State.
 .NOTES
     Requires SQL 2012 R2.
     Part of a report should not be run separately.
+.LINK
+    https://SCCM.Zone/
+.LINK
+    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+.LINK
+    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
 */
 
 /*##=============================================*/
@@ -16,6 +22,26 @@
 /* Testing variables !! Need to be commented for Production !! */
 -- DECLARE @UserSIDs     AS NVARCHAR(10)  = 'Disabled';
 -- DECLARE @CollectionID AS NVARCHAR(10)  = 'SMS00001';
+-- DECLARE @ScanStates   AS INT           = 3; -- Completed
+
+/* Initialize HealthState descriptor table */
+DECLARE @HealthState TABLE (
+    BitMask     INT
+    , StateName NVARCHAR(250)
+)
+
+/* Populate HealthState table */
+INSERT INTO @HealthState (BitMask, StateName)
+VALUES
+    ('0',     'Healthy')
+    , ('1',   'Unmanaged')
+    , ('2',   'Inactive')
+    , ('4',   'Health Evaluation Failed')
+    , ('8',   'Update Scan Completed with Errors')
+    , ('16',  'Update Scan Failed')
+    , ('32',  'Update Scan Unknown')
+    , ('64',  'Update Scan Late')
+    , ('128', 'Update Sync Catalog is Outdated')
 
 /* Variable declaration */
 DECLARE @UpdateSearchID INT   = (
@@ -27,7 +53,48 @@ DECLARE @UpdateSearchID INT   = (
 /* Gets the device update scan states */
 SELECT
     ResourceID                = Systems.ResourceID
-    , ScanState               = ISNULL(StateNames.StateName, 'Unknown')
+    , HealthStates            = (
+        IIF(CombinedResources.IsClient != 1, POWER(1, 1), 0)
+        +
+        IIF(
+            ClientSummary.ClientStateDescription = 'Inactive/Pass'
+            OR
+            ClientSummary.ClientStateDescription = 'Inactive/Fail'
+            OR
+            ClientSummary.ClientStateDescription = 'Inactive/Unknown'
+            , POWER(2, 1), 0)
+        +
+        IIF(
+            ClientSummary.ClientStateDescription = 'Active/Fail'
+            OR
+            ClientSummary.ClientStateDescription = 'Inactive/Fail'
+            , POWER(4, 1), 0
+        )
+        +
+        IIF(StateNames.StateID = 6, POWER(8, 1), 0)                                -- Scan Completed with errors
+        +
+        IIF(StateNames.StateID = 5, POWER(16, 1), 0)                               -- Scan failed
+        +
+        IIF(StateNames.StateID = 0 OR StateNames.StateID IS NULL, POWER(32, 1), 0) -- Scan state unknown
+        +
+        IIF(UpdateScan.LastScanTime < (SELECT DATEADD(dd, -14, CURRENT_TIMESTAMP)), POWER(64, 1), 0)
+        +
+        IIF(SyncSourceInfo.SyncCatalogVersion - UpdateScan.LastScanPackageVersion > 14, POWER(128, 1), 0)
+    )
+    , ScanState               = (
+        CASE
+            WHEN StateNames.StateID = 0
+                OR StateNames.StateID IS NULL THEN 'Unkown'
+            WHEN StateNames.StateID = 1       THEN 'Waiting'
+            WHEN StateNames.StateID = 2       THEN 'Running'
+            WHEN StateNames.StateID = 3       THEN 'Completed'
+            WHEN StateNames.StateID = 4       THEN 'Retry'
+            WHEN StateNames.StateID = 5       THEN 'Failed'
+            WHEN StateNames.StateID = 6       THEN 'Error'
+
+        END
+    )
+    , ScanStateDescription    = ISNULL(StateNames.StateName, 'Scan state unknown')
     , Device                  = IIF(Systems.Full_Domain_Name0 IS NOT NULL, Systems.Name0 + '.' + Systems.Full_Domain_Name0, Systems.Name0)
     , OperatingSystem         = (
         CASE
@@ -104,6 +171,7 @@ FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers
     ) AS SyncSourceInfo
 WHERE CollectionMembers.CollectionID   = @CollectionID
     AND CollectionMembers.ResourceType = 5   -- Select devices only
+    AND ISNULL(StateNames.StateID, 0) IN (@ScanStates)
 
 /* #endregion */
 /*##=============================================*/
