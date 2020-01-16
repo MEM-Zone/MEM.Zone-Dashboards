@@ -34,7 +34,7 @@ Will be added one a later date
 
 ## Preview
 
-[![](http://img.youtube.com/vi/MOHxb8me4IM/0.jpg)](http://www.youtube.com/watch?v=MOHxb8me4IM "CM SRS Dashboards")
+[![](https://s3.ioan.in/Screen-Shot-2020-01-16-at-18.01.39/Screen-Shot-2020-01-16-at-18.01.39.png)](http://www.youtube.com/watch?v=MOHxb8me4IM "CM SRS Dashboards")
 
 [release-version-badge]: https://img.shields.io/github/v/release/SCCM-ZONE/CM-SRS-Dashboards?include_prereleases
 [release-version]: https://github.com/SCCM-Zone/CM-SRS-Dashboards/releases
