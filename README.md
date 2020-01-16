@@ -42,7 +42,7 @@ Will be added one a later date
 [release-date]: https://github.com/SCCM-Zone/CM-SRS-Dashboards/releases
 [issues-badge]: https://img.shields.io/github/issues/SCCM-Zone/CM-SRS-Dashboards
 [issues]: https://github.com/SCCM-Zone/CM-SRS-Dashboards/issues?q=is%3Aopen+is%3Aissue
-[commits-since-badge]: https://img.shields.io/github/commits-since/SCCM-Zone/CM-SRS-Dashboards/v1.0.1-beta
+[commits-since-badge]: https://img.shields.io/github/commits-since/SCCM-Zone/CM-SRS-Dashboards/v1.1.0-beta
 [commits-since]: https://github.com/SCCM-Zone/CM-SRS-Dashboards/commits/master
 [discord-badge]: https://img.shields.io/discord/666618982844989460?logo=discord
 [discord]: https://discord.gg/ZCkVcmP
