@@ -20,3 +20,11 @@
 
 * Git badges to README.MD
 * Added discord channel
+
+## 1.0.2-beta - 2020-01-16
+
+### README.md
+
+* Added software prerequisites
+* Fixed some typos
+* Added some clarifications
