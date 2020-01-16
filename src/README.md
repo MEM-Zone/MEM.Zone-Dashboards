@@ -1,16 +1,12 @@
-# Help for CM SRS Dashboards
+# Readme for CM SRS Dashboards
 
 ## Latest release
 
 See [releases](https://SCCM.Zone/CM-SRS-Dashboards-RELEASES).
 
-## Project Tree
-
-Will be addded one a later date
-
 ## Dashboards and Reports
 
-* SU DAS Overall Compliance
+* SU DAS Overall Compliance (Main Dashboard Report)
 * AL Alerts
 * SU Compliance by Collection
 * SU Compliance by Device
@@ -18,7 +14,6 @@ Will be addded one a later date
 * SU SUP Sync Status
 
 >**Notes**
-> Reports must be placed in the same folder.
 > Reports can be run independently.
 
 ## Credit
@@ -27,11 +22,16 @@ Will be addded one a later date
 
 ## Prerequisites
 
-### User Defined Funtions (UDF)
+### Software
+
+* Microsoft Endpoint Management Configuration Manager (MEMCM) with Windows Update Services (WSUS) integration.
+* Microsoft SQL Server Reporting Services (SSRS) 2017 or above.
+
+### SQL User Defined Funtions (UDF)
 
 * `ufn_CM_GetNextMaintenanceWindow` helper function (Optional)
 
-### SELECT Rights for smsschm_users (CM Reporting)
+### SQL SELECT Rights for smsschm_users (CM Reporting)
 
 * `ufn_CM_GetNextMaintenanceWindow`
 * `fnListAlerts`
@@ -47,6 +47,9 @@ Will be addded one a later date
 
 * Start Internet Explorer and navigate to [`http://<YOUR_REPORT_SERVER_FQDN>/Reports`](http://en.wikipedia.org/wiki/Fully_qualified_domain_name)
 * Choose a path and upload the three report files.
+
+>**Notes**
+> Reports must be placed in the same folder.
 
 ### Configure Imported Report
 
