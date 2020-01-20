@@ -145,13 +145,13 @@ WITH SummarizationInfo_CTE AS (
             DENSE_RANK() OVER(PARTITION BY CICategory.CategoryInstanceName ORDER BY UpdateCIs.ArticleID)
             +
             DENSE_RANK() OVER(PARTITION BY CICategory.CategoryInstanceName ORDER BY UpdateCIs.ArticleID DESC)
-            -1
+            - 1
         )
         , TotalUniqueUpdates   = (
             DENSE_RANK() OVER(PARTITION BY CollectionMembers.CollectionID ORDER BY ComplianceStatus.Status, UpdateCIs.ArticleID)
             +
             DENSE_RANK() OVER(PARTITION BY CollectionMembers.CollectionID ORDER BY ComplianceStatus.Status, UpdateCIs.ArticleID DESC)
-            - 16
+            - 1
         )
         , NonCompliant         = (
             DENSE_RANK() OVER(PARTITION BY CollectionMembers.CollectionID ORDER BY ComplianceStatus.Status, ComplianceStatus.ResourceID)
