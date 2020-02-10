@@ -6,9 +6,9 @@
 * Fixed Dashboard and SU Compliance reports not working [Issue #5](#5). RS path is now computed from variables instead of the RS DB.
 * Moved the permission block to a separate file [Issue #9](#9)
 * Commented database references from prerequisite files
-* Removed 'GO' statements from prerequisite files
-* Report files have been moved to the 'Reports' folder to match the installer defaults
-* Prerequisites have been moved to the 'Extensions' folder to match the installer defaults
+* Removed `GO` statements from prerequisite files
+* Report files have been moved to the `Reports` folder to match the installer defaults
+* Prerequisites have been moved to the `Extensions` folder to match the installer defaults
 
 ## 1.1.1-beta - 2020-01-22
 
