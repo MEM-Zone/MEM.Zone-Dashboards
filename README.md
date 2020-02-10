@@ -19,6 +19,10 @@ You've found the GitHub repository that houses the source for dashboard related 
 
 See [releases](https://SCCM.Zone/CM-SRS-Dashboards-RELEASES).
 
+## Changelog
+
+See [changelog](https://SCCM.Zone/CM-SRS-Dashboards-CHANGELOG).
+
 ## Project Tree
 
 Will be added one a later date
