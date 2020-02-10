@@ -5,7 +5,7 @@
   <DataSources>
     <DataSource Name="CMSQLDatabase">
       <Transaction>true</Transaction>
-      <DataSourceReference>/ConfigMgr_ULB/{5C6358F2-4BB6-4a1b-A16E-8D96795D8602}</DataSourceReference>
+      <DataSourceReference></DataSourceReference>
       <rd:SecurityType>Integrated</rd:SecurityType>
       <rd:DataSourceID>6fe7a601-d088-4e03-b266-36dd4f559a6d</rd:DataSourceID>
     </DataSource>
@@ -5042,7 +5042,7 @@ ORDER BY CategoryInstanceName</CommandText>
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>=SrsResources.Localization.GetString(Globals!ReportName, User!Language)</Value>
+                      <Value>=Globals!ReportName</Value>
                       <Style>
                         <FontFamily>Segoe UI</FontFamily>
                         <FontSize>17pt</FontSize>
@@ -5231,17 +5231,6 @@ ORDER BY CategoryInstanceName</CommandText>
       </DefaultValue>
       <Hidden>true</Hidden>
     </ReportParameter>
-    <ReportParameter Name="ReportName">
-      <DataType>String</DataType>
-      <Nullable>true</Nullable>
-      <DefaultValue>
-        <Values>
-          <Value>=Globals!ReportName</Value>
-        </Values>
-      </DefaultValue>
-      <AllowBlank>true</AllowBlank>
-      <Hidden>true</Hidden>
-    </ReportParameter>
     <ReportParameter Name="NameOrResourceID">
       <DataType>String</DataType>
       <Prompt>Device Name or ResourceID</Prompt>
@@ -5377,11 +5366,6 @@ ORDER BY CategoryInstanceName</CommandText>
           <ParameterName>Locale</ParameterName>
         </CellDefinition>
         <CellDefinition>
-          <ColumnIndex>1</ColumnIndex>
-          <RowIndex>1</RowIndex>
-          <ParameterName>ReportName</ParameterName>
-        </CellDefinition>
-        <CellDefinition>
           <ColumnIndex>0</ColumnIndex>
           <RowIndex>2</RowIndex>
           <ParameterName>NameOrResourceID</ParameterName>
@@ -5423,6 +5407,6 @@ ORDER BY CategoryInstanceName</CommandText>
     <CodeModule>SrsResources, Culture=neutral</CodeModule>
   </CodeModules>
   <rd:ReportUnitType>Cm</rd:ReportUnitType>
-  <rd:ReportServerUrl>http://ulb-cm-sql-01a/ReportServer</rd:ReportServerUrl>
+  <rd:ReportServerUrl></rd:ReportServerUrl>
   <rd:ReportID>6fbd236a-d836-4950-8788-14b828deb616</rd:ReportID>
 </Report>

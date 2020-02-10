@@ -5,7 +5,7 @@
   <DataSources>
     <DataSource Name="CMSQLDatabase">
       <Transaction>true</Transaction>
-      <DataSourceReference>/ConfigMgr_ULB/{5C6358F2-4BB6-4a1b-A16E-8D96795D8602}</DataSourceReference>
+      <DataSourceReference></DataSourceReference>
       <rd:SecurityType>Integrated</rd:SecurityType>
       <rd:DataSourceID>6fe7a601-d088-4e03-b266-36dd4f559a6d</rd:DataSourceID>
     </DataSource>
@@ -4617,7 +4617,7 @@ WHERE Alert.FeatureArea IN (@AlertFeatureArea)
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>=SrsResources.Localization.GetString(Globals!ReportName, User!Language)</Value>
+                      <Value>=Globals!ReportName</Value>
                       <Style>
                         <FontFamily>Segoe UI</FontFamily>
                         <FontSize>17pt</FontSize>
@@ -4910,6 +4910,6 @@ WHERE Alert.FeatureArea IN (@AlertFeatureArea)
     <CodeModule>SrsResources, Culture=neutral</CodeModule>
   </CodeModules>
   <rd:ReportUnitType>Cm</rd:ReportUnitType>
-  <rd:ReportServerUrl>http://ulb-cm-sql-01a/ReportServer</rd:ReportServerUrl>
+  <rd:ReportServerUrl></rd:ReportServerUrl>
   <rd:ReportID>6fbd236a-d836-4950-8788-14b828deb616</rd:ReportID>
 </Report>

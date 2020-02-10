@@ -5,7 +5,7 @@
   <DataSources>
     <DataSource Name="CMSQLDatabase">
       <Transaction>true</Transaction>
-      <DataSourceReference>/ConfigMgr_ULB/{5C6358F2-4BB6-4a1b-A16E-8D96795D8602}</DataSourceReference>
+      <DataSourceReference></DataSourceReference>
       <rd:SecurityType>Integrated</rd:SecurityType>
       <rd:DataSourceID>6fe7a601-d088-4e03-b266-36dd4f559a6d</rd:DataSourceID>
     </DataSource>
@@ -324,32 +324,6 @@ IF OBJECT_ID('tempdb..#SummarizationInfo', 'U') IS NOT NULL
         </Field>
       </Fields>
     </DataSet>
-    <DataSet Name="ReportInfo">
-      <Query>
-        <DataSourceName>CMSQLDatabase</DataSourceName>
-        <QueryParameters>
-          <QueryParameter Name="@ReportName">
-            <Value>=Parameters!ReportName.Value</Value>
-          </QueryParameter>
-        </QueryParameters>
-        <CommandText>/* ReportInfo Dataset */
-SELECT DISTINCT 
-	Description
-	, Path = REPLACE(Path, Name, '')
-FROM ReportServer.dbo.Catalog
-WHERE Name = @ReportName</CommandText>
-      </Query>
-      <Fields>
-        <Field Name="Description">
-          <DataField>Description</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="Path">
-          <DataField>Path</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-      </Fields>
-    </DataSet>
     <DataSet Name="UpdateCategories">
       <Query>
         <DataSourceName>CMSQLDatabase</DataSourceName>
@@ -385,7 +359,7 @@ ORDER BY CategoryInstanceName</CommandText>
         </QueryParameters>
         <CommandText>/* Get Critical Active Software Update Alerts Dataset */
 SELECT CriticalAlertCount = Count(*) FROM fn_rbac_Alert(@UserSIDs)
-WHERE FeatureArea = 'ALERT_FEATUREAREA_4' --Software Update Feature Area	
+WHERE FeatureArea = 'ALERT_FEATUREAREA_4' --Software Update Feature Area
 	AND Severity  = 1    --1 (Critical)
 	AND AlertState = 0 --0 (Active), 2 (Closed)</CommandText>
       </Query>
@@ -663,7 +637,7 @@ GROUP BY
                           <Actions>
                             <Action>
                               <Drillthrough>
-                                <ReportName>=(Replace(Parameters!ReportPath.Value, Parameters!ReportName.Value, "") &amp; "AL Alerts")</ReportName>
+                                <ReportName>=Globals!ReportFolder &amp; "/AL Alerts"</ReportName>
                                 <Parameters>
                                   <Parameter Name="AlertFeatureArea">
                                     <Value>4</Value>
@@ -849,7 +823,7 @@ GROUP BY
                           <Actions>
                             <Action>
                               <Drillthrough>
-                                <ReportName>=(Replace(Parameters!ReportPath.Value, Parameters!ReportName.Value, "") &amp; "SU SUP Sync Status")</ReportName>
+                                <ReportName>=Globals!ReportFolder &amp; "/SU SUP Sync Status"</ReportName>
                               </Drillthrough>
                             </Action>
                           </Actions>
@@ -1063,7 +1037,7 @@ GROUP BY
                   <ChartDataPoints>
                     <ChartDataPoint>
                       <ChartDataPointValues>
-                        <Y>=First(Fields!Compliant.Value)</Y>
+                        <Y>=IIF(First(Fields!Compliant.Value) &lt;&gt; 0, Fields!Compliant.Value, Nothing)</Y>
                       </ChartDataPointValues>
                       <ChartDataLabel>
                         <Style>
@@ -1079,7 +1053,7 @@ GROUP BY
                         <Actions>
                           <Action>
                             <Drillthrough>
-                              <ReportName>=(Replace(Parameters!ReportPath.Value, Parameters!ReportName.Value, "") &amp; "SU Compliance by Collection")</ReportName>
+                              <ReportName>=Globals!ReportFolder &amp; "/SU Compliance by Collection"</ReportName>
                               <Parameters>
                                 <Parameter Name="CollectionID">
                                   <Value>=Parameters!CollectionID.Value</Value>
@@ -1139,7 +1113,7 @@ GROUP BY
                   <ChartDataPoints>
                     <ChartDataPoint>
                       <ChartDataPointValues>
-                        <Y>=First(Fields!NonCompliant.Value)</Y>
+                        <Y>=IIF(First(Fields!NonCompliant.Value) &lt;&gt; 0, Fields!NonCompliant.Value, Nothing)</Y>
                       </ChartDataPointValues>
                       <ChartDataLabel>
                         <Style>
@@ -1155,7 +1129,7 @@ GROUP BY
                         <Actions>
                           <Action>
                             <Drillthrough>
-                              <ReportName>=(Replace(Parameters!ReportPath.Value, Parameters!ReportName.Value, "") &amp; "SU Compliance by Collection")</ReportName>
+                              <ReportName>=Globals!ReportFolder &amp; "/SU Compliance by Collection"</ReportName>
                               <Parameters>
                                 <Parameter Name="CollectionID">
                                   <Value>=Parameters!CollectionID.Value</Value>
@@ -1209,7 +1183,7 @@ GROUP BY
                   <ChartDataPoints>
                     <ChartDataPoint>
                       <ChartDataPointValues>
-                        <Y>=First(Fields!Unmanaged.Value)</Y>
+                        <Y>=IIF(First(Fields!Unmanaged.Value) &lt;&gt; 0, Fields!Unmanaged.Value, Nothing)</Y>
                       </ChartDataPointValues>
                       <ChartDataLabel>
                         <Style>
@@ -1225,7 +1199,7 @@ GROUP BY
                         <Actions>
                           <Action>
                             <Drillthrough>
-                              <ReportName>/ConfigMgr_ULB/_Custom Reports_/SU DAS Compliance by Collection or Device/SU Compliance by Collection</ReportName>
+                              <ReportName>=Globals!ReportFolder &amp; "/SU Compliance by Collection"</ReportName>
                               <Parameters>
                                 <Parameter Name="CollectionID">
                                   <Value>=Parameters!CollectionID.Value</Value>
@@ -1530,7 +1504,7 @@ GROUP BY
             </ChartLegends>
             <ChartTitles>
               <ChartTitle Name="CT_DevicesCompliance">
-                <Caption>Devices Compliance Status</Caption>
+                <Caption>Update Compliance</Caption>
                 <Style>
                   <BackgroundGradientType>None</BackgroundGradientType>
                   <FontFamily>Segoe UI</FontFamily>
@@ -1542,7 +1516,7 @@ GROUP BY
                   <Actions>
                     <Action>
                       <Drillthrough>
-                        <ReportName>=(Replace(Parameters!ReportPath.Value, Parameters!ReportName.Value, "") &amp; "SU Compliance by Collection")</ReportName>
+                        <ReportName>=Globals!ReportFolder &amp; "/SU Compliance by Collection"</ReportName>
                         <Parameters>
                           <Parameter Name="CollectionID">
                             <Value>=Parameters!CollectionID.Value</Value>
@@ -1652,7 +1626,7 @@ Fields!CategorySummarization.Value = "Others", 4
                         <Actions>
                           <Action>
                             <Drillthrough>
-                              <ReportName>=(Replace(Parameters!ReportPath.Value, Parameters!ReportName.Value, "") &amp; "SU Compliance by Collection")</ReportName>
+                              <ReportName>=Globals!ReportFolder &amp; "/SU Compliance by Collection"</ReportName>
                               <Parameters>
                                 <Parameter Name="CollectionID">
                                   <Value>=Parameters!CollectionID.Value</Value>
@@ -1990,7 +1964,7 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
                   <Actions>
                     <Action>
                       <Drillthrough>
-                        <ReportName>=(Replace(Parameters!ReportPath.Value, Parameters!ReportName.Value, "") &amp; "SU Compliance by Collection")</ReportName>
+                        <ReportName>=Globals!ReportFolder &amp; "/SU Compliance by Collection"</ReportName>
                         <Parameters>
                           <Parameter Name="CollectionID">
                             <Value>=Parameters!CollectionID.Value</Value>
@@ -2167,7 +2141,7 @@ Fields!CategorySummarization.Value = "Others", 4
                         <Actions>
                           <Action>
                             <Drillthrough>
-                              <ReportName>=(Replace(Parameters!ReportPath.Value, Parameters!ReportName.Value, "") &amp; "SU Compliance by Collection")</ReportName>
+                              <ReportName>=Globals!ReportFolder &amp; "/SU Compliance by Collection"</ReportName>
                               <Parameters>
                                 <Parameter Name="CollectionID">
                                   <Value>=Parameters!CollectionID.Value</Value>
@@ -2472,7 +2446,7 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
             </ChartAreas>
             <ChartTitles>
               <ChartTitle Name="CT_DevicesMissingUpdates">
-                <Caption>Devices Missing Updates</Caption>
+                <Caption> Devices Missing a Specific Update</Caption>
                 <Style>
                   <BackgroundGradientType>None</BackgroundGradientType>
                   <FontFamily>Segoe UI</FontFamily>
@@ -2484,7 +2458,7 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
                   <Actions>
                     <Action>
                       <Drillthrough>
-                        <ReportName>/ConfigMgr_ULB/_Custom Reports_/SU DAS Compliance by Collection or Device/SU Compliance by Collection</ReportName>
+                        <ReportName>=Globals!ReportFolder &amp; "/SU Compliance by Collection"</ReportName>
                         <Parameters>
                           <Parameter Name="CollectionID">
                             <Value>=Parameters!CollectionID.Value</Value>
@@ -2526,8 +2500,8 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
               </Style>
             </ChartNoDataMessage>
             <DataSetName>UpdateComplianceSummarization</DataSetName>
-            <Top>9.68736cm</Top>
-            <Left>0.127cm</Left>
+            <Top>9.76229cm</Top>
+            <Left>0.16228cm</Left>
             <Height>8cm</Height>
             <Width>24.3422cm</Width>
             <ZIndex>7</ZIndex>
@@ -2588,7 +2562,7 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
                         <Actions>
                           <Action>
                             <Drillthrough>
-                              <ReportName>=(Replace(Parameters!ReportPath.Value, Parameters!ReportName.Value, "") &amp; "SU Scan Status by Collection")</ReportName>
+                              <ReportName>=Globals!ReportFolder &amp; "SU Scan Status by Collection"</ReportName>
                               <Parameters>
                                 <Parameter Name="CollectionID">
                                   <Value>=Parameters!CollectionID.Value</Value>
@@ -2603,7 +2577,7 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
                       </ActionInfo>
                       <Style>
                         <Color>=SWITCH(
-Fields!ScanState.Value = "Scan completed", "#55bfa4", 
+Fields!ScanState.Value = "Scan completed", "#55bfa4",
 Fields!ScanState.Value = "Scan is running", "#EBEBEB",
 Fields!ScanState.Value = "Unknown", "#FFE279",
 Fields!ScanState.Value = "Scan failed", "#D46456",
@@ -2902,7 +2876,7 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
                   <Actions>
                     <Action>
                       <Drillthrough>
-                        <ReportName>=(Replace(Parameters!ReportPath.Value, Parameters!ReportName.Value, "") &amp; "SU Scan Status by Collection")</ReportName>
+                        <ReportName>=Globals!ReportFolder &amp; "/SU Scan Status by Collection"</ReportName>
                         <Parameters>
                           <Parameter Name="CollectionID">
                             <Value>=Parameters!CollectionID.Value</Value>
@@ -2984,32 +2958,6 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
                         <Visible>true</Visible>
                       </ChartDataLabel>
                       <ToolTip>="Compliant: " &amp; FormatPercent(IIF(Avg(Fields!Compliant.Value) = 0, Nothing, Avg(Fields!Compliant.Value)) / Fields!TotalDevices.Value, 1)</ToolTip>
-                      <ActionInfo>
-                        <Actions>
-                          <Action>
-                            <Drillthrough>
-                              <ReportName>=(Replace(Parameters!ReportPath.Value, Parameters!ReportName.Value, "") &amp; "SU Compliance by Collection")</ReportName>
-                              <Parameters>
-                                <Parameter Name="CollectionID">
-                                  <Value>=Parameters!CollectionID.Value</Value>
-                                </Parameter>
-                                <Parameter Name="Categories">
-                                  <Value>=Parameters!Categories.Value</Value>
-                                </Parameter>
-                                <Parameter Name="Compliant">
-                                  <Value>1</Value>
-                                </Parameter>
-                                <Parameter Name="Targeted">
-                                  <Value>=Parameters!Targeted.Value</Value>
-                                </Parameter>
-                                <Parameter Name="Superseded">
-                                  <Value>=Parameters!Superseded.Value</Value>
-                                </Parameter>
-                              </Parameters>
-                            </Drillthrough>
-                          </Action>
-                        </Actions>
-                      </ActionInfo>
                       <Style>
                         <Color>#55bfa4</Color>
                       </Style>
@@ -3059,32 +3007,6 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
                         <Visible>true</Visible>
                       </ChartDataLabel>
                       <ToolTip>="Non-Compliant: " &amp; FormatPercent(IIF(Avg(Fields!NonCompliant.Value) = 0, Nothing, Avg(Fields!NonCompliant.Value) / Fields!TotalDevices.Value), 1)</ToolTip>
-                      <ActionInfo>
-                        <Actions>
-                          <Action>
-                            <Drillthrough>
-                              <ReportName>=(Replace(Parameters!ReportPath.Value, Parameters!ReportName.Value, "") &amp; "SU Compliance by Collection")</ReportName>
-                              <Parameters>
-                                <Parameter Name="CollectionID">
-                                  <Value>=Parameters!CollectionID.Value</Value>
-                                </Parameter>
-                                <Parameter Name="Categories">
-                                  <Value>=Parameters!Categories.Value</Value>
-                                </Parameter>
-                                <Parameter Name="Compliant">
-                                  <Value>0</Value>
-                                </Parameter>
-                                <Parameter Name="Targeted">
-                                  <Value>=Parameters!Targeted.Value</Value>
-                                </Parameter>
-                                <Parameter Name="Superseded">
-                                  <Value>=Parameters!Superseded.Value</Value>
-                                </Parameter>
-                              </Parameters>
-                            </Drillthrough>
-                          </Action>
-                        </Actions>
-                      </ActionInfo>
                       <Style>
                         <Color>#d46456</Color>
                         <BackgroundGradientEndColor>LightGrey</BackgroundGradientEndColor>
@@ -3128,32 +3050,6 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
                         <Visible>true</Visible>
                       </ChartDataLabel>
                       <ToolTip>="Unknown: " &amp; FormatPercent(IIF(Avg(Fields!Unknown.Value) = 0, Nothing, Avg(Fields!Unknown.Value)) / Fields!TotalDevices.Value, 1)</ToolTip>
-                      <ActionInfo>
-                        <Actions>
-                          <Action>
-                            <Drillthrough>
-                              <ReportName>/ConfigMgr_ULB/_Custom Reports_/SU DAS Compliance by Collection or Device/SU Compliance by Collection</ReportName>
-                              <Parameters>
-                                <Parameter Name="CollectionID">
-                                  <Value>=Parameters!CollectionID.Value</Value>
-                                </Parameter>
-                                <Parameter Name="Categories">
-                                  <Value>=Parameters!Categories.Value</Value>
-                                </Parameter>
-                                <Parameter Name="Compliant">
-                                  <Value>2</Value>
-                                </Parameter>
-                                <Parameter Name="Targeted">
-                                  <Value>=Parameters!Targeted.Value</Value>
-                                </Parameter>
-                                <Parameter Name="Superseded">
-                                  <Value>=Parameters!Superseded.Value</Value>
-                                </Parameter>
-                              </Parameters>
-                            </Drillthrough>
-                          </Action>
-                        </Actions>
-                      </ActionInfo>
                       <Style>
                         <Color>#ebebeb</Color>
                       </Style>
@@ -3437,7 +3333,7 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
             </ChartLegends>
             <ChartTitles>
               <ChartTitle Name="CT_UpdateGroupsCompliance">
-                <Caption>Update Groups Compliance Status</Caption>
+                <Caption>Overall Update Group Compliance</Caption>
                 <Style>
                   <BackgroundGradientType>None</BackgroundGradientType>
                   <FontFamily>Segoe UI</FontFamily>
@@ -3445,32 +3341,6 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
                   <TextAlign>General</TextAlign>
                   <VerticalAlign>Top</VerticalAlign>
                 </Style>
-                <ActionInfo>
-                  <Actions>
-                    <Action>
-                      <Drillthrough>
-                        <ReportName>=(Replace(Parameters!ReportPath.Value, Parameters!ReportName.Value, "") &amp; "SU Compliance by Collection")</ReportName>
-                        <Parameters>
-                          <Parameter Name="CollectionID">
-                            <Value>=Parameters!CollectionID.Value</Value>
-                          </Parameter>
-                          <Parameter Name="Categories">
-                            <Value>=Parameters!Categories.Value</Value>
-                          </Parameter>
-                          <Parameter Name="Targeted">
-                            <Value>=Parameters!Targeted.Value</Value>
-                          </Parameter>
-                          <Parameter Name="Superseded">
-                            <Value>=Parameters!Superseded.Value</Value>
-                          </Parameter>
-                          <Parameter Name="ExcludeArticleIDs">
-                            <Value>=Parameters!ExcludeArticleIDs.Value</Value>
-                          </Parameter>
-                        </Parameters>
-                      </Drillthrough>
-                    </Action>
-                  </Actions>
-                </ActionInfo>
               </ChartTitle>
             </ChartTitles>
             <Palette>Pacific</Palette>
@@ -3527,7 +3397,7 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>=SrsResources.Localization.GetString(Globals!ReportName, User!Language)</Value>
+                      <Value>=Globals!ReportName</Value>
                       <Style>
                         <FontFamily>Segoe UI</FontFamily>
                         <FontSize>17pt</FontSize>
@@ -3727,16 +3597,6 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
       <AllowBlank>true</AllowBlank>
       <Hidden>true</Hidden>
     </ReportParameter>
-    <ReportParameter Name="ReportPath">
-      <DataType>String</DataType>
-      <DefaultValue>
-        <DataSetReference>
-          <DataSetName>ReportInfo</DataSetName>
-          <ValueField>Path</ValueField>
-        </DataSetReference>
-      </DefaultValue>
-      <Hidden>true</Hidden>
-    </ReportParameter>
     <ReportParameter Name="CollectionID">
       <DataType>String</DataType>
       <Prompt>Collection Name</Prompt>
@@ -3865,11 +3725,6 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
           <ParameterName>ReportName</ParameterName>
         </CellDefinition>
         <CellDefinition>
-          <ColumnIndex>2</ColumnIndex>
-          <RowIndex>1</RowIndex>
-          <ParameterName>ReportPath</ParameterName>
-        </CellDefinition>
-        <CellDefinition>
           <ColumnIndex>0</ColumnIndex>
           <RowIndex>2</RowIndex>
           <ParameterName>CollectionID</ParameterName>
@@ -3906,6 +3761,6 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
     <CodeModule>SrsResources, Culture=neutral</CodeModule>
   </CodeModules>
   <rd:ReportUnitType>Cm</rd:ReportUnitType>
-  <rd:ReportServerUrl>http://ulb-cm-sql-01a/ReportServer</rd:ReportServerUrl>
+  <rd:ReportServerUrl></rd:ReportServerUrl>
   <rd:ReportID>6fbd236a-d836-4950-8788-14b828deb616</rd:ReportID>
 </Report>
