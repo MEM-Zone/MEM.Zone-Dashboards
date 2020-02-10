@@ -13,7 +13,7 @@
     Created by Ioan Popovici
     All credit goes to Adam Weigert and Ed Price for the original code. I only reformated it a bit.
     Requires SELECT access on dbo.vSMS_ServiceWindow and on itself for smsschm_users (SCCM Reporting).
-    Replace the <SITE_CODE> with your CM Site Code.
+    Replace the <SITE_CODE> with your CM Site Code and uncomment SSMS region if running directly from SSMS.
     Run the code in SQL Server Management Studio.
 .LINK
     https://social.technet.microsoft.com/wiki/contents/articles/7870.sccm-2007-create-report-of-upcoming-maintenance-windows-by-client.aspx (Adam Weigert)
@@ -30,19 +30,19 @@
 /*##=============================================*/
 /* #region QueryBody */
 
-USE [CM_<SITE_CODE>]
-GO
-
-SET NOCOUNT ON
-GO
+/* #region SSMS */
+-- USE [CM_<SITE_CODE>]
+-- SET NOCOUNT ON
 
 /* Drop function if it exists */
-IF OBJECT_ID('[dbo].[ufn_CM_GetNextMaintenanceWindow]') IS NOT NULL
-    BEGIN
-        DROP FUNCTION [dbo].[ufn_CM_GetNextMaintenanceWindow]
-    END
-GO
+-- IF OBJECT_ID('[dbo].[ufn_CM_GetNextMaintenanceWindow]') IS NOT NULL
+--    BEGIN
+--        DROP FUNCTION [dbo].[ufn_CM_GetNextMaintenanceWindow]
+--    END
+-- GO
+/* #endregion */
 
+/* #region create ufn_CM_GetNextMaintenanceWindow */
 CREATE FUNCTION [dbo].[ufn_CM_GetNextMaintenanceWindow](
     @ScheduleToken      AS CHAR(16)
     , @RecurrenceType   AS INT
@@ -297,23 +297,7 @@ AS
         /* Return result */
         RETURN
     END
-GO
-
-/* Grant select rights for this function to CM reporting users */
-GRANT SELECT ON OBJECT::dbo.ufn_CM_GetNextMaintenanceWindow TO smsschm_users;
-GO
-
-/* Grant select right for the fnListAlerts function to CM reporting users */
-GRANT SELECT ON OBJECT::dbo.fnListAlerts TO smsschm_users;
-GO
-
-/* Grant select right for the vSMS_ServiceWindow view to CM reporting users */
-GRANT SELECT ON OBJECT::dbo.vSMS_ServiceWindow TO smsschm_users;
-GO
-
-/* Grant select right for the vSMS_SUPSyncStatus view to CM reporting users */
-GRANT SELECT ON OBJECT::dbo.vSMS_SUPSyncStatus TO smsschm_users;
-GO
+/* #endregion */
 
 /* #endregion */
 /*##=============================================*/
