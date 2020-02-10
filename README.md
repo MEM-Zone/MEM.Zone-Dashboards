@@ -40,7 +40,7 @@ Will be added one a later date
 
 [![](https://s3.ioan.in/Screen-Shot-2020-01-16-at-18.01.39/Screen-Shot-2020-01-16-at-18.01.39.png)](http://www.youtube.com/watch?v=MOHxb8me4IM "CM SRS Dashboards")
 
-[release-version-badge]: https://img.shields.io/github/v/release/SCCM-ZONE/CM-SRS-Dashboards?include_prereleases
+[release-version-badge]: https://img.shields.io/github/v/release/SCCM-ZONE/CM-SRS-Dashboards
 [release-version]: https://github.com/SCCM-Zone/CM-SRS-Dashboards/releases
 [release-date-badge]: https://img.shields.io/github/release-date-pre/SCCM-ZONE/CM-SRS-Dashboards
 [release-date]: https://github.com/SCCM-Zone/CM-SRS-Dashboards/releases
