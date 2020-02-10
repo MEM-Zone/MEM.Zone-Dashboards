@@ -969,8 +969,18 @@ Function Add-RISQLExtension {
 #region ScriptBody
 
 Try {
-    Write-Output -InputObject 'Instalation has started, please be patient...'
+    Write-Output -InputObject 'Installation has started, please be patient...'
 
+    ## Check if the ReportingServicesTools powerhshell module is installed
+    $TestReportingServicesTools = Get-Module -Name 'ReportingServicesTools' -ErrorAction 'SilentlyContinue'
+    If (-not $TestReportingServicesTools) {
+        Do {
+            $AskUser = Read-Host -Prompt '[ReportingServicesTools] module is required for this installer. Allow installation? [y/n] (If you choose [n] the installer will exit!)'
+        }
+        Until ($AskUser -eq 'y' -or $AskUser -eq 'n')
+        If ($AskUser -eq 'n') { Exit }
+        Install-Module -Name 'ReportingServicesTools' -Confirm
+    }
     ## Install only sql extensions
     If ($($PSCmdlet.ParameterSetName) -eq 'ExtensionsOnly') {
         Write-Verbose -Message 'Installing sql extensions only...'

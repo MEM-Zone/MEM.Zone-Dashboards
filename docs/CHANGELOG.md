@@ -1,5 +1,9 @@
 # Changelog for CM SRS Dashboards
 
+## 2.0.1 - 2020-02-10
+
+* Added check and installation for `ReportingServicesTools` module.
+
 ## 2.0.0 - 2020-02-10
 
 * Created a dashboard PowerShell installer [Issue #6](#6)
