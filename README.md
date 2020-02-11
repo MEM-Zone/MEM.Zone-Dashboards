@@ -9,7 +9,7 @@
 
 ## Welcome to our awesome MEMCM Dashboards :)
 
-This repository is a sollution of dashboards and reports, for Microsoft Endpoint Configuration Manager.
+This repository is a solution of dashboards and reports, for Microsoft Endpoint Configuration Manager.
 
 A software update dashboard with five subreports is currently available. Installation can be done manually or via the included PowerShell installer.
 
