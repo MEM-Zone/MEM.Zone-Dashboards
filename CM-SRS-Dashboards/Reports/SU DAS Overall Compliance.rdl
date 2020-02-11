@@ -809,9 +809,9 @@ GROUP BY
               </Border>
             </Style>
           </Rectangle>
-          <Rectangle Name="RE_LastSuccesfulSynchronizationTime">
+          <Rectangle Name="RE_LastSuccessfulSynchronizationTime">
             <ReportItems>
-              <Textbox Name="TXT_LastSuccesfulSynchronizationTime_Value">
+              <Textbox Name="TXT_LastSuccessfulSynchronizationTime_Value">
                 <CanGrow>true</CanGrow>
                 <KeepTogether>true</KeepTogether>
                 <Paragraphs>
@@ -855,13 +855,13 @@ GROUP BY
                   <PaddingBottom>2pt</PaddingBottom>
                 </Style>
               </Textbox>
-              <Textbox Name="TXT_LastSuccesfulSynchronizationTime_Label">
+              <Textbox Name="TXT_LastSuccessfulSynchronizationTime_Label">
                 <KeepTogether>true</KeepTogether>
                 <Paragraphs>
                   <Paragraph>
                     <TextRuns>
                       <TextRun>
-                        <Value>Last Succesful Synchronization Time</Value>
+                        <Value>Last Successful Synchronization Time</Value>
                         <Style>
                           <FontFamily>Segoe UI</FontFamily>
                           <FontWeight>Normal</FontWeight>
