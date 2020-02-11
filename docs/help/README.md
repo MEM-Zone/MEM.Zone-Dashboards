@@ -51,19 +51,20 @@ Use the provided powershell installer.
 
 ```PowerShell
 ## Get syntax help
-Get-Help .\Install-CMSRSDashboard.ps1
+Get-Help .\Install-CMSRSReports.ps1
 
 ## Typical installation example
 #  With extensions
-.\Install-CMSRSDashboards.ps1 -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -Overwrite
+.\Install-CMSRSReports.ps1 -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -Overwrite -Verbose
 #  Without extensions (Permissions will still be granted on prerequisite views and tables)
-.\Install-CMSRSDashboards.ps1 -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -ExcludeExtensions
+.\Install-CMSRSReports.ps1 -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -ExcludeExtensions -Verbose
 #  Extensions only
-.\Install-CMSRSDashboards.ps1 -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -Overwrite
+.\Install-CMSRSReports.ps1 -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -ExtensionsOnly -Overwrite -Verbose
 ```
 
 >**Notes**
 > If you don't use `Windows Authentication` (you should!) in your SQL server you can use the `-UseSQLAuthentication` switch.
+> PowerShell script needs to be run as administrator.
 
 ## Installation - Manual
 
@@ -89,7 +90,7 @@ The `ufn_CM_GetNextMaintenanceWindow` is needed in order to display the next mai
 * Uncomment the `SMS region` and change the `<SITE_CODE>` in the `USE` statement to match your Site Code.
 * Click `Execute` to add the `ufn_CM_GetNextMaintenanceWindow` function to your database.
 * Copy paste the `perm_CMDatabase.sql` in [`SSMS`](https://docs.microsoft.com/en-us/sql/ssms/
-  * Click `Execute` to add the necessary permissions to your database.
+* Click `Execute` to add the necessary permissions to your database.
 
 > **Notes**
 > You need to have access to add the function and grant SELECT on `ufn_CM_GetNextMaintenanceWindow`, `fnListAlerts`, `vSMS_ServiceWindow` and `vSMS_SUPSyncStatus` for the `smsschm_users` (SCCM reporting).

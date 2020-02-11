@@ -245,7 +245,7 @@ Function Invoke-SQLCommand {
     Begin {
 
         ## Assemble connection string
-        [string]$ConnectionString = "Server=$Server; Database=$Database; "
+        [string]$ConnectionString = "Server=$ServerInstance; Database=$Database; "
         #  Set connection string for integrated or non-integrated authentication
         If ($UseSQLAuthentication) {
             # Get credentials if SQL Server Authentication is used
@@ -261,7 +261,7 @@ Function Invoke-SQLCommand {
         Try {
 
             ## Connect to the database
-            Write-Verbose -Message "Connecting to [$Database]..."
+            Write-Verbose -Message "Connecting to [${ServerInstance}\${Database}]..."
             $DBConnection = New-Object System.Data.SqlClient.SqlConnection($ConnectionString)
             $DBConnection.Open()
 
@@ -867,24 +867,24 @@ Function Add-RISQLExtension {
         [ValidateNotNullorEmpty()]
         [Alias('Server')]
         [string]$ServerInstance,
-        [Parameter(Mandatory=$true,ParameterSetName='FunctionAndPermissions',HelpMessage='Database name',Position=2)]
+        [Parameter(Mandatory=$true,ParameterSetName='FunctionsAndPermissions',HelpMessage='Database name',Position=2)]
         [Parameter(Mandatory=$true,ParameterSetName='Functions',HelpMessage='Database name',Position=2)]
         [Parameter(Mandatory=$true,ParameterSetName='Permissions',HelpMessage='Database name',Position=2)]
         [ValidateNotNullorEmpty()]
         [Alias('Dbs')]
         [string]$Database,
-        [Parameter(Mandatory=$false,ParameterSetName='FunctionAndPermissions',Position=5)]
+        [Parameter(Mandatory=$false,ParameterSetName='FunctionsAndPermissions',Position=5)]
         [Parameter(Mandatory=$false,ParameterSetName='Functions',Position=5)]
         [Parameter(Mandatory=$false,ParameterSetName='Permissions',Position=5)]
         [ValidateNotNullorEmpty()]
         [Alias('Tmo')]
         [int]$ConnectionTimeout = 0,
-        [Parameter(Mandatory=$false,ParameterSetName='FunctionAndPermissions',Position=6)]
+        [Parameter(Mandatory=$false,ParameterSetName='FunctionsAndPermissions',Position=6)]
         [Parameter(Mandatory=$false,ParameterSetName='Functions',Position=6)]
         [Parameter(Mandatory=$false,ParameterSetName='Permissions',Position=6)]
         [Alias('SQLAuth')]
         [switch]$UseSQLAuthentication,
-        [Parameter(Mandatory=$false,ParameterSetName='FunctionAndPermissions',Position=7)]
+        [Parameter(Mandatory=$false,ParameterSetName='FunctionsAndPermissions',Position=7)]
         [Parameter(Mandatory=$false,ParameterSetName='Functions',Position=7)]
         [ValidateNotNullorEmpty()]
         [Alias('Force')]
@@ -920,7 +920,8 @@ Function Add-RISQLExtension {
                         DROP FUNCTION [dbo].[$FunctionName]
                     END
 "@
-                If (($($PSCmdlet.ParameterSetName) -eq 'Functions') -or ($($PSCmdlet.ParameterSetName) -eq 'FunctionAndPermissions')) {
+                If (($($PSCmdlet.ParameterSetName) -eq 'Functions') -or ($($PSCmdlet.ParameterSetName) -eq 'FunctionsAndPermissions')) {
+
                     ## Perform function cleanup
                     If ($Overwrite) {
                         Write-Verbose -Message "Performing [$FunctionName] function cleanup..."
@@ -931,16 +932,15 @@ Function Add-RISQLExtension {
                     Write-Verbose -Message "Installing [$FunctionName] function..."
                     Invoke-SQLCommand -ServerInstance $ServerInstance -Database $Database -Query $InstallFunction -UseSQLAuthentication:$UseSQLAuthentication
                 }
-                If (($($PSCmdlet.ParameterSetName) -eq 'Permissions') -or ($($PSCmdlet.ParameterSetName) -eq 'FunctionAndPermissions')) {
+                If (($($PSCmdlet.ParameterSetName) -eq 'Permissions') -or ($($PSCmdlet.ParameterSetName) -eq 'FunctionsAndPermissions')) {
+
                     ## Process permissions
                     ForEach ($Permission in $Permissions) {
-
-                        ## Set variables
+                        #  Set variables
                         [string]$PermissionName = $($Permission.BaseName)
                         [string]$PermissionPath = $($Permission.FullName)
                         [string]$GrantPermission = Get-Content -Path $PermissionPath | Out-String
-
-                        ## Grant permissions
+                        #  Grant permissions
                         Write-Verbose -Message "Granting permissions from [$PermissionName]..."
                         Invoke-SQLCommand -ServerInstance $ServerInstance -Database $Database -Query $GrantPermission -UseSQLAuthentication:$UseSQLAuthentication
                     }
@@ -973,7 +973,7 @@ Try {
 
     ## Check if the ReportingServicesTools powerhshell module is installed
     $TestReportingServicesTools = Get-Module -Name 'ReportingServicesTools' -ErrorAction 'SilentlyContinue'
-    If (-not $TestReportingServicesTools) {
+    If (-not $TestReportingServicesTools -and -not $ExtensionsOnly) {
         Do {
             $AskUser = Read-Host -Prompt '[ReportingServicesTools] module is required for this installer. Allow installation? [y/n] (If you choose [n] the installer will exit!)'
         }

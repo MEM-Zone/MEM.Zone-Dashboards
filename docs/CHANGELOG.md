@@ -1,14 +1,23 @@
 # Changelog for CM SRS Dashboards
 
+## 2.1.0 - 2020-02-11
+
+* Added run as administrator requirement
+* Fixed `Invoke-SQL` not connecting to the SQL server due to bad connection string
+* Fixed `Add-RISQLExtension` not getting the right parameter set and skipping permissions extensions
+* Don't check for `ReportingServicesTools` module if `-ExtensionsOnly` switch is used
+* Fix script name in `README.md`
+* Fix install parameters in `README.md`
+
 ## 2.0.1 - 2020-02-10
 
 * Added check and installation for `ReportingServicesTools` module.
 
 ## 2.0.0 - 2020-02-10
 
-* Created a dashboard PowerShell installer [Issue #6](#6)
-* Fixed Dashboard and SU Compliance reports not working [Issue #5](#5). RS path is now computed from variables instead of the RS DB.
-* Moved the permission block to a separate file [Issue #9](#9)
+* Created a dashboard PowerShell installer issue [#6](#6)
+* Fixed Dashboard and SU Compliance reports not working issue [#5](#5). RS path is now computed from variables instead of the RS DB.
+* Moved the permission block to a separate file issue [#9](#9)
 * Commented database references from prerequisite files
 * Removed `GO` statements from prerequisite files
 * Report files have been moved to the `Reports` folder to match the installer defaults
