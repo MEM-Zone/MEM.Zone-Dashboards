@@ -7,13 +7,15 @@
 
 # SU SRS Dashboards
 
-## Welcome to our awesome MEMCM Dashboard Collection :)
+## Welcome to our awesome MEMCM Dashboards :)
 
-This repository is a collection of dashboards and reports, for Microsoft Endpoint Configuration Manager.
+This repository is a sollution of dashboards and reports, for Microsoft Endpoint Configuration Manager.
 
-## SCCM-Zone/CM-SRS-Dashboards Github repository
+A software update dashboard with five subreports is currently available. Installation can be done manually or via the included PowerShell installer.
 
-You've found the GitHub repository that houses the source for dashboard related content published to [https://SCCM-Zone.com](https://SCCM-Zone.com/).
+The `SU DAS Overall Compliance` dashboard is navigable, independent of `Software Update Groups` and comes with an array of filtering options.
+
+All subreports can be run standalone.
 
 ## Latest release
 
@@ -23,9 +25,9 @@ See [releases](https://SCCM.Zone/CM-SRS-Dashboards-RELEASES).
 
 See [changelog](https://SCCM.Zone/CM-SRS-Dashboards-CHANGELOG).
 
-## Project Tree
+## Credit
 
-Will be added one a later date
+* Adam Weigert [`ufn_CM_GetNextMaintenanceWindow`](https://social.technet.microsoft.com/wiki/contents/articles/7870.sccm-2007-create-report-of-upcoming-maintenance-windows-by-client.aspx)
 
 ## Dashboards and Reports
 
@@ -35,6 +37,62 @@ Will be added one a later date
 * SU Compliance by Device
 * SU Scan Status
 * SU SUP Sync Status
+
+## Build Tree
+
+```bash
+.
++-- src
+    +-- CM Dashboards
+        +-- Extensions
+        |   +-- perm_CMDatabase.sql
+        |   +-- ufn_CM_GetNextMainanceWindow
+        +-- help
+        |   +-- README.md
+        +-- Reports
+            +-- AL Alerts.rdl
+            +-- SU Compliance by Collection.rdl
+            +-- SU Compliance by Device.rdl
+            +-- SU DAS Overall Compliance.rdl
+            +-- SU Scan Status by Collection.rdl
+            +-- SU SUP Sync Status.rdl
+```
+
+## Navigation Tree
+
+````bash
+.
++-- (D) SU DAS Overall Compliance
+    +-- (C) Update Compliance
+    |   +-- (R) SU Compliance by Collection
+    |       +-- (R) SU Compliance by Device
+    |
+    +-- (C) Missing updates by Category
+    |   +-- (R) SU Compliance by Collection
+    |       +-- (R) SU Compliance by Device
+    |
+    +-- (C) Update Agent Scan States
+    |   +-- (R) SU Scan Status
+    |
+    +-- (C) Overall Update Group Compliance
+    |
+    +-- (C) Devices Missing a Specific Update
+    |   +-- (R) SU Compliance by Collection
+    |       +-- (R) SU Compliance by Device
+    |
+    +-- (T) Critical Alerts
+    |   +-- (R) AL Alerts
+    |
+    +-- (T) Last Successful Synchronization Time
+        +-- (R) SU SUP Sync Status
+
+## Legend
+'()'  - 'to' or 'from' navigation element
+'(D)' - Dashboard
+'(R)' - Report
+'(C)' - Chart
+'(T)' - Text
+````
 
 ## Preview
 

@@ -1,5 +1,9 @@
 # Changelog for CM SRS Dashboards
 
+## 2.1.1 - 2020-02-11
+
+* Updated README.md with navigation and build tree
+
 ## 2.1.0 - 2020-02-11
 
 * Added run as administrator requirement

@@ -1,5 +1,15 @@
 # Readme for CM SRS Dashboards
 
+## Welcome to our awesome MEMCM Dashboards :)
+
+This repository is a sollution of dashboards and reports, for Microsoft Endpoint Configuration Manager.
+
+A software update dashboard with five subreports is currently available. Installation can be done manually or via the included PowerShell installer.
+
+The `SU DAS Overall Compliance` dashboard is navigable, independent of `Software Update Groups` and comes with an array of filtering options.
+
+All subreports can be run standalone.
+
 ## Latest release
 
 See [releases](https://SCCM.Zone/CM-SRS-Dashboards-RELEASES).
@@ -7,6 +17,10 @@ See [releases](https://SCCM.Zone/CM-SRS-Dashboards-RELEASES).
 ## Changelog
 
 See [changelog](https://SCCM.Zone/CM-SRS-Dashboards-CHANGELOG).
+
+## Credit
+
+* Adam Weigert [`ufn_CM_GetNextMaintenanceWindow`](https://social.technet.microsoft.com/wiki/contents/articles/7870.sccm-2007-create-report-of-upcoming-maintenance-windows-by-client.aspx)
 
 ## Dashboards and Reports
 
@@ -17,12 +31,41 @@ See [changelog](https://SCCM.Zone/CM-SRS-Dashboards-CHANGELOG).
 * SU Scan Status
 * SU SUP Sync Status
 
->**Notes**
-> Reports can be run independently.
+## Navigation Tree
 
-## Credit
+````bash
+.
++-- (D) SU DAS Overall Compliance
+    +-- (C) Update Compliance
+    |   +-- (R) SU Compliance by Collection
+    |       +-- (R) SU Compliance by Device
+    |
+    +-- (C) Missing updates by Category
+    |   +-- (R) SU Compliance by Collection
+    |       +-- (R) SU Compliance by Device
+    |
+    +-- (C) Update Agent Scan States
+    |   +-- (R) SU Scan Status
+    |
+    +-- (C) Overall Update Group Compliance
+    |
+    +-- (C) Devices Missing a Specific Update
+    |   +-- (R) SU Compliance by Collection
+    |       +-- (R) SU Compliance by Device
+    |
+    +-- (T) Critical Alerts
+    |   +-- (R) AL Alerts
+    |
+    +-- (T) Last Successful Synchronization Time
+        +-- (R) SU SUP Sync Status
 
-* Adam Weigert [`ufn_CM_GetNextMaintenanceWindow`](https://social.technet.microsoft.com/wiki/contents/articles/7870.sccm-2007-create-report-of-upcoming-maintenance-windows-by-client.aspx)
+## Legend
+'()'  - 'to' or 'from' navigation element
+'(D)' - Dashboard
+'(R)' - Report
+'(C)' - Chart
+'(T)' - Text
+````
 
 ## Prerequisites
 
