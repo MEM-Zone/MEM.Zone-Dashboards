@@ -60,7 +60,7 @@ See [changelog](https://SCCM.Zone/CM-SRS-Dashboards-CHANGELOG).
 
 ## Navigation Tree
 
-````bash
+```bash
 .
 +-- (D) SU DAS Overall Compliance
     +-- (C) Update Compliance
@@ -92,7 +92,7 @@ See [changelog](https://SCCM.Zone/CM-SRS-Dashboards-CHANGELOG).
 '(R)' - Report
 '(C)' - Chart
 '(T)' - Text
-````
+```
 
 ## Preview
 
