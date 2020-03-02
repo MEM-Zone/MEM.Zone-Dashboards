@@ -117,8 +117,12 @@ ELSE
 /* Get Device FQDN from ResourceID */
 SET @DeviceFQDN = (
     SELECT
-        IIF(Systems.Full_Domain_Name0 IS NOT NULL, Systems.Name0 + '.' + Systems.Full_Domain_Name0, Systems.Name0)
+        IIF(
+            SystemNames.Resource_Names0 IS NOT NULL, UPPER(SystemNames.Resource_Names0)
+            , IIF(Systems.Full_Domain_Name0 IS NOT NULL, Systems.Name0 + '.' + Systems.Full_Domain_Name0, Systems.Name0)
+        )
     FROM fn_rbac_R_System(@UserSIDs) AS Systems
+        JOIN fn_rbac_RA_System_ResourceNames(@UserSIDs) AS SystemNames ON SystemNames.ResourceID = Systems.ResourceID
     WHERE Systems.ResourceID = @ResourceID
 )
 

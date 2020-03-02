@@ -180,11 +180,9 @@ IF @HelperFunctionExists = 1
         WITH Maintenance_CTE AS (
             SELECT
                 CollectionMembers.ResourceID
-                , CollectionName        = Collections.Name
                 , NextServiceWindow.Duration
                 , NextServiceWindow.NextServiceWindow
                 , RowNumber             = DENSE_RANK() OVER (PARTITION BY ResourceID ORDER BY NextServiceWindow.NextServiceWindow)
-                , MaintenanceWindowName = ServiceWindow.Name
                 , ServiceWindowType
                 , ServiceWindow.Enabled
             FROM vSMS_ServiceWindow AS ServiceWindow
@@ -193,6 +191,7 @@ IF @HelperFunctionExists = 1
                     AND Collections.CollectionType = 2                           -- Device Collections
                 CROSS APPLY ufn_CM_GetNextMaintenanceWindow(ServiceWindow.Schedules, ServiceWindow.RecurrenceType) AS NextServiceWindow
             WHERE  NextServiceWindow.NextServiceWindow IS NOT NULL
+                AND ServiceWindowType &lt;&gt; 5 -- OSD Service
         )
 
         /* Populate MaintenanceInfo table and remove duplicates */
@@ -270,7 +269,12 @@ SELECT
         IIF(NextServiceWindow &gt; (SELECT DATEADD(dd, 30, CURRENT_TIMESTAMP)), POWER(128, 1), 0)
     )
     , Missing           = ISNULL(Missing, (IIF(CombinedResources.IsClient = 1, 0, NULL)))
-    , Device            = IIF(Systems.Full_Domain_Name0 IS NOT NULL, Systems.Name0 + '.' + Systems.Full_Domain_Name0, Systems.Name0)
+    , Device            = (
+            IIF(
+                SystemNames.Resource_Names0 IS NOT NULL, UPPER(SystemNames.Resource_Names0)
+                , IIF(Systems.Full_Domain_Name0 IS NOT NULL, Systems.Name0 + '.' + Systems.Full_Domain_Name0, Systems.Name0)
+            )
+    )
     , OperatingSystem   = (
         CASE
             WHEN OperatingSystem.Caption0 != '' THEN
@@ -340,6 +344,7 @@ SELECT
     , NextServiceWindow = IIF(CombinedResources.IsClient != 1, NULL, CONVERT(NVARCHAR(16), NextServiceWindow, 120))
 FROM fn_rbac_R_System(@UserSIDs) AS Systems
     JOIN fn_rbac_CombinedDeviceResources(@UserSIDs) AS CombinedResources ON CombinedResources.MachineID = Systems.ResourceID
+    LEFT JOIN fn_rbac_RA_System_ResourceNames(@UserSIDs) AS SystemNames ON SystemNames.ResourceID = Systems.ResourceID
     LEFT JOIN fn_rbac_GS_OPERATING_SYSTEM(@UserSIDs) AS OperatingSystem ON OperatingSystem.ResourceID = Systems.ResourceID
     LEFT JOIN fn_rbac_CH_ClientSummary(@UserSIDs) AS ClientSummary ON ClientSummary.ResourceID = Systems.ResourceID
     LEFT JOIN fn_rbac_UpdateScanStatus(@UserSIDs) AS UpdateScan ON UpdateScan.ResourceID = Systems.ResourceID

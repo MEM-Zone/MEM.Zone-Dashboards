@@ -2339,7 +2339,6 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
                         <Color>#5c5c5c</Color>
                       </Style>
                     </ChartAxisTitle>
-                    <Interval>1</Interval>
                     <IntervalType>Number</IntervalType>
                     <ChartMajorGridLines>
                       <Enabled>False</Enabled>
@@ -2364,6 +2363,7 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
                           <Style>None</Style>
                         </Border>
                       </Style>
+                      <IntervalType>Number</IntervalType>
                     </ChartMajorTickMarks>
                     <ChartMinorTickMarks>
                       <Enabled>True</Enabled>
@@ -2373,6 +2373,7 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
                         </Border>
                       </Style>
                       <Length>0.5</Length>
+                      <IntervalType>Number</IntervalType>
                     </ChartMinorTickMarks>
                     <CrossAt>NaN</CrossAt>
                     <Minimum>NaN</Minimum>

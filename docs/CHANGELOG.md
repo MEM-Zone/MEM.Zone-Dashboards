@@ -1,5 +1,10 @@
 # Changelog for CM SRS Dashboards
 
+## 2.1.2 - 2020-03-02
+
+* Fixed FQDN not displaying when System Discovery is not enabled
+* Fixed dashboard chart axis numbering
+
 ## 2.1.1 - 2020-02-11
 
 * Updated README.md with navigation and build tree
