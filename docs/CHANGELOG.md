@@ -1,5 +1,9 @@
 # Changelog for CM SRS Dashboards
 
+## 2.1.3 - 2020-03-012
+
+* Fixed navigation path for the `Update Scan States` piechart
+
 ## 2.1.2 - 2020-03-02
 
 * Fixed FQDN not displaying when System Discovery is not enabled

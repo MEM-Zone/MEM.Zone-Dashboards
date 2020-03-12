@@ -2563,7 +2563,7 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
                         <Actions>
                           <Action>
                             <Drillthrough>
-                              <ReportName>=Globals!ReportFolder &amp; "SU Scan Status by Collection"</ReportName>
+                              <ReportName>=Globals!ReportFolder &amp; "/SU Scan Status by Collection"</ReportName>
                               <Parameters>
                                 <Parameter Name="CollectionID">
                                   <Value>=Parameters!CollectionID.Value</Value>
