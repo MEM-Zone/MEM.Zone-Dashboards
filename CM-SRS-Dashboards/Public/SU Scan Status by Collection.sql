@@ -79,7 +79,7 @@ SELECT
         +
         IIF(UpdateScan.LastScanTime < (SELECT DATEADD(dd, -14, CURRENT_TIMESTAMP)), POWER(64, 1), 0)
         +
-        IIF(SyncSourceInfo.SyncCatalogVersion - UpdateScan.LastScanPackageVersion > 14, POWER(128, 1), 0)
+        IIF(NULLIF(SyncSourceInfo.SyncCatalogVersion, '') IS NULL OR SyncSourceInfo.SyncCatalogVersion - UpdateScan.LastScanPackageVersion > 14, POWER(128, 1), 0)
     )
     , ScanState               = (
         CASE
@@ -140,7 +140,7 @@ SELECT
     , LastScanPackageLocation = NULLIF(UpdateScan.LastScanPackageLocation, '')
     , LastScanPackageVersion  = UpdateScan.LastScanPackageVersion
     , SyncCatalogVersion      = SyncSourceInfo.SyncCatalogVersion
-    , CatalogVersionsBehind   = SyncSourceInfo.SyncCatalogVersion - UpdateScan.LastScanPackageVersion
+    , CatalogVersionsBehind   = IIF(NULLIF(SyncSourceInfo.SyncCatalogVersion, '') IS NULL, NULL, SyncSourceInfo.SyncCatalogVersion - UpdateScan.LastScanPackageVersion)
     , LastScanError           = NULLIF(UpdateScan.LastErrorCode, 0)
 FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers
     JOIN fn_rbac_R_System(@UserSIDs) AS Systems ON Systems.ResourceID = CollectionMembers.ResourceID
@@ -156,18 +156,19 @@ FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers
     CROSS APPLY (
         SELECT SUPSyncStatus.SyncCatalogVersion
         FROM vSMS_SUPSyncStatus AS SUPSyncStatus
-        WHERE (
-            SELECT SUBSTRING(
-                UpdateScan.LastScanPackageLocation
-                , CHARINDEX('/', UpdateScan.LastScanPackageLocation) + 2
-                ,
-                (
-                    (
+        WHERE SUPSyncStatus.WSUSServerName = (
+            IIF(
+                LEN(UpdateScan.LastScanPackageLocation) = 0
+                , UpdateScan.LastScanPackageLocation
+                , SUBSTRING(
+                    UpdateScan.LastScanPackageLocation
+                    , CHARINDEX('/', UpdateScan.LastScanPackageLocation) + 2
+                    , (
                         (LEN(UpdateScan.LastScanPackageLocation)) - CHARINDEX(':', REVERSE(UpdateScan.LastScanPackageLocation))
-                    ) - CHARINDEX(':',UpdateScan.LastScanPackageLocation)
-                ) - 2
+                    ) - CHARINDEX(':', UpdateScan.LastScanPackageLocation) - 2
+                )
             )
-        ) = SUPSyncStatus.WSUSServerName
+        )
     ) AS SyncSourceInfo
 WHERE CollectionMembers.CollectionID   = @CollectionID
     AND CollectionMembers.ResourceType = 5   -- Select devices only

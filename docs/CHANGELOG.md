@@ -1,6 +1,10 @@
 # Changelog for CM SRS Dashboards
 
-## 2.1.3 - 2020-03-012
+## 2.1.4 - 2020-03-16
+
+* Fixed crash when LastScanPackageLocation is NULL in `SU Scan Status by Collection` (Issue #18)
+
+## 2.1.3 - 2020-03-12
 
 * Fixed navigation path for the `Update Scan States` piechart
 
