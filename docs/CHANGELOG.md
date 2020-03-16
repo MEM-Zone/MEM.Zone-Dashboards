@@ -1,8 +1,13 @@
 # Changelog for CM SRS Dashboards
 
+## 2.1.5 - 2020-03-16
+
+* Moved to standalone installer
+* Deleted old installer references
+
 ## 2.1.4 - 2020-03-16
 
-* Fixed crash when LastScanPackageLocation is NULL in `SU Scan Status by Collection` (Issue #18)
+* Fixed crash when `LastScanPackageLocation` is NULL in `SU Scan Status by Collection` (Issue #18)
 
 ## 2.1.3 - 2020-03-12
 
