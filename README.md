@@ -11,7 +11,7 @@
 
 This repository is a solution of dashboards and reports, for Microsoft Endpoint Configuration Manager.
 
-A software update dashboard with five subreports is currently available. Installation can be done manually or via the included PowerShell installer.
+A software update dashboard with five subreports is currently available. Installation can be done manually or via the included PowerShell installer. You can find the standalone repository for the installer [here](https://SCCM.Zone/Install-SRSReport-RELEASES).
 
 The `SU DAS Overall Compliance` dashboard is navigable, independent of `Software Update Groups` and comes with an array of filtering options.
 

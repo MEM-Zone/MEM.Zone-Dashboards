@@ -90,19 +90,19 @@ See [changelog](https://SCCM.Zone/CM-SRS-Dashboards-CHANGELOG).
 
 ## Installation - Automatic
 
-Use the provided powershell installer.
+Use the provided PowerShell installer. You can find the standalone repository for the installer [here](https://SCCM.Zone/Install-SRSReport-RELEASES).
 
 ```PowerShell
 ## Get syntax help
-Get-Help .\Install-CMSRSReports.ps1
+Get-Help .\Install-SRSReport.ps1
 
 ## Typical installation example
 #  With extensions
-.\Install-CMSRSReports.ps1 -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -Overwrite -Verbose
+.\Install-SRSReport.ps1 -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -Overwrite -Verbose
 #  Without extensions (Permissions will still be granted on prerequisite views and tables)
-.\Install-CMSRSReports.ps1 -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -ExcludeExtensions -Verbose
+.\Install-SRSReport.ps1 -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -ExcludeExtensions -Verbose
 #  Extensions only
-.\Install-CMSRSReports.ps1 -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -ExtensionsOnly -Overwrite -Verbose
+.\Install-SRSReport.ps1 -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -ExtensionsOnly -Overwrite -Verbose
 ```
 
 >**Notes**
@@ -136,6 +136,6 @@ The `ufn_CM_GetNextMaintenanceWindow` is needed in order to display the next mai
 * Click `Execute` to add the necessary permissions to your database.
 
 > **Notes**
-> You need to have access to add the function and grant SELECT on `ufn_CM_GetNextMaintenanceWindow`, `fnListAlerts`, `vSMS_ServiceWindow` and `vSMS_SUPSyncStatus` for the `smsschm_users` (SCCM reporting).
+> You need to have access to add the function and grant SELECT on `ufn_CM_GetNextMaintenanceWindow`, `fnListAlerts`, `vSMS_ServiceWindow` and `vSMS_SUPSyncStatus` for the `smsschm_users` (MEMCM reporting).
 > If the `ufn_CM_GetNextMaintenanceWindow` is not present you will get a 'Missing helper function!' instead of the next maintenance window.
 > To resolve the error codes, see the restart reason or health states just hover over the table cell.

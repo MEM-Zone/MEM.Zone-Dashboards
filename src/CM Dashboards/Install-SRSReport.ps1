@@ -35,13 +35,13 @@
     Specifies to Overwrite the old entry, if an existing report with same name exists at the specified destination.
 .EXAMPLE
     [hashtable]$SetReportNodeValue = @{ NodeName  = 'ReportName'; NodeValue = '/ConfigMgr_XXX/SRSDashboards'; NsPrefix  = 'ns' }
-    .\Install-CMSRSDashboards.ps1 -Path 'C:\DAS\Reports\SU Compliance by Collection.rdl' -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -SetReportNodeValue $SetReportNodeValue
+    .\Install-SRSReport.ps1 -Path 'C:\DAS\Reports\SU Compliance by Collection.rdl' -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -SetReportNodeValue $SetReportNodeValue
 .EXAMPLE
-    .\Install-CMSRSDashboards.ps1 -Path 'C:\DAS\Reports\SU Compliance by Collection.rdl' -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -Overwrite
+    .\Install-SRSReport.ps1 -Path 'C:\DAS\Reports\SU Compliance by Collection.rdl' -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -Overwrite
 .EXAMPLE
-    .\Install-CMSRSDashboards.ps1 -Path 'C:\DAS\Reports' -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -DataSourceRoot -Overwrite -ExcludeExtensions
+    .\Install-SRSReport.ps1 -Path 'C:\DAS\Reports' -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -DataSourceRoot -Overwrite -ExcludeExtensions
 .EXAMPLE
-    .\Install-CMSRSDashboards.ps1 -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -ExtensionsOnly -UseSQLAuthentication -Verbose
+    .\Install-SRSReport.ps1 -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -ExtensionsOnly -UseSQLAuthentication -Verbose
 .INPUTS
     None.
 .OUTPUTS
@@ -57,9 +57,11 @@
 .LINK
     https://SCCM.Zone/
 .LINK
-    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+    https://SCCM.Zone/Install-SRSReport-RELEASES
 .LINK
-    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
+    https://SCCM.Zone/Install-SRSReport-GIT
+.LINK
+    https://SCCM.Zone/Install-SRSReport-ISSUES
 .COMPONENT
     RS
 .FUNCTIONALITY
@@ -211,9 +213,9 @@ Function Invoke-SQLCommand {
 .LINK
     https://SCCM.Zone/
 .LINK
-    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+    https://SCCM.Zone/Install-SRSReport-GIT
 .LINK
-    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
+    https://SCCM.Zone/Install-SRSReport-ISSUES
 .COMPONENT
     RS
 .FUNCTIONALITY
@@ -245,7 +247,7 @@ Function Invoke-SQLCommand {
     Begin {
 
         ## Assemble connection string
-        [string]$ConnectionString = "Server=$ServerInstance; Database=$Database; "
+        [string]$ConnectionString = "Server=$Server; Database=$Database; "
         #  Set connection string for integrated or non-integrated authentication
         If ($UseSQLAuthentication) {
             # Get credentials if SQL Server Authentication is used
@@ -261,7 +263,7 @@ Function Invoke-SQLCommand {
         Try {
 
             ## Connect to the database
-            Write-Verbose -Message "Connecting to [${ServerInstance}\${Database}]..."
+            Write-Verbose -Message "Connecting to [$Database]..."
             $DBConnection = New-Object System.Data.SqlClient.SqlConnection($ConnectionString)
             $DBConnection.Open()
 
@@ -314,9 +316,9 @@ Function New-NamespaceManager {
 .LINK
     https://SCCM.Zone/
 .LINK
-    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+    https://SCCM.Zone/Install-SRSReport-GIT
 .LINK
-    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
+    https://SCCM.Zone/Install-SRSReport-ISSUES
 .COMPONENT
     RS
 .FUNCTIONALITY
@@ -388,9 +390,9 @@ Function Get-RINode {
 .LINK
     https://SCCM.Zone/
 .LINK
-    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+    https://SCCM.Zone/Install-SRSReport-GIT
 .LINK
-    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
+    https://SCCM.Zone/Install-SRSReport-ISSUES
 .COMPONENT
     RS
 .FUNCTIONALITY
@@ -461,9 +463,9 @@ Function Set-RINodeValue {
 .LINK
     https://SCCM.Zone/
 .LINK
-    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+    https://SCCM.Zone/Install-SRSReport-GIT
 .LINK
-    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
+    https://SCCM.Zone/Install-SRSReport-ISSUES
 .COMPONENT
     RS
 .FUNCTIONALITY
@@ -572,9 +574,9 @@ Function Install-RIReport {
 .LINK
     https://SCCM.Zone/
 .LINK
-    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+    https://SCCM.Zone/Install-SRSReport-GIT
 .LINK
-    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
+    https://SCCM.Zone/Install-SRSReport-ISSUES
 .COMPONENT
     RS
 .FUNCTIONALITY
@@ -691,9 +693,9 @@ Function Set-RIDataSourceReference {
 .LINK
     https://SCCM.Zone/
 .LINK
-    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+    https://SCCM.Zone/Install-SRSReport-GIT
 .LINK
-    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
+    https://SCCM.Zone/Install-SRSReport-ISSUES
 .COMPONENT
     RS
 .FUNCTIONALITY
@@ -845,9 +847,9 @@ Function Add-RISQLExtension {
 .LINK
     https://SCCM.Zone/
 .LINK
-    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+    https://SCCM.Zone/Install-SRSReport-GIT
 .LINK
-    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
+    https://SCCM.Zone/Install-SRSReport-ISSUES
 .COMPONENT
     RS
 .FUNCTIONALITY
@@ -867,24 +869,24 @@ Function Add-RISQLExtension {
         [ValidateNotNullorEmpty()]
         [Alias('Server')]
         [string]$ServerInstance,
-        [Parameter(Mandatory=$true,ParameterSetName='FunctionsAndPermissions',HelpMessage='Database name',Position=2)]
+        [Parameter(Mandatory=$true,ParameterSetName='FunctionAndPermissions',HelpMessage='Database name',Position=2)]
         [Parameter(Mandatory=$true,ParameterSetName='Functions',HelpMessage='Database name',Position=2)]
         [Parameter(Mandatory=$true,ParameterSetName='Permissions',HelpMessage='Database name',Position=2)]
         [ValidateNotNullorEmpty()]
         [Alias('Dbs')]
         [string]$Database,
-        [Parameter(Mandatory=$false,ParameterSetName='FunctionsAndPermissions',Position=5)]
+        [Parameter(Mandatory=$false,ParameterSetName='FunctionAndPermissions',Position=5)]
         [Parameter(Mandatory=$false,ParameterSetName='Functions',Position=5)]
         [Parameter(Mandatory=$false,ParameterSetName='Permissions',Position=5)]
         [ValidateNotNullorEmpty()]
         [Alias('Tmo')]
         [int]$ConnectionTimeout = 0,
-        [Parameter(Mandatory=$false,ParameterSetName='FunctionsAndPermissions',Position=6)]
+        [Parameter(Mandatory=$false,ParameterSetName='FunctionAndPermissions',Position=6)]
         [Parameter(Mandatory=$false,ParameterSetName='Functions',Position=6)]
         [Parameter(Mandatory=$false,ParameterSetName='Permissions',Position=6)]
         [Alias('SQLAuth')]
         [switch]$UseSQLAuthentication,
-        [Parameter(Mandatory=$false,ParameterSetName='FunctionsAndPermissions',Position=7)]
+        [Parameter(Mandatory=$false,ParameterSetName='FunctionAndPermissions',Position=7)]
         [Parameter(Mandatory=$false,ParameterSetName='Functions',Position=7)]
         [ValidateNotNullorEmpty()]
         [Alias('Force')]
@@ -920,8 +922,7 @@ Function Add-RISQLExtension {
                         DROP FUNCTION [dbo].[$FunctionName]
                     END
 "@
-                If (($($PSCmdlet.ParameterSetName) -eq 'Functions') -or ($($PSCmdlet.ParameterSetName) -eq 'FunctionsAndPermissions')) {
-
+                If (($($PSCmdlet.ParameterSetName) -eq 'Functions') -or ($($PSCmdlet.ParameterSetName) -eq 'FunctionAndPermissions')) {
                     ## Perform function cleanup
                     If ($Overwrite) {
                         Write-Verbose -Message "Performing [$FunctionName] function cleanup..."
@@ -932,15 +933,16 @@ Function Add-RISQLExtension {
                     Write-Verbose -Message "Installing [$FunctionName] function..."
                     Invoke-SQLCommand -ServerInstance $ServerInstance -Database $Database -Query $InstallFunction -UseSQLAuthentication:$UseSQLAuthentication
                 }
-                If (($($PSCmdlet.ParameterSetName) -eq 'Permissions') -or ($($PSCmdlet.ParameterSetName) -eq 'FunctionsAndPermissions')) {
-
+                If (($($PSCmdlet.ParameterSetName) -eq 'Permissions') -or ($($PSCmdlet.ParameterSetName) -eq 'FunctionAndPermissions')) {
                     ## Process permissions
                     ForEach ($Permission in $Permissions) {
-                        #  Set variables
+
+                        ## Set variables
                         [string]$PermissionName = $($Permission.BaseName)
                         [string]$PermissionPath = $($Permission.FullName)
                         [string]$GrantPermission = Get-Content -Path $PermissionPath | Out-String
-                        #  Grant permissions
+
+                        ## Grant permissions
                         Write-Verbose -Message "Granting permissions from [$PermissionName]..."
                         Invoke-SQLCommand -ServerInstance $ServerInstance -Database $Database -Query $GrantPermission -UseSQLAuthentication:$UseSQLAuthentication
                     }
@@ -973,7 +975,7 @@ Try {
 
     ## Check if the ReportingServicesTools powerhshell module is installed
     $TestReportingServicesTools = Get-Module -Name 'ReportingServicesTools' -ErrorAction 'SilentlyContinue'
-    If (-not $TestReportingServicesTools -and -not $ExtensionsOnly) {
+    If (-not $TestReportingServicesTools) {
         Do {
             $AskUser = Read-Host -Prompt '[ReportingServicesTools] module is required for this installer. Allow installation? [y/n] (If you choose [n] the installer will exit!)'
         }
