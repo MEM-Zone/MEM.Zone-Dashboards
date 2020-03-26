@@ -4596,7 +4596,7 @@ WHERE Alert.FeatureArea IN (@AlertFeatureArea)
             </Style>
           </Line>
         </ReportItems>
-        <Height>7.89733cm</Height>
+        <Height>7.12095cm</Height>
         <Style>
           <Border>
             <Style>None</Style>
@@ -4606,7 +4606,7 @@ WHERE Alert.FeatureArea IN (@AlertFeatureArea)
       <Width>49.29074cm</Width>
       <Page>
         <PageHeader>
-          <Height>2.49515cm</Height>
+          <Height>1.0664cm</Height>
           <PrintOnFirstPage>true</PrintOnFirstPage>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>
@@ -4630,7 +4630,7 @@ WHERE Alert.FeatureArea IN (@AlertFeatureArea)
                   </Style>
                 </Paragraph>
               </Paragraphs>
-              <Top>1.59698cm</Top>
+              <Top>0.127cm</Top>
               <Left>0.127cm</Left>
               <Height>0.89817cm</Height>
               <Width>24.95739cm</Width>
@@ -4646,7 +4646,7 @@ WHERE Alert.FeatureArea IN (@AlertFeatureArea)
               </Style>
             </Textbox>
             <Line Name="LN_ReportHeader">
-              <Top>1.53141cm</Top>
+              <Top>0.13441cm</Top>
               <Left>0.127cm</Left>
               <Height>0cm</Height>
               <Width>48.97461cm</Width>

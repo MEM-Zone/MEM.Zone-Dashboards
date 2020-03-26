@@ -800,7 +800,7 @@ GROUP BY
             </ReportItems>
             <KeepTogether>true</KeepTogether>
             <Top>9.67035cm</Top>
-            <Left>24.64559cm</Left>
+            <Left>27.841cm</Left>
             <Height>3.91cm</Height>
             <Width>8cm</Width>
             <Style>
@@ -892,7 +892,7 @@ GROUP BY
             </ReportItems>
             <KeepTogether>true</KeepTogether>
             <Top>13.76174cm</Top>
-            <Left>24.64559cm</Left>
+            <Left>27.841cm</Left>
             <Height>3.91cm</Height>
             <Width>8cm</Width>
             <ZIndex>1</ZIndex>
@@ -1480,6 +1480,18 @@ GROUP BY
                   <BackgroundColor>#00ffffff</BackgroundColor>
                   <BackgroundGradientType>None</BackgroundGradientType>
                 </Style>
+                <ChartElementPosition>
+                  <Top>13</Top>
+                  <Left>3</Left>
+                  <Height>68</Height>
+                  <Width>94</Width>
+                </ChartElementPosition>
+                <ChartInnerPlotPosition>
+                  <Top>2.5</Top>
+                  <Left>15.6</Left>
+                  <Height>95</Height>
+                  <Width>69</Width>
+                </ChartInnerPlotPosition>
               </ChartArea>
             </ChartAreas>
             <ChartLegends>
@@ -1558,7 +1570,7 @@ GROUP BY
               </Style>
             </ChartNoDataMessage>
             <DataSetName>UpdateComplianceSummarization</DataSetName>
-            <Top>1.32753cm</Top>
+            <Top>1.35285cm</Top>
             <Left>0.127cm</Left>
             <Height>8cm</Height>
             <Width>8cm</Width>
@@ -1928,6 +1940,18 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
                   <BackgroundColor>#00ffffff</BackgroundColor>
                   <BackgroundGradientType>None</BackgroundGradientType>
                 </Style>
+                <ChartElementPosition>
+                  <Top>13</Top>
+                  <Left>3</Left>
+                  <Height>68</Height>
+                  <Width>94</Width>
+                </ChartElementPosition>
+                <ChartInnerPlotPosition>
+                  <Top>2.5</Top>
+                  <Left>15.6</Left>
+                  <Height>95</Height>
+                  <Width>69</Width>
+                </ChartInnerPlotPosition>
               </ChartArea>
             </ChartAreas>
             <ChartLegends>
@@ -2009,7 +2033,7 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
               </Style>
             </ChartNoDataMessage>
             <DataSetName>UpdateComplianceSummarization</DataSetName>
-            <Top>1.32753cm</Top>
+            <Top>1.35285cm</Top>
             <Left>8.29281cm</Left>
             <Height>8cm</Height>
             <Width>8cm</Width>
@@ -2027,7 +2051,7 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
             <Top>1.18642cm</Top>
             <Left>0.127cm</Left>
             <Height>0cm</Height>
-            <Width>32.51859cm</Width>
+            <Width>35.714cm</Width>
             <ZIndex>5</ZIndex>
             <Style>
               <Border>
@@ -2057,7 +2081,7 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
             <Top>9.49396cm</Top>
             <Left>0.127cm</Left>
             <Height>0cm</Height>
-            <Width>32.5186cm</Width>
+            <Width>35.714cm</Width>
             <ZIndex>6</ZIndex>
             <Style>
               <Border>
@@ -2501,10 +2525,10 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
               </Style>
             </ChartNoDataMessage>
             <DataSetName>UpdateComplianceSummarization</DataSetName>
-            <Top>9.76229cm</Top>
+            <Top>9.66704cm</Top>
             <Left>0.16228cm</Left>
             <Height>8cm</Height>
-            <Width>24.3422cm</Width>
+            <Width>27.50234cm</Width>
             <ZIndex>7</ZIndex>
             <Bookmark>Chart</Bookmark>
             <Style>
@@ -2534,7 +2558,7 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
                   </Group>
                   <SortExpressions>
                     <SortExpression>
-                      <Value>=Fields!ScanState.Value</Value>
+                      <Value>=Fields!DevicesByScanState.Value</Value>
                     </SortExpression>
                   </SortExpressions>
                   <Label>=Fields!ScanState.Value</Label>
@@ -2591,7 +2615,7 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
                       <DataElementOutput>Output</DataElementOutput>
                     </ChartDataPoint>
                   </ChartDataPoints>
-                  <Type>Shape</Type>
+                  <Type>Bar</Type>
                   <Style />
                   <ChartEmptyPoints>
                     <Style />
@@ -2777,6 +2801,7 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
                     <CrossAt>NaN</CrossAt>
                     <Minimum>NaN</Minimum>
                     <Maximum>NaN</Maximum>
+                    <HideLabels>true</HideLabels>
                     <ChartAxisScaleBreak>
                       <Style />
                     </ChartAxisScaleBreak>
@@ -2841,6 +2866,12 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
                   <BackgroundColor>#00ffffff</BackgroundColor>
                   <BackgroundGradientType>None</BackgroundGradientType>
                 </Style>
+                <ChartInnerPlotPosition>
+                  <Top>2.5</Top>
+                  <Left>15.6</Left>
+                  <Height>95</Height>
+                  <Width>85</Width>
+                </ChartInnerPlotPosition>
               </ChartArea>
             </ChartAreas>
             <ChartLegends>
@@ -2907,10 +2938,10 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
               </Style>
             </ChartNoDataMessage>
             <DataSetName>ScanStatesSummarization</DataSetName>
-            <Top>1.32753cm</Top>
-            <Left>16.4692cm</Left>
+            <Top>1.35285cm</Top>
+            <Left>24.69245cm</Left>
             <Height>8cm</Height>
-            <Width>8cm</Width>
+            <Width>11.14855cm</Width>
             <ZIndex>8</ZIndex>
             <Style>
               <Border>
@@ -3310,6 +3341,18 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
                   <BackgroundColor>#00ffffff</BackgroundColor>
                   <BackgroundGradientType>None</BackgroundGradientType>
                 </Style>
+                <ChartElementPosition>
+                  <Top>13</Top>
+                  <Left>3</Left>
+                  <Height>68</Height>
+                  <Width>94</Width>
+                </ChartElementPosition>
+                <ChartInnerPlotPosition>
+                  <Top>2.5</Top>
+                  <Left>15.6</Left>
+                  <Height>95</Height>
+                  <Width>69</Width>
+                </ChartInnerPlotPosition>
               </ChartArea>
             </ChartAreas>
             <ChartLegends>
@@ -3362,8 +3405,8 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
               </Style>
             </ChartNoDataMessage>
             <DataSetName>UpdateGroupComplianceSummarization</DataSetName>
-            <Top>1.32753cm</Top>
-            <Left>24.6456cm</Left>
+            <Top>1.35285cm</Top>
+            <Left>16.48684cm</Left>
             <Height>8cm</Height>
             <Width>8cm</Width>
             <ZIndex>9</ZIndex>
@@ -3377,17 +3420,17 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
             </Style>
           </Chart>
         </ReportItems>
-        <Height>17.76229cm</Height>
+        <Height>17.67174cm</Height>
         <Style>
           <Border>
             <Style>None</Style>
           </Border>
         </Style>
       </Body>
-      <Width>32.86766cm</Width>
+      <Width>36.00504cm</Width>
       <Page>
         <PageHeader>
-          <Height>2.49515cm</Height>
+          <Height>1.05163cm</Height>
           <PrintOnFirstPage>true</PrintOnFirstPage>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>
@@ -3411,7 +3454,7 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
                   </Style>
                 </Paragraph>
               </Paragraphs>
-              <Top>1.59698cm</Top>
+              <Top>0.127cm</Top>
               <Left>0.127cm</Left>
               <Height>0.89817cm</Height>
               <Width>24.3422cm</Width>
@@ -3427,10 +3470,10 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
               </Style>
             </Textbox>
             <Line Name="LN_ReportHeader">
-              <Top>1.53141cm</Top>
+              <Top>0.127cm</Top>
               <Left>0.127cm</Left>
               <Height>0cm</Height>
-              <Width>32.5186cm</Width>
+              <Width>35.714cm</Width>
               <ZIndex>1</ZIndex>
               <Style>
                 <Border>
@@ -3464,47 +3507,15 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
           </Style>
         </PageHeader>
         <PageFooter>
-          <Height>1.25148cm</Height>
+          <Height>0.3519cm</Height>
           <PrintOnFirstPage>true</PrintOnFirstPage>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>
-            <Textbox Name="TX_ReportPageNumber">
-              <CanGrow>true</CanGrow>
-              <KeepTogether>true</KeepTogether>
-              <Paragraphs>
-                <Paragraph>
-                  <TextRuns>
-                    <TextRun>
-                      <Value>="Page: " + Globals!PageNumber.ToString() + "of " + Globals!TotalPages.ToString()</Value>
-                      <Style>
-                        <FontFamily>Segoe UI</FontFamily>
-                        <FontWeight>Bold</FontWeight>
-                      </Style>
-                    </TextRun>
-                  </TextRuns>
-                  <Style>
-                    <TextAlign>Left</TextAlign>
-                  </Style>
-                </Paragraph>
-              </Paragraphs>
-              <Top>0.38806cm</Top>
-              <Left>0.12413cm</Left>
-              <Height>0.63492cm</Height>
-              <Width>2.79292cm</Width>
-              <Style>
-                <VerticalAlign>Middle</VerticalAlign>
-                <PaddingLeft>2pt</PaddingLeft>
-                <PaddingRight>2pt</PaddingRight>
-                <PaddingTop>2pt</PaddingTop>
-                <PaddingBottom>2pt</PaddingBottom>
-              </Style>
-            </Textbox>
             <Line Name="LN_ReportFooter">
               <Top>0.1905cm</Top>
               <Left>0.127cm</Left>
               <Height>0cm</Height>
-              <Width>32.51859cm</Width>
-              <ZIndex>1</ZIndex>
+              <Width>35.714cm</Width>
               <Style>
                 <Border>
                   <Color>LightGrey</Color>

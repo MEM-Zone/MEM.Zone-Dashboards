@@ -1874,7 +1874,7 @@ FROM vSMS_SUPSyncStatus AS SUPSyncStatus
       <Width>37.71207cm</Width>
       <Page>
         <PageHeader>
-          <Height>2.49515cm</Height>
+          <Height>1.0664cm</Height>
           <PrintOnFirstPage>true</PrintOnFirstPage>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>
@@ -1898,7 +1898,7 @@ FROM vSMS_SUPSyncStatus AS SUPSyncStatus
                   </Style>
                 </Paragraph>
               </Paragraphs>
-              <Top>1.59698cm</Top>
+              <Top>0.127cm</Top>
               <Left>0.127cm</Left>
               <Height>0.89817cm</Height>
               <Width>24.95739cm</Width>
@@ -1914,7 +1914,7 @@ FROM vSMS_SUPSyncStatus AS SUPSyncStatus
               </Style>
             </Textbox>
             <Line Name="LN_ReportHeader">
-              <Top>1.53141cm</Top>
+              <Top>0.13441cm</Top>
               <Left>0.127cm</Left>
               <Height>0cm</Height>
               <Width>37.45277cm</Width>
@@ -1951,7 +1951,7 @@ FROM vSMS_SUPSyncStatus AS SUPSyncStatus
           </Style>
         </PageHeader>
         <PageFooter>
-          <Height>1.25148cm</Height>
+          <Height>1.27794cm</Height>
           <PrintOnFirstPage>true</PrintOnFirstPage>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>

@@ -2659,7 +2659,8 @@ Restart</Text>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=IIF(First(Fields!HelperFunctionExists.Value, "HelperFunctionInfo") = 0, "Missing helper function!", Fields!NextServiceWindow.Value)</Value>
+                                  <Value>=Fields!NextServiceWindow.Value</Value>
+                                  <ToolTip>=IIF(First(Fields!HelperFunctionExists.Value, "HelperFunctionInfo") = 0, "Missing SQL helper function, see help file.", Nothing)</ToolTip>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
                                     <FontSize>9pt</FontSize>
@@ -4608,6 +4609,225 @@ Restart</Text>
               </RightBorder>
             </Style>
           </Line>
+          <Textbox Name="TX_SQLHelperFunctionValue">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=IIF(First(Fields!HelperFunctionExists.Value, "HelperFunctionInfo") = 0, "Missing", "Present")</Value>
+                    <ActionInfo>
+                      <Actions>
+                        <Action>
+                          <Hyperlink>https://github.com/SCCM-Zone/CM-SRS-Dashboards/tree/master/docs/help#create-the-sql-helper-function</Hyperlink>
+                        </Action>
+                      </Actions>
+                    </ActionInfo>
+                    <ToolTip>See help file!</ToolTip>
+                    <Style>
+                      <FontFamily>Segoe UI</FontFamily>
+                      <FontSize>15pt</FontSize>
+                      <FontWeight>Normal</FontWeight>
+                      <TextDecoration>Underline</TextDecoration>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Right</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <Top>1.23179in</Top>
+            <Left>10.35953in</Left>
+            <Height>0.3765in</Height>
+            <Width>0.86897in</Width>
+            <ZIndex>15</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <VerticalAlign>Top</VerticalAlign>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="TX_SQLHelperFunction">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>SQL Helper Function</Value>
+                    <Style>
+                      <FontFamily>Segoe UI</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Center</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <Top>0.9803in</Top>
+            <Left>10.28003in</Left>
+            <Height>0.23622in</Height>
+            <Width>1.38009in</Width>
+            <ZIndex>16</ZIndex>
+            <Style>
+              <Border />
+              <VerticalAlign>Bottom</VerticalAlign>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <GaugePanel Name="GP_SQLHelperFunction">
+            <StateIndicators>
+              <StateIndicator Name="IN_SQLHelperFunction">
+                <GaugeInputValue>
+                  <Value>=IIF(First(Fields!HelperFunctionExists.Value, "HelperFunctionInfo") = 0, 0, 1)</Value>
+                  <Multiplier>1</Multiplier>
+                  <DataElementOutput>NoOutput</DataElementOutput>
+                </GaugeInputValue>
+                <TransformationType>None</TransformationType>
+                <TransformationScope />
+                <MinimumValue>
+                  <Value>NaN</Value>
+                  <Multiplier>1</Multiplier>
+                </MinimumValue>
+                <MaximumValue>
+                  <Value>NaN</Value>
+                  <Multiplier>1</Multiplier>
+                </MaximumValue>
+                <IndicatorStyle>None</IndicatorStyle>
+                <IndicatorImage>
+                  <Source>External</Source>
+                  <Value />
+                </IndicatorImage>
+                <ScaleFactor>1</ScaleFactor>
+                <IndicatorStates>
+                  <IndicatorState Name="ThreeSymbolCross">
+                    <StartValue>
+                      <Value>0</Value>
+                      <Multiplier>1</Multiplier>
+                    </StartValue>
+                    <EndValue>
+                      <Value>0</Value>
+                      <Multiplier>1</Multiplier>
+                    </EndValue>
+                    <Color>#c0433a</Color>
+                    <ScaleFactor>1</ScaleFactor>
+                    <IndicatorStyle>ThreeSymbolCross</IndicatorStyle>
+                    <IndicatorImage>
+                      <Source>External</Source>
+                      <Value />
+                    </IndicatorImage>
+                  </IndicatorState>
+                  <IndicatorState Name="ThreeSymbolCheck">
+                    <StartValue>
+                      <Value>1</Value>
+                      <Multiplier>1</Multiplier>
+                    </StartValue>
+                    <EndValue>
+                      <Value>1</Value>
+                      <Multiplier>1</Multiplier>
+                    </EndValue>
+                    <Color>#79c75b</Color>
+                    <ScaleFactor>1</ScaleFactor>
+                    <IndicatorStyle>ThreeSymbolCheck</IndicatorStyle>
+                    <IndicatorImage>
+                      <Source>External</Source>
+                      <Value />
+                    </IndicatorImage>
+                  </IndicatorState>
+                </IndicatorStates>
+                <Angle>0</Angle>
+                <StateDataElementName />
+                <rd:IconsSet>ThreeCircledSymbols</rd:IconsSet>
+                <Style>
+                  <Border>
+                    <Style>None</Style>
+                  </Border>
+                  <ShadowOffset>0pt</ShadowOffset>
+                </Style>
+                <Top>4</Top>
+                <Left>4</Left>
+                <Height>92</Height>
+                <Width>92</Width>
+              </StateIndicator>
+            </StateIndicators>
+            <AutoLayout>true</AutoLayout>
+            <BackFrame>
+              <Style>
+                <Border>
+                  <Style>None</Style>
+                </Border>
+                <BackgroundColor>Gainsboro</BackgroundColor>
+                <BackgroundGradientType>None</BackgroundGradientType>
+                <BackgroundGradientEndColor>Gray</BackgroundGradientEndColor>
+                <BackgroundHatchType>None</BackgroundHatchType>
+                <ShadowOffset>0pt</ShadowOffset>
+              </Style>
+              <FrameBackground>
+                <Style>
+                  <BackgroundColor>Silver</BackgroundColor>
+                  <BackgroundGradientType>DiagonalLeft</BackgroundGradientType>
+                  <BackgroundGradientEndColor>Gray</BackgroundGradientEndColor>
+                  <BackgroundHatchType>None</BackgroundHatchType>
+                </Style>
+              </FrameBackground>
+              <FrameImage>
+                <Source>External</Source>
+                <Value />
+              </FrameImage>
+            </BackFrame>
+            <TopImage>
+              <Source>External</Source>
+              <Value />
+            </TopImage>
+            <DataSetName>CollectionInfo</DataSetName>
+            <Top>3.25331cm</Top>
+            <Left>28.60153cm</Left>
+            <Height>0.8cm</Height>
+            <Width>0.8cm</Width>
+            <ZIndex>17</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <BackgroundColor>White</BackgroundColor>
+            </Style>
+          </GaugePanel>
+          <Line Name="LN_GaugesRight2">
+            <Top>1.44cm</Top>
+            <Left>29.89599cm</Left>
+            <Height>3.39395cm</Height>
+            <Width>0cm</Width>
+            <ZIndex>18</ZIndex>
+            <Style>
+              <Border>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+              </Border>
+              <TopBorder>
+                <Color>LightGrey</Color>
+              </TopBorder>
+              <BottomBorder>
+                <Color>LightGrey</Color>
+              </BottomBorder>
+              <LeftBorder>
+                <Color>LightGrey</Color>
+              </LeftBorder>
+              <RightBorder>
+                <Color>LightGrey</Color>
+              </RightBorder>
+            </Style>
+          </Line>
         </ReportItems>
         <Height>7.14248cm</Height>
         <Style>
@@ -4619,7 +4839,7 @@ Restart</Text>
       <Width>41.37698cm</Width>
       <Page>
         <PageHeader>
-          <Height>2.49515cm</Height>
+          <Height>1.0664cm</Height>
           <PrintOnFirstPage>true</PrintOnFirstPage>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>
@@ -4643,7 +4863,7 @@ Restart</Text>
                   </Style>
                 </Paragraph>
               </Paragraphs>
-              <Top>1.59698cm</Top>
+              <Top>0.127cm</Top>
               <Left>0.127cm</Left>
               <Height>0.89817cm</Height>
               <Width>24.95739cm</Width>
@@ -4659,7 +4879,7 @@ Restart</Text>
               </Style>
             </Textbox>
             <Line Name="LN_ReportHeader">
-              <Top>1.53141cm</Top>
+              <Top>0.127cm</Top>
               <Left>0.127cm</Left>
               <Height>0cm</Height>
               <Width>41.08284cm</Width>
