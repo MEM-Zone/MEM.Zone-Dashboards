@@ -7,7 +7,7 @@
       <Transaction>true</Transaction>
       <DataSourceReference></DataSourceReference>
       <rd:SecurityType>Integrated</rd:SecurityType>
-      <rd:DataSourceID></rd:DataSourceID>
+      <rd:DataSourceID>6fe7a601-d088-4e03-b266-36dd4f559a6d</rd:DataSourceID>
     </DataSource>
   </DataSources>
   <DataSets>

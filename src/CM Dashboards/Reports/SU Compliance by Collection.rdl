@@ -153,6 +153,7 @@ VALUES
     , ('32',  'Update Scan Late')
     , ('64',  'No Maintenance Window')
     , ('128', 'Distant Maintenance Window')
+    , ('256', 'Expired Maintenance Window')
 
 /* Initialize ClientState descriptor table */
 DECLARE @ClientState TABLE (
@@ -267,6 +268,8 @@ SELECT
         IIF(ISNULL(NextServiceWindow, 0) = 0 AND @HelperFunctionExists = 1, POWER(64, 1), 0)
         +
         IIF(NextServiceWindow &gt; (SELECT DATEADD(dd, 30, CURRENT_TIMESTAMP)), POWER(128, 1), 0)
+        +
+        IIF(NextServiceWindow &lt; (CURRENT_TIMESTAMP), POWER(256, 1), 0)
     )
     , Missing           = ISNULL(Missing, (IIF(CombinedResources.IsClient = 1, 0, NULL)))
     , Device            = (
@@ -3450,6 +3453,9 @@ Restart</Text>
                       </TablixMembers>
                     </TablixMember>
                   </TablixMembers>
+                  <KeepWithGroup>After</KeepWithGroup>
+                  <RepeatOnNewPage>true</RepeatOnNewPage>
+                  <KeepTogether>true</KeepTogether>
                 </TablixMember>
                 <TablixMember>
                   <Group Name="Details" />
@@ -5244,7 +5250,7 @@ Restart</Text>
 Function GetHealthStates (ByVal intBitMask As Integer) As String
     Dim astrHealthStates() As String = {
         "Healthy", "Unmanaged", "Inactive", "Health Evaluation Failed", "Pending Restart", "Update Scan Failed",
-        "Update Scan Late", "No Service Window", "Distant Service Window"
+        "Update Scan Late", "No Service Window", "Distant Service Window", "Expired Maintenance Window"
     }
     Dim iaHealthStates As Integer
     Dim intStep As Integer

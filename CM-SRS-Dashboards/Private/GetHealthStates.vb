@@ -25,7 +25,7 @@
 Function GetHealthStates (ByVal intBitMask As Integer) As String
     Dim astrHealthStates() As String = {
         "Healthy", "Unmanaged", "Inactive", "Health Evaluation Failed", "Pending Restart", "Update Scan Failed",
-        "Update Scan Late", "No Service Window", "Distant Service Window"
+        "Update Scan Late", "No Service Window", "Distant Service Window", "Expired Maintenance Window"
     }
     Dim iaHealthStates As Integer
     Dim intStep As Integer

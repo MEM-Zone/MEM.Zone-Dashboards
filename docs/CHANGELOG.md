@@ -1,5 +1,10 @@
 # Changelog for CM SRS Dashboards
 
+## 2.2.1 - 2020-05-18
+
+* Added `Expired Maintenance Window` status #20
+* Header rows are now properly displayed on all report pages #19
+
 ## 2.2.0 - 2020-03-23
 
 ### SU DAS Overall Compliance v2.2.0

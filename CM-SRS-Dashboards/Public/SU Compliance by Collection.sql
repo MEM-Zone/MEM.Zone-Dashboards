@@ -62,6 +62,7 @@ VALUES
     , ('32',  'Update Scan Late')
     , ('64',  'No Maintenance Window')
     , ('128', 'Distant Maintenance Window')
+    , ('256', 'Expired Maintenance Window')
 
 /* Initialize ClientState descriptor table */
 DECLARE @ClientState TABLE (
@@ -176,6 +177,8 @@ SELECT
         IIF(ISNULL(NextServiceWindow, 0) = 0 AND @HelperFunctionExists = 1, POWER(64, 1), 0)
         +
         IIF(NextServiceWindow > (SELECT DATEADD(dd, 30, CURRENT_TIMESTAMP)), POWER(128, 1), 0)
+        +
+        IIF(NextServiceWindow < (CURRENT_TIMESTAMP), POWER(256, 1), 0)
     )
     , Missing           = ISNULL(Missing, (IIF(CombinedResources.IsClient = 1, 0, NULL)))
     , Device            = (
