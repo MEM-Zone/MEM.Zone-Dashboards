@@ -1,5 +1,14 @@
 # Changelog for CM SRS Dashboards
 
+## 2.3.0 - 2020-06-10
+
+* Added `Update Vendor` support for `3rd party` update filtering #21
+* Fixed `SU Scan Status by Collection` is not devices without client #24
+* Fixed `Unknown scan state` actionable chart action error #23
+* Fixed the number of updates showing up in `Devices Missing a Specific Update` by limiting them to `TOP 30` #22
+* Fixed some others small bug or inconsistencies, replaced some functions with the `RBAC` versions
+* Improved performance by not letting SQL convert to `NVARCHAR` where not needed #25
+
 ## 2.2.1 - 2020-05-18
 
 * Added `Expired Maintenance Window` status #20

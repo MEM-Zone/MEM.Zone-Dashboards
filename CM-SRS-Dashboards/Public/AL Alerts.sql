@@ -22,8 +22,8 @@
 
 /* Testing variables !! Need to be commented for Production !! */
 DECLARE @UserSIDs         AS NVARCHAR(10) = 'Disabled';
--- DECLARE @AlertFeatureArea AS NVARCHAR(25) = 'ALERT_FEATUREAREA_4'; -- Software Update Area
--- DECLARE @AlertState       AS INT          = 0;                     -- 0 = Active, 1 = Postponed, 2 = Canceled, 3 = Unknown, 4 = Disabled, 5 = Never Triggered
+-- DECLARE @AlertFeatureArea AS NVARCHAR(25) = '4'; -- Software Update Area
+-- DECLARE @AlertState       AS INT          = 0;   -- 0 = Active, 1 = Postponed, 2 = Canceled, 3 = Unknown, 4 = Disabled, 5 = Never Triggered
 -- DECLARE @Locale           AS INT          = 2;
 
 /* Variable declaration */
@@ -34,8 +34,8 @@ SELECT
     , Alert.TypeInstanceID
     , Name                       = (
         CASE
-            WHEN Alert.Name = '$SUMCompliance2UpdateGroupDeploymentName' THEN Alert.InstanceNameParam1
-            WHEN Alert.Name = '$AntimalwareClientVersionAlertName'       THEN 'Antimalware clients out of date'
+            WHEN Alert.Name = N'$SUMCompliance2UpdateGroupDeploymentName' THEN Alert.InstanceNameParam1
+            WHEN Alert.Name = N'$AntimalwareClientVersionAlertName'       THEN N'Antimalware clients out of date'
             ELSE Alert.Name
         END
     )
@@ -44,13 +44,13 @@ SELECT
     , Alert.Severity
     , AlertState                 = (
         CASE Alert.AlertState
-            WHEN 0 THEN 'Active'
-            WHEN 1 THEN 'Postponed'
-            WHEN 2 THEN 'Canceled'
-            WHEN 3 THEN 'Unknown'
-            WHEN 4 THEN 'Disabled'
-            WHEN 5 THEN 'Never Triggered'
-            ELSE 'Not Defined'
+            WHEN 0 THEN N'Active'
+            WHEN 1 THEN N'Postponed'
+            WHEN 2 THEN N'Canceled'
+            WHEN 3 THEN N'Unknown'
+            WHEN 4 THEN N'Disabled'
+            WHEN 5 THEN N'Never Triggered'
+            ELSE N'Not Defined'
         END
     )
     , CreationTime               = CONVERT(NVARCHAR(16), Alert.CreationTime, 120)
@@ -65,6 +65,8 @@ SELECT
 FROM fnListAlerts(@LCID, @UserSIDs) AS Alert
 WHERE Alert.FeatureArea IN (@AlertFeatureArea)
    AND Alert.AlertState IN (@AlertState)
+
+select  * from fnListGeneralAlerts(1033,'0x01050000000000051500000019A3885163E6C6B9E6C9C9E356040000') AS SMS_ALERT  where ((SMS_ALERT.AlertState = 0 AND SMS_ALERT.FeatureArea = 4) AND SMS_ALERT.IsIgnored = 0)
 
 /* #endregion */
 /*##=============================================*/

@@ -76,6 +76,9 @@ ORDER BY Name</CommandText>
           <QueryParameter Name="@ExcludeArticleIDs">
             <Value>=Parameters!ExcludeArticleIDs.Value</Value>
           </QueryParameter>
+          <QueryParameter Name="@Vendors">
+            <Value>=Parameters!Vendors.Value</Value>
+          </QueryParameter>
           <QueryParameter Name="@Categories">
             <Value>=Parameters!Categories.Value</Value>
           </QueryParameter>
@@ -105,16 +108,17 @@ ORDER BY Name</CommandText>
 /* #region QueryBody */
 
 /* Testing variables !! Need to be commented for Production !! */
--- DECLARE @UserSIDs          AS NVARCHAR(10)  = 'Disabled';
--- DECLARE @CollectionID      AS NVARCHAR(10)  = 'SMS00001';
--- DECLARE @Locale            AS INT           = 2;
--- DECLARE @Categories        AS NVARCHAR(250) = 'Tools';
--- DECLARE @Targeted          AS INT           = 1;
--- DECLARE @Superseded        AS INT           = 0;
--- DECLARE @ExcludeArticleIDs AS NVARCHAR(250) = '';
+-- DECLARE @UserSIDs          AS NVARCHAR(10) = 'Disabled';
+-- DECLARE @CollectionID      AS NVARCHAR(10) = 'SMS00001';
+-- DECLARE @Locale            AS INT          = 2;
+-- DECLARE @Categories        AS NVARCHAR(50) = 'Security Updates';
+-- DECLARE @Vendors           AS NVARCHAR(50) = 'Microsoft';
+-- DECLARE @Targeted          AS INT          = 1;
+-- DECLARE @Superseded        AS INT          = 0;
+-- DECLARE @ExcludeArticleIDs AS NVARCHAR(50) = '';
 
 /* Perform cleanup */
-IF OBJECT_ID('tempdb..#SummarizationInfo', 'U') IS NOT NULL
+IF OBJECT_ID(N'tempdb..#SummarizationInfo', N'U') IS NOT NULL
     DROP TABLE #SummarizationInfo;
 
 /* Variable declaration */
@@ -138,13 +142,14 @@ WITH SummarizationInfo_CTE AS (
     SELECT DISTINCT
         ResourceID             = Systems.ResourceID
         , ArticleID            = UpdateCIs.ArticleID
-        , Title                = UpdateCIs.DisplayName
-        , Category             = CICategory.CategoryInstanceName
-        , InformationURL       = UpdateCIs.CIInformativeURL
+        , Title                = UpdateCIs.Title
+        , Category             = CICategoryClassification.CategoryInstanceName
+        , Vendor               = CICategoryCompany.CategoryInstanceName
+        , InformationURL       = UpdateCIs.InfoURL
         , UpdatesByCategory    = (
-            DENSE_RANK() OVER(PARTITION BY CICategory.CategoryInstanceName ORDER BY UpdateCIs.ArticleID)
+            DENSE_RANK() OVER(PARTITION BY CICategoryClassification.CategoryInstanceName ORDER BY UpdateCIs.ArticleID)
             +
-            DENSE_RANK() OVER(PARTITION BY CICategory.CategoryInstanceName ORDER BY UpdateCIs.ArticleID DESC)
+            DENSE_RANK() OVER(PARTITION BY CICategoryClassification.CategoryInstanceName ORDER BY UpdateCIs.ArticleID DESC)
             - 1
         )
         , TotalUniqueUpdates   = (
@@ -160,27 +165,30 @@ WITH SummarizationInfo_CTE AS (
             - 1
         )
 
- FROM fn_rbac_R_System(@UserSIDs) AS Systems
-        JOIN fn_rbac_UpdateComplianceStatus(@UserSIDs) AS ComplianceStatus ON ComplianceStatus.ResourceID = Systems.ResourceID
-            AND ComplianceStatus.Status = 2                              -- Filter on 'Required' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
-        JOIN fn_rbac_ClientCollectionMembers(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = ComplianceStatus.ResourceID
-        JOIN fn_ListUpdateCIs(@LCID) AS UpdateCIs ON UpdateCIs.CI_ID = ComplianceStatus.CI_ID
-            AND UpdateCIs.IsExpired = 0
-            AND UpdateCIs.IsSuperseded IN (@Superseded)
-            AND UpdateCIs.CIType_ID IN (1, 8)                            -- Filter on 1 Software Updates, 8 Software Update Bundle (v_CITypes)
-            AND UpdateCIs.ArticleID NOT IN (                             -- Filter on ArticleID csv list
-                SELECT VALUE FROM STRING_SPLIT(@ExcludeArticleIDs, ',')
-            )
-            AND UpdateCIs.DisplayName NOT LIKE (                         -- Filter Preview updates
-                '[1-9][0-9][0-9][0-9]-[0-9][0-9]_Preview_of_%'
-            )
-        JOIN fn_rbac_CICategoryInfo_All(@LCID, @UserSIDs) AS CICategory ON CICategory.CI_ID = ComplianceStatus.CI_ID
-            AND CICategory.CategoryTypeName = 'UpdateClassification'
-            AND CICategory.CategoryInstanceName IN (@Categories)         -- Filter on Selected Update Classification Categories
-        LEFT JOIN fn_rbac_CITargetedMachines(@UserSIDs) AS Targeted ON Targeted.ResourceID = ComplianceStatus.ResourceID
-            AND Targeted.CI_ID = ComplianceStatus.CI_ID
-    WHERE CollectionMembers.CollectionID = @CollectionID
-        AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted)        -- Filter on 'Targeted' or 'NotTargeted'
+FROM fn_rbac_R_System(@UserSIDs) AS Systems
+    JOIN fn_rbac_UpdateComplianceStatus(@UserSIDs) AS ComplianceStatus ON ComplianceStatus.ResourceID = Systems.ResourceID
+        AND ComplianceStatus.Status = 2                                    -- Filter on 'Required' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
+    JOIN fn_rbac_ClientCollectionMembers(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = ComplianceStatus.ResourceID
+    JOIN fn_rbac_UpdateInfo(@LCID, @UserSIDs) AS UpdateCIs ON UpdateCIs.CI_ID = ComplianceStatus.CI_ID
+        AND UpdateCIs.IsExpired = 0
+        AND UpdateCIs.IsSuperseded IN (@Superseded)
+        AND UpdateCIs.CIType_ID IN (1, 8)                                  -- Filter on 1 Software Updates, 8 Software Update Bundle (v_CITypes)
+        AND UpdateCIs.ArticleID NOT IN (                                   -- Filter on ArticleID csv list
+            SELECT VALUE FROM STRING_SPLIT(@ExcludeArticleIDs, ',')
+        )
+        AND UpdateCIs.Title NOT LIKE (                                     -- Filter Preview updates
+            N'[1-9][0-9][0-9][0-9]-[0-9][0-9]_Preview_of_%'
+        )
+    JOIN fn_rbac_CICategoryInfo_All(@LCID, @UserSIDs) AS CICategoryCompany ON CICategoryCompany.CI_ID = UpdateCIs.CI_ID
+        AND CICategoryCompany.CategoryTypeName = N'Company'
+        AND CICategoryCompany.CategoryInstanceName IN (@Vendors)           -- Filter on Selected Update Vendors
+    JOIN fn_rbac_CICategoryInfo_All(@LCID, @UserSIDs) AS CICategoryClassification ON CICategoryClassification.CI_ID = UpdateCIs.CI_ID
+        AND CICategoryClassification.CategoryTypeName = N'UpdateClassification'
+        AND CICategoryClassification.CategoryInstanceName IN (@Categories) -- Filter on Selected Update Classification Categories
+    LEFT JOIN fn_rbac_CITargetedMachines(@UserSIDs) AS Targeted ON Targeted.ResourceID = ComplianceStatus.ResourceID
+        AND Targeted.CI_ID = ComplianceStatus.CI_ID
+WHERE CollectionMembers.CollectionID = @CollectionID
+    AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted)              -- Filter on 'Targeted' or 'NotTargeted'
 )
 
 /* Insert into SummarizationInfo */
@@ -188,6 +196,7 @@ SELECT
     ArticleID
     , Title
     , Category
+    , Vendor
     , InformationURL
     , UpdatesByCategory
     , TotalUniqueUpdates
@@ -199,6 +208,7 @@ GROUP BY
    ArticleID
     , Title
     , Category
+    , Vendor
     , InformationURL
     , UpdatesByCategory
     , TotalUniqueUpdates
@@ -212,6 +222,7 @@ IF (SELECT COUNT(1) FROM #SummarizationInfo) = 0                         -- If c
             , Title                   = NULL
             , Category                = 'Selected Categories'
             , CategorySummarization   = 'Selected Categories'
+            , Vendor                  = NULL
             , InformationURL          = NULL
             , UpdatesByCategory       = NULL
             , TotalUniqueUpdates      = NULL
@@ -233,6 +244,7 @@ ELSE
                 Category IN ('Critical Updates', 'Security Updates', 'Feature Packs')
                 , Category, 'Others'
             )
+            , Vendor                  = Vendor
             , InformationURL          = InformationURL
             , UpdatesByCategory       = UpdatesByCategory
             , TotalUniqueUpdates      = TotalUniqueUpdates
@@ -248,6 +260,7 @@ ELSE
             ArticleID
             , Title
             , Category
+            , Vendor
             , InformationURL
             , UpdatesByCategory
             , TotalUniqueUpdates
@@ -256,7 +269,7 @@ ELSE
     END
 
 /* Perform cleanup */
-IF OBJECT_ID('tempdb..#SummarizationInfo', 'U') IS NOT NULL
+IF OBJECT_ID(N'tempdb..#SummarizationInfo', N'U') IS NOT NULL
     DROP TABLE #SummarizationInfo;
 
 /* #endregion */
@@ -281,6 +294,10 @@ IF OBJECT_ID('tempdb..#SummarizationInfo', 'U') IS NOT NULL
         <Field Name="CategorySummarization">
           <DataField>CategorySummarization</DataField>
           <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Vendor">
+          <DataField>Vendor</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
         </Field>
         <Field Name="InformationURL">
           <DataField>InformationURL</DataField>
@@ -335,12 +352,13 @@ IF OBJECT_ID('tempdb..#SummarizationInfo', 'U') IS NOT NULL
         <CommandText>/* Get Update Classification Categories */
 
 /* Variable declaration */
-DECLARE @LCID AS INT = dbo.fn_LShortNameToLCID (@Locale);
+DECLARE @LCID AS INT = dbo.fn_LShortNameToLCID(@Locale);
 
 SELECT DISTINCT CategoryInstanceName
 FROM fn_CICategoryInfo(@LCID)
-WHERE CategoryTypeName = 'UpdateClassification'
+WHERE CategoryTypeName = N'UpdateClassification'
 ORDER BY CategoryInstanceName</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
       <Fields>
         <Field Name="CategoryInstanceName">
@@ -359,9 +377,10 @@ ORDER BY CategoryInstanceName</CommandText>
         </QueryParameters>
         <CommandText>/* Get Critical Active Software Update Alerts Dataset */
 SELECT CriticalAlertCount = Count(*) FROM fn_rbac_Alert(@UserSIDs)
-WHERE FeatureArea = 'ALERT_FEATUREAREA_4' --Software Update Feature Area
-	AND Severity  = 1    --1 (Critical)
-	AND AlertState = 0 --0 (Active), 2 (Closed)</CommandText>
+WHERE FeatureArea = N'ALERT_FEATUREAREA_4' -- Software Update Feature Area
+    AND Severity  = 1                      -- 1 (Critical)
+    AND AlertState = 0                     -- 0 (Active), 2 (Closed)</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
       <Fields>
         <Field Name="CriticalAlertCount">
@@ -375,8 +394,9 @@ WHERE FeatureArea = 'ALERT_FEATUREAREA_4' --Software Update Feature Area
         <DataSourceName>CMSQLDatabase</DataSourceName>
         <CommandText>/* Get Last Successful Sync Time Dataset */
 SELECT
-	LastSuccessfulSyncTime
+    LastSuccessfulSyncTime
 FROM vSMS_SUPSyncStatus</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
       <Fields>
         <Field Name="LastSuccessfulSyncTime">
@@ -396,13 +416,14 @@ FROM vSMS_SUPSyncStatus</CommandText>
         <CommandText>/* Get 'Other' Update Classification Category */
 
 /* Variable declaration */
-DECLARE @LCID AS INT = dbo.fn_LShortNameToLCID (@Locale);
+DECLARE @LCID AS INT = dbo.fn_LShortNameToLCID(@Locale);
 
 SELECT DISTINCT CategoryInstanceName
 FROM fn_CICategoryInfo(@LCID)
-WHERE CategoryTypeName = 'UpdateClassification'
-	AND CategoryInstanceName NOT IN ('Critical Updates','Security Updates','Feature Packs')
+WHERE CategoryTypeName = N'UpdateClassification'
+    AND CategoryInstanceName NOT IN (N'Critical Updates', N'Security Updates', N'Feature Packs')
 ORDER BY CategoryInstanceName</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
       <Fields>
         <Field Name="CategoryInstanceName">
@@ -456,8 +477,8 @@ DECLARE @TotalDevices AS INT = (
 
 /* Summarize device update scan states */
 SELECT
-    ScanStateID              = StateNames.StateID
-    , ScanState              = ISNULL(StateNames.StateName, 'Unknown')
+    ScanStateID              = ISNULL(StateNames.StateID, 0)
+    , ScanState              = ISNULL(StateNames.StateName, N'Scan state unknown')
     , DevicesByScanState     = COUNT(*)
     , TotalDevices           = @TotalDevices
 FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers
@@ -582,6 +603,41 @@ GROUP BY
         <Field Name="TotalDevices">
           <DataField>TotalDevices</DataField>
           <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="UpdateVendors">
+      <Query>
+        <DataSourceName>CMSQLDatabase</DataSourceName>
+        <QueryParameters>
+          <QueryParameter Name="@Locale">
+            <Value>=Parameters!Locale.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@UserSIDs">
+            <Value>=Parameters!UserSIDs.Value</Value>
+          </QueryParameter>
+        </QueryParameters>
+        <CommandText>/* Get Update Vendors */
+DECLARE @LCID AS INT = dbo.fn_LShortNameToLCID(@Locale);
+
+SELECT DISTINCT
+    Vendor = UpdateCategoryInstance.CategoryInstanceName
+FROM
+    fn_rbac_ListUpdateCategoryInstances(@LCID, @UserSIDs) AS UpdateCategoryInstance
+WHERE (
+    UpdateCategoryInstance.CategoryTypeName = N'Company'
+        AND UpdateCategoryInstance.AllowSubscription = 1
+)
+ORDER BY Vendor</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
+      </Query>
+      <Fields>
+        <Field Name="Vendor">
+          <DataField>Vendor</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="VendorDisplayName">
+          <Value>=IIF(Fields!Vendor.Value &lt;&gt; "", Fields!Vendor.Value, SrsResources.Localization.GetString("AllValues", User!Language))</Value>
         </Field>
       </Fields>
     </DataSet>
@@ -1070,6 +1126,9 @@ GROUP BY
                                 <Parameter Name="Superseded">
                                   <Value>=Parameters!Superseded.Value</Value>
                                 </Parameter>
+                                <Parameter Name="Vendors">
+                                  <Value>=Parameters!Vendors.Value</Value>
+                                </Parameter>
                               </Parameters>
                             </Drillthrough>
                           </Action>
@@ -1146,6 +1205,9 @@ GROUP BY
                                 <Parameter Name="Superseded">
                                   <Value>=Parameters!Superseded.Value</Value>
                                 </Parameter>
+                                <Parameter Name="Vendors">
+                                  <Value>=Parameters!Vendors.Value</Value>
+                                </Parameter>
                               </Parameters>
                             </Drillthrough>
                           </Action>
@@ -1215,6 +1277,9 @@ GROUP BY
                                 </Parameter>
                                 <Parameter Name="Superseded">
                                   <Value>=Parameters!Superseded.Value</Value>
+                                </Parameter>
+                                <Parameter Name="Vendors">
+                                  <Value>=Parameters!Vendors.Value</Value>
                                 </Parameter>
                               </Parameters>
                             </Drillthrough>
@@ -1545,6 +1610,9 @@ GROUP BY
                           <Parameter Name="ExcludeArticleIDs">
                             <Value>=Parameters!ExcludeArticleIDs.Value</Value>
                           </Parameter>
+                          <Parameter Name="Vendors">
+                            <Value>=Parameters!Vendors.Value</Value>
+                          </Parameter>
                         </Parameters>
                       </Drillthrough>
                     </Action>
@@ -1654,6 +1722,9 @@ Fields!CategorySummarization.Value = "Others", 4
                                 </Parameter>
                                 <Parameter Name="Compliant">
                                   <Value>0</Value>
+                                </Parameter>
+                                <Parameter Name="Vendors">
+                                  <Value>=Parameters!Vendors.Value</Value>
                                 </Parameter>
                               </Parameters>
                             </Drillthrough>
@@ -2008,6 +2079,9 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
                           <Parameter Name="ExcludeArticleIDs">
                             <Value>=Parameters!ExcludeArticleIDs.Value</Value>
                           </Parameter>
+                          <Parameter Name="Vendors">
+                            <Value>=Parameters!Vendors.Value</Value>
+                          </Parameter>
                         </Parameters>
                       </Drillthrough>
                     </Action>
@@ -2034,7 +2108,7 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
             </ChartNoDataMessage>
             <DataSetName>UpdateComplianceSummarization</DataSetName>
             <Top>1.35285cm</Top>
-            <Left>8.29281cm</Left>
+            <Left>8.31045cm</Left>
             <Height>8cm</Height>
             <Width>8cm</Width>
             <ZIndex>4</ZIndex>
@@ -2107,439 +2181,6 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
               </RightBorder>
             </Style>
           </Line>
-          <Chart Name="CH_DevicesMissingUpdates">
-            <ChartCategoryHierarchy>
-              <ChartMembers>
-                <ChartMember>
-                  <Group Name="CG_ArticleID">
-                    <GroupExpressions>
-                      <GroupExpression>=Fields!ArticleID.Value</GroupExpression>
-                      <GroupExpression>=Fields!CategorySummarization.Value</GroupExpression>
-                    </GroupExpressions>
-                  </Group>
-                  <SortExpressions>
-                    <SortExpression>
-                      <Value>=SWITCH(
-Fields!CategorySummarization.Value = "Security Updates", 1,
-
-Fields!CategorySummarization.Value = "Critical Updates", 2,
-
-Fields!
-CategorySummarization.Value = "Feature Packs", 3,
-Fields!CategorySummarization.Value = "Others", 4
-)</Value>
-                    </SortExpression>
-                    <SortExpression>
-                      <Value>=Count(Fields!ArticleID.Value)</Value>
-                    </SortExpression>
-                  </SortExpressions>
-                  <Label>=Fields!ArticleID.Value</Label>
-                </ChartMember>
-              </ChartMembers>
-            </ChartCategoryHierarchy>
-            <ChartSeriesHierarchy>
-              <ChartMembers>
-                <ChartMember>
-                  <Label>Non Compliant By Category</Label>
-                </ChartMember>
-              </ChartMembers>
-            </ChartSeriesHierarchy>
-            <ChartData>
-              <ChartSeriesCollection>
-                <ChartSeries Name="CD_DevicesMissingUpdates">
-                  <ChartDataPoints>
-                    <ChartDataPoint>
-                      <ChartDataPointValues>
-                        <Y>=Sum(Fields!NonCompliantByCategory.Value)</Y>
-                      </ChartDataPointValues>
-                      <ChartDataLabel>
-                        <Style>
-                          <FontFamily>Segoe UI Bold</FontFamily>
-                          <FontSize>9pt</FontSize>
-                        </Style>
-                        <UseValueAsLabel>true</UseValueAsLabel>
-                        <Visible>true</Visible>
-                      </ChartDataLabel>
-                      <ToolTip>=Fields!CategorySummarization.Value &amp; ": " &amp; Fields!Title.Value</ToolTip>
-                      <ActionInfo>
-                        <Actions>
-                          <Action>
-                            <Drillthrough>
-                              <ReportName>=Globals!ReportFolder &amp; "/SU Compliance by Collection"</ReportName>
-                              <Parameters>
-                                <Parameter Name="CollectionID">
-                                  <Value>=Parameters!CollectionID.Value</Value>
-                                </Parameter>
-                                <Parameter Name="Categories">
-                                  <Value>=Parameters!Categories.Value</Value>
-                                </Parameter>
-                                <Parameter Name="Compliant">
-                                  <Value>0</Value>
-                                </Parameter>
-                                <Parameter Name="Targeted">
-                                  <Value>=Parameters!Targeted.Value</Value>
-                                </Parameter>
-                                <Parameter Name="Superseded">
-                                  <Value>=Parameters!Superseded.Value</Value>
-                                </Parameter>
-                                <Parameter Name="ArticleID">
-                                  <Value>=Fields!ArticleID.Value</Value>
-                                </Parameter>
-                              </Parameters>
-                            </Drillthrough>
-                          </Action>
-                        </Actions>
-                      </ActionInfo>
-                      <Style>
-                        <Color>=SWITCH(
-Fields!CategorySummarization.Value = "Security Updates", "#D46456",
-
-Fields!CategorySummarization.Value = "Critical Updates", "#F4BF65",
-
-Fields!CategorySummarization.Value = "Feature Packs", "#EBEBEB",
-Fields!CategorySummarization.Value = "Others", "#55BFA4"
-)</Color>
-                      </Style>
-                      <ChartMarker>
-                        <Size>10pt</Size>
-                        <Style />
-                      </ChartMarker>
-                      <DataElementOutput>Output</DataElementOutput>
-                    </ChartDataPoint>
-                  </ChartDataPoints>
-                  <Style />
-                  <ChartEmptyPoints>
-                    <Style />
-                    <ChartMarker>
-                      <Style />
-                    </ChartMarker>
-                    <ChartDataLabel>
-                      <Style />
-                    </ChartDataLabel>
-                  </ChartEmptyPoints>
-                  <ValueAxisName>Primary</ValueAxisName>
-                  <CategoryAxisName>Primary</CategoryAxisName>
-                  <ChartSmartLabel>
-                    <CalloutLineColor>Black</CalloutLineColor>
-                    <MinMovingDistance>0pt</MinMovingDistance>
-                  </ChartSmartLabel>
-                </ChartSeries>
-              </ChartSeriesCollection>
-            </ChartData>
-            <ChartAreas>
-              <ChartArea Name="CA_DevicesMissingUpdates">
-                <ChartCategoryAxes>
-                  <ChartAxis Name="Primary">
-                    <Style>
-                      <Border>
-                        <Color>Gainsboro</Color>
-                        <Style>None</Style>
-                      </Border>
-                      <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>9pt</FontSize>
-                      <Color>#5c5c5c</Color>
-                    </Style>
-                    <ChartAxisTitle>
-                      <Caption />
-                      <Style>
-                        <FontSize>9pt</FontSize>
-                        <Color>#5c5c5c</Color>
-                      </Style>
-                    </ChartAxisTitle>
-                    <Interval>1</Interval>
-                    <ChartMajorGridLines>
-                      <Enabled>False</Enabled>
-                      <Style>
-                        <Border>
-                          <Color>Gainsboro</Color>
-                        </Border>
-                      </Style>
-                    </ChartMajorGridLines>
-                    <ChartMinorGridLines>
-                      <Style>
-                        <Border>
-                          <Color>Gainsboro</Color>
-                          <Style>Dotted</Style>
-                        </Border>
-                      </Style>
-                    </ChartMinorGridLines>
-                    <ChartMajorTickMarks>
-                      <Enabled>False</Enabled>
-                      <Style>
-                        <Border>
-                          <Color>Gainsboro</Color>
-                          <Style>None</Style>
-                        </Border>
-                      </Style>
-                    </ChartMajorTickMarks>
-                    <ChartMinorTickMarks>
-                      <Style>
-                        <Border>
-                          <Color>Gainsboro</Color>
-                        </Border>
-                      </Style>
-                      <Length>0.5</Length>
-                    </ChartMinorTickMarks>
-                    <CrossAt>NaN</CrossAt>
-                    <Minimum>NaN</Minimum>
-                    <Maximum>NaN</Maximum>
-                    <ChartAxisScaleBreak>
-                      <Style />
-                    </ChartAxisScaleBreak>
-                  </ChartAxis>
-                  <ChartAxis Name="Secondary">
-                    <Visible>False</Visible>
-                    <Style>
-                      <Border>
-                        <Color>Gainsboro</Color>
-                        <Style>None</Style>
-                      </Border>
-                      <FontSize>8pt</FontSize>
-                      <Color>#5c5c5c</Color>
-                    </Style>
-                    <ChartAxisTitle>
-                      <Caption />
-                      <Style>
-                        <FontSize>9pt</FontSize>
-                        <Color>#5c5c5c</Color>
-                      </Style>
-                    </ChartAxisTitle>
-                    <ChartMajorGridLines>
-                      <Enabled>False</Enabled>
-                      <Style>
-                        <Border>
-                          <Color>Gainsboro</Color>
-                        </Border>
-                      </Style>
-                    </ChartMajorGridLines>
-                    <ChartMinorGridLines>
-                      <Style>
-                        <Border>
-                          <Color>Gainsboro</Color>
-                          <Style>Dotted</Style>
-                        </Border>
-                      </Style>
-                    </ChartMinorGridLines>
-                    <ChartMajorTickMarks>
-                      <Style>
-                        <Border>
-                          <Color>Gainsboro</Color>
-                          <Style>None</Style>
-                        </Border>
-                      </Style>
-                    </ChartMajorTickMarks>
-                    <ChartMinorTickMarks>
-                      <Style>
-                        <Border>
-                          <Color>Gainsboro</Color>
-                        </Border>
-                      </Style>
-                      <Length>0.5</Length>
-                    </ChartMinorTickMarks>
-                    <CrossAt>NaN</CrossAt>
-                    <Location>Opposite</Location>
-                    <Minimum>NaN</Minimum>
-                    <Maximum>NaN</Maximum>
-                    <ChartAxisScaleBreak>
-                      <Style />
-                    </ChartAxisScaleBreak>
-                  </ChartAxis>
-                </ChartCategoryAxes>
-                <ChartValueAxes>
-                  <ChartAxis Name="Primary">
-                    <Style>
-                      <Border>
-                        <Color>Gainsboro</Color>
-                        <Style>Solid</Style>
-                      </Border>
-                      <FontFamily>Segoe UI</FontFamily>
-                      <FontSize>9pt</FontSize>
-                      <Color>#5c5c5c</Color>
-                    </Style>
-                    <ChartAxisTitle>
-                      <Caption />
-                      <Style>
-                        <FontSize>9pt</FontSize>
-                        <Color>#5c5c5c</Color>
-                      </Style>
-                    </ChartAxisTitle>
-                    <IntervalType>Number</IntervalType>
-                    <ChartMajorGridLines>
-                      <Enabled>False</Enabled>
-                      <Style>
-                        <Border>
-                          <Color>Gainsboro</Color>
-                        </Border>
-                      </Style>
-                    </ChartMajorGridLines>
-                    <ChartMinorGridLines>
-                      <Style>
-                        <Border>
-                          <Color>Gainsboro</Color>
-                          <Style>Dotted</Style>
-                        </Border>
-                      </Style>
-                    </ChartMinorGridLines>
-                    <ChartMajorTickMarks>
-                      <Style>
-                        <Border>
-                          <Color>Gainsboro</Color>
-                          <Style>None</Style>
-                        </Border>
-                      </Style>
-                      <IntervalType>Number</IntervalType>
-                    </ChartMajorTickMarks>
-                    <ChartMinorTickMarks>
-                      <Enabled>True</Enabled>
-                      <Style>
-                        <Border>
-                          <Color>Gainsboro</Color>
-                        </Border>
-                      </Style>
-                      <Length>0.5</Length>
-                      <IntervalType>Number</IntervalType>
-                    </ChartMinorTickMarks>
-                    <CrossAt>NaN</CrossAt>
-                    <Minimum>NaN</Minimum>
-                    <Maximum>NaN</Maximum>
-                    <ChartAxisScaleBreak>
-                      <Style />
-                    </ChartAxisScaleBreak>
-                  </ChartAxis>
-                  <ChartAxis Name="Secondary">
-                    <Visible>False</Visible>
-                    <Style>
-                      <Border>
-                        <Color>Gainsboro</Color>
-                        <Style>None</Style>
-                      </Border>
-                      <FontSize>8pt</FontSize>
-                      <Color>#5c5c5c</Color>
-                    </Style>
-                    <ChartAxisTitle>
-                      <Caption />
-                      <Style>
-                        <FontSize>9pt</FontSize>
-                        <Color>#5c5c5c</Color>
-                      </Style>
-                    </ChartAxisTitle>
-                    <ChartMajorGridLines>
-                      <Style>
-                        <Border>
-                          <Color>Gainsboro</Color>
-                        </Border>
-                      </Style>
-                    </ChartMajorGridLines>
-                    <ChartMinorGridLines>
-                      <Style>
-                        <Border>
-                          <Color>Gainsboro</Color>
-                          <Style>Dotted</Style>
-                        </Border>
-                      </Style>
-                    </ChartMinorGridLines>
-                    <ChartMajorTickMarks>
-                      <Style>
-                        <Border>
-                          <Color>Gainsboro</Color>
-                          <Style>None</Style>
-                        </Border>
-                      </Style>
-                    </ChartMajorTickMarks>
-                    <ChartMinorTickMarks>
-                      <Style>
-                        <Border>
-                          <Color>Gainsboro</Color>
-                        </Border>
-                      </Style>
-                      <Length>0.5</Length>
-                    </ChartMinorTickMarks>
-                    <CrossAt>NaN</CrossAt>
-                    <Location>Opposite</Location>
-                    <Minimum>NaN</Minimum>
-                    <Maximum>NaN</Maximum>
-                    <ChartAxisScaleBreak>
-                      <Style />
-                    </ChartAxisScaleBreak>
-                  </ChartAxis>
-                </ChartValueAxes>
-                <Style>
-                  <BackgroundColor>#00ffffff</BackgroundColor>
-                  <BackgroundGradientType>None</BackgroundGradientType>
-                </Style>
-              </ChartArea>
-            </ChartAreas>
-            <ChartTitles>
-              <ChartTitle Name="CT_DevicesMissingUpdates">
-                <Caption> Devices Missing a Specific Update</Caption>
-                <Style>
-                  <BackgroundGradientType>None</BackgroundGradientType>
-                  <FontFamily>Segoe UI</FontFamily>
-                  <TextDecoration>Underline</TextDecoration>
-                  <TextAlign>General</TextAlign>
-                  <VerticalAlign>Top</VerticalAlign>
-                </Style>
-                <ActionInfo>
-                  <Actions>
-                    <Action>
-                      <Drillthrough>
-                        <ReportName>=Globals!ReportFolder &amp; "/SU Compliance by Collection"</ReportName>
-                        <Parameters>
-                          <Parameter Name="CollectionID">
-                            <Value>=Parameters!CollectionID.Value</Value>
-                          </Parameter>
-                          <Parameter Name="Categories">
-                            <Value>=Parameters!Categories.Value</Value>
-                          </Parameter>
-                          <Parameter Name="Compliant">
-                            <Value>0</Value>
-                          </Parameter>
-                          <Parameter Name="Targeted">
-                            <Value>=Parameters!Targeted.Value</Value>
-                          </Parameter>
-                          <Parameter Name="Superseded">
-                            <Value>=Parameters!Superseded.Value</Value>
-                          </Parameter>
-                        </Parameters>
-                      </Drillthrough>
-                    </Action>
-                  </Actions>
-                </ActionInfo>
-              </ChartTitle>
-            </ChartTitles>
-            <Palette>Pacific</Palette>
-            <ChartBorderSkin>
-              <Style>
-                <BackgroundColor>Gray</BackgroundColor>
-                <BackgroundGradientType>None</BackgroundGradientType>
-                <Color>White</Color>
-              </Style>
-            </ChartBorderSkin>
-            <ChartNoDataMessage Name="NoDataMessage">
-              <Caption>No Data Available</Caption>
-              <Style>
-                <BackgroundGradientType>None</BackgroundGradientType>
-                <FontWeight>Bold</FontWeight>
-                <TextAlign>General</TextAlign>
-                <VerticalAlign>Top</VerticalAlign>
-              </Style>
-            </ChartNoDataMessage>
-            <DataSetName>UpdateComplianceSummarization</DataSetName>
-            <Top>9.66704cm</Top>
-            <Left>0.16228cm</Left>
-            <Height>8cm</Height>
-            <Width>27.50234cm</Width>
-            <ZIndex>7</ZIndex>
-            <Bookmark>Chart</Bookmark>
-            <Style>
-              <Border>
-                <Color>LightGrey</Color>
-                <Style>None</Style>
-              </Border>
-              <BackgroundColor>White</BackgroundColor>
-              <BackgroundGradientType>None</BackgroundGradientType>
-            </Style>
-          </Chart>
           <Chart Name="CH_UpdateAgentScanStates">
             <ChartCategoryHierarchy>
               <ChartMembers>
@@ -2604,7 +2245,7 @@ Fields!CategorySummarization.Value = "Others", "#55BFA4"
                         <Color>=SWITCH(
 Fields!ScanState.Value = "Scan completed", "#55bfa4",
 Fields!ScanState.Value = "Scan is running", "#EBEBEB",
-Fields!ScanState.Value = "Unknown", "#FFE279",
+Fields!ScanState.Value = "Scan state unknown", "#FFE279",
 Fields!ScanState.Value = "Scan failed", "#D46456",
  Fields!ScanState.Value = "Scan completed with errors", "#E77061"
 )</Color>
@@ -2942,7 +2583,455 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
             <Left>24.69245cm</Left>
             <Height>8cm</Height>
             <Width>11.14855cm</Width>
+            <ZIndex>7</ZIndex>
+            <Style>
+              <Border>
+                <Color>LightGrey</Color>
+                <Style>None</Style>
+              </Border>
+              <BackgroundColor>White</BackgroundColor>
+              <BackgroundGradientType>None</BackgroundGradientType>
+            </Style>
+          </Chart>
+          <Chart Name="CH_DevicesMissingUpdates">
+            <ChartCategoryHierarchy>
+              <ChartMembers>
+                <ChartMember>
+                  <Group Name="CG_ArticleID">
+                    <GroupExpressions>
+                      <GroupExpression>=Fields!ArticleID.Value</GroupExpression>
+                      <GroupExpression>=Fields!CategorySummarization.Value</GroupExpression>
+                    </GroupExpressions>
+                  </Group>
+                  <SortExpressions>
+                    <SortExpression>
+                      <Value>=SWITCH(
+Fields!CategorySummarization.Value = "Security Updates", 1,
+
+Fields!CategorySummarization.Value = "Critical Updates", 2,
+
+Fields!
+CategorySummarization.Value = "Feature Packs", 3,
+Fields!CategorySummarization.Value = "Others", 4
+)</Value>
+                    </SortExpression>
+                    <SortExpression>
+                      <Value>=Fields!CompliantByCategory.Value</Value>
+                    </SortExpression>
+                  </SortExpressions>
+                  <Label>=Fields!ArticleID.Value</Label>
+                </ChartMember>
+              </ChartMembers>
+            </ChartCategoryHierarchy>
+            <ChartSeriesHierarchy>
+              <ChartMembers>
+                <ChartMember>
+                  <Label>Non Compliant By Category</Label>
+                </ChartMember>
+              </ChartMembers>
+            </ChartSeriesHierarchy>
+            <ChartData>
+              <ChartSeriesCollection>
+                <ChartSeries Name="CD_DevicesMissingUpdates">
+                  <ChartDataPoints>
+                    <ChartDataPoint>
+                      <ChartDataPointValues>
+                        <Y>=Sum(Fields!NonCompliantByCategory.Value)</Y>
+                      </ChartDataPointValues>
+                      <ChartDataLabel>
+                        <Style>
+                          <FontFamily>Segoe UI Bold</FontFamily>
+                          <FontSize>9pt</FontSize>
+                        </Style>
+                        <UseValueAsLabel>true</UseValueAsLabel>
+                        <Visible>true</Visible>
+                      </ChartDataLabel>
+                      <ToolTip>=Fields!CategorySummarization.Value &amp; ": " &amp; Fields!Title.Value</ToolTip>
+                      <ActionInfo>
+                        <Actions>
+                          <Action>
+                            <Drillthrough>
+                              <ReportName>=Globals!ReportFolder &amp; "/SU Compliance by Collection"</ReportName>
+                              <Parameters>
+                                <Parameter Name="CollectionID">
+                                  <Value>=Parameters!CollectionID.Value</Value>
+                                </Parameter>
+                                <Parameter Name="Categories">
+                                  <Value>=Parameters!Categories.Value</Value>
+                                </Parameter>
+                                <Parameter Name="Compliant">
+                                  <Value>0</Value>
+                                </Parameter>
+                                <Parameter Name="Targeted">
+                                  <Value>=Parameters!Targeted.Value</Value>
+                                </Parameter>
+                                <Parameter Name="Superseded">
+                                  <Value>=Parameters!Superseded.Value</Value>
+                                </Parameter>
+                                <Parameter Name="ArticleID">
+                                  <Value>=Fields!ArticleID.Value</Value>
+                                </Parameter>
+                                <Parameter Name="Vendors">
+                                  <Value>=Parameters!Vendors.Value</Value>
+                                </Parameter>
+                              </Parameters>
+                            </Drillthrough>
+                          </Action>
+                        </Actions>
+                      </ActionInfo>
+                      <Style>
+                        <Color>=SWITCH(
+Fields!CategorySummarization.Value = "Security Updates", "#D46456",
+
+Fields!CategorySummarization.Value = "Critical Updates", "#F4BF65",
+
+Fields!CategorySummarization.Value = "Feature Packs", "#EBEBEB",
+Fields!CategorySummarization.Value = "Others", "#55BFA4"
+)</Color>
+                      </Style>
+                      <ChartMarker>
+                        <Size>10pt</Size>
+                        <Style />
+                      </ChartMarker>
+                      <DataElementOutput>Output</DataElementOutput>
+                    </ChartDataPoint>
+                  </ChartDataPoints>
+                  <Style />
+                  <ChartEmptyPoints>
+                    <Style />
+                    <ChartMarker>
+                      <Style />
+                    </ChartMarker>
+                    <ChartDataLabel>
+                      <Style />
+                    </ChartDataLabel>
+                  </ChartEmptyPoints>
+                  <ValueAxisName>Primary</ValueAxisName>
+                  <CategoryAxisName>Primary</CategoryAxisName>
+                  <ChartSmartLabel>
+                    <CalloutLineColor>Black</CalloutLineColor>
+                    <MinMovingDistance>0pt</MinMovingDistance>
+                  </ChartSmartLabel>
+                </ChartSeries>
+              </ChartSeriesCollection>
+            </ChartData>
+            <ChartAreas>
+              <ChartArea Name="CA_DevicesMissingUpdates">
+                <ChartCategoryAxes>
+                  <ChartAxis Name="Primary">
+                    <Style>
+                      <Border>
+                        <Color>Gainsboro</Color>
+                        <Style>None</Style>
+                      </Border>
+                      <FontFamily>Segoe UI</FontFamily>
+                      <FontSize>9pt</FontSize>
+                      <Color>#5c5c5c</Color>
+                    </Style>
+                    <ChartAxisTitle>
+                      <Caption />
+                      <Style>
+                        <FontSize>9pt</FontSize>
+                        <Color>#5c5c5c</Color>
+                      </Style>
+                    </ChartAxisTitle>
+                    <Interval>1</Interval>
+                    <ChartMajorGridLines>
+                      <Enabled>False</Enabled>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                    </ChartMajorGridLines>
+                    <ChartMinorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>Dotted</Style>
+                        </Border>
+                      </Style>
+                    </ChartMinorGridLines>
+                    <ChartMajorTickMarks>
+                      <Enabled>False</Enabled>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>None</Style>
+                        </Border>
+                      </Style>
+                    </ChartMajorTickMarks>
+                    <ChartMinorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                      <Length>0.5</Length>
+                    </ChartMinorTickMarks>
+                    <CrossAt>NaN</CrossAt>
+                    <Minimum>NaN</Minimum>
+                    <Maximum>NaN</Maximum>
+                    <ChartAxisScaleBreak>
+                      <Style />
+                    </ChartAxisScaleBreak>
+                  </ChartAxis>
+                  <ChartAxis Name="Secondary">
+                    <Visible>False</Visible>
+                    <Style>
+                      <Border>
+                        <Color>Gainsboro</Color>
+                        <Style>None</Style>
+                      </Border>
+                      <FontSize>8pt</FontSize>
+                      <Color>#5c5c5c</Color>
+                    </Style>
+                    <ChartAxisTitle>
+                      <Caption />
+                      <Style>
+                        <FontSize>9pt</FontSize>
+                        <Color>#5c5c5c</Color>
+                      </Style>
+                    </ChartAxisTitle>
+                    <ChartMajorGridLines>
+                      <Enabled>False</Enabled>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                    </ChartMajorGridLines>
+                    <ChartMinorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>Dotted</Style>
+                        </Border>
+                      </Style>
+                    </ChartMinorGridLines>
+                    <ChartMajorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>None</Style>
+                        </Border>
+                      </Style>
+                    </ChartMajorTickMarks>
+                    <ChartMinorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                      <Length>0.5</Length>
+                    </ChartMinorTickMarks>
+                    <CrossAt>NaN</CrossAt>
+                    <Location>Opposite</Location>
+                    <Minimum>NaN</Minimum>
+                    <Maximum>NaN</Maximum>
+                    <ChartAxisScaleBreak>
+                      <Style />
+                    </ChartAxisScaleBreak>
+                  </ChartAxis>
+                </ChartCategoryAxes>
+                <ChartValueAxes>
+                  <ChartAxis Name="Primary">
+                    <Style>
+                      <Border>
+                        <Color>Gainsboro</Color>
+                        <Style>Solid</Style>
+                      </Border>
+                      <FontFamily>Segoe UI</FontFamily>
+                      <FontSize>9pt</FontSize>
+                      <Color>#5c5c5c</Color>
+                    </Style>
+                    <ChartAxisTitle>
+                      <Caption />
+                      <Style>
+                        <FontSize>9pt</FontSize>
+                        <Color>#5c5c5c</Color>
+                      </Style>
+                    </ChartAxisTitle>
+                    <IntervalType>Number</IntervalType>
+                    <ChartMajorGridLines>
+                      <Enabled>False</Enabled>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                    </ChartMajorGridLines>
+                    <ChartMinorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>Dotted</Style>
+                        </Border>
+                      </Style>
+                    </ChartMinorGridLines>
+                    <ChartMajorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>None</Style>
+                        </Border>
+                      </Style>
+                      <IntervalType>Number</IntervalType>
+                    </ChartMajorTickMarks>
+                    <ChartMinorTickMarks>
+                      <Enabled>True</Enabled>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                      <Length>0.5</Length>
+                      <IntervalType>Number</IntervalType>
+                    </ChartMinorTickMarks>
+                    <CrossAt>NaN</CrossAt>
+                    <Minimum>NaN</Minimum>
+                    <Maximum>NaN</Maximum>
+                    <ChartAxisScaleBreak>
+                      <Style />
+                    </ChartAxisScaleBreak>
+                  </ChartAxis>
+                  <ChartAxis Name="Secondary">
+                    <Visible>False</Visible>
+                    <Style>
+                      <Border>
+                        <Color>Gainsboro</Color>
+                        <Style>None</Style>
+                      </Border>
+                      <FontSize>8pt</FontSize>
+                      <Color>#5c5c5c</Color>
+                    </Style>
+                    <ChartAxisTitle>
+                      <Caption />
+                      <Style>
+                        <FontSize>9pt</FontSize>
+                        <Color>#5c5c5c</Color>
+                      </Style>
+                    </ChartAxisTitle>
+                    <ChartMajorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                    </ChartMajorGridLines>
+                    <ChartMinorGridLines>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>Dotted</Style>
+                        </Border>
+                      </Style>
+                    </ChartMinorGridLines>
+                    <ChartMajorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                          <Style>None</Style>
+                        </Border>
+                      </Style>
+                    </ChartMajorTickMarks>
+                    <ChartMinorTickMarks>
+                      <Style>
+                        <Border>
+                          <Color>Gainsboro</Color>
+                        </Border>
+                      </Style>
+                      <Length>0.5</Length>
+                    </ChartMinorTickMarks>
+                    <CrossAt>NaN</CrossAt>
+                    <Location>Opposite</Location>
+                    <Minimum>NaN</Minimum>
+                    <Maximum>NaN</Maximum>
+                    <ChartAxisScaleBreak>
+                      <Style />
+                    </ChartAxisScaleBreak>
+                  </ChartAxis>
+                </ChartValueAxes>
+                <Style>
+                  <BackgroundColor>#00ffffff</BackgroundColor>
+                  <BackgroundGradientType>None</BackgroundGradientType>
+                </Style>
+              </ChartArea>
+            </ChartAreas>
+            <ChartTitles>
+              <ChartTitle Name="CT_DevicesMissingUpdates">
+                <Caption>Devices Missing Updates</Caption>
+                <Style>
+                  <BackgroundGradientType>None</BackgroundGradientType>
+                  <FontFamily>Segoe UI</FontFamily>
+                  <TextDecoration>Underline</TextDecoration>
+                  <TextAlign>General</TextAlign>
+                  <VerticalAlign>Top</VerticalAlign>
+                </Style>
+                <ActionInfo>
+                  <Actions>
+                    <Action>
+                      <Drillthrough>
+                        <ReportName>=Globals!ReportFolder &amp; "/SU Compliance by Collection"</ReportName>
+                        <Parameters>
+                          <Parameter Name="CollectionID">
+                            <Value>=Parameters!CollectionID.Value</Value>
+                          </Parameter>
+                          <Parameter Name="Categories">
+                            <Value>=Parameters!Categories.Value</Value>
+                          </Parameter>
+                          <Parameter Name="Compliant">
+                            <Value>0</Value>
+                          </Parameter>
+                          <Parameter Name="Targeted">
+                            <Value>=Parameters!Targeted.Value</Value>
+                          </Parameter>
+                          <Parameter Name="Superseded">
+                            <Value>=Parameters!Superseded.Value</Value>
+                          </Parameter>
+                          <Parameter Name="Vendors">
+                            <Value>=Parameters!Vendors.Value</Value>
+                          </Parameter>
+                        </Parameters>
+                      </Drillthrough>
+                    </Action>
+                  </Actions>
+                </ActionInfo>
+              </ChartTitle>
+            </ChartTitles>
+            <Palette>Pacific</Palette>
+            <ChartBorderSkin>
+              <Style>
+                <BackgroundColor>Gray</BackgroundColor>
+                <BackgroundGradientType>None</BackgroundGradientType>
+                <Color>White</Color>
+              </Style>
+            </ChartBorderSkin>
+            <ChartNoDataMessage Name="NoDataMessage">
+              <Caption>No Data Available</Caption>
+              <Style>
+                <BackgroundGradientType>None</BackgroundGradientType>
+                <FontWeight>Bold</FontWeight>
+                <TextAlign>General</TextAlign>
+                <VerticalAlign>Top</VerticalAlign>
+              </Style>
+            </ChartNoDataMessage>
+            <DataSetName>UpdateComplianceSummarization</DataSetName>
+            <Filters>
+              <Filter>
+                <FilterExpression>=Fields!NonCompliantByCategory.Value</FilterExpression>
+                <Operator>TopN</Operator>
+                <FilterValues>
+                  <FilterValue DataType="Integer">30</FilterValue>
+                </FilterValues>
+              </Filter>
+            </Filters>
+            <Top>9.66704cm</Top>
+            <Left>0.16228cm</Left>
+            <Height>8cm</Height>
+            <Width>27.50234cm</Width>
             <ZIndex>8</ZIndex>
+            <Bookmark>Chart</Bookmark>
             <Style>
               <Border>
                 <Color>LightGrey</Color>
@@ -3638,14 +3727,31 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
       </ValidValues>
       <MultiValue>true</MultiValue>
     </ReportParameter>
-    <ReportParameter Name="Targeted">
+    <ReportParameter Name="Vendors">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>Microsoft</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>Vendors (Multiple Selection)</Prompt>
+      <ValidValues>
+        <DataSetReference>
+          <DataSetName>UpdateVendors</DataSetName>
+          <ValueField>Vendor</ValueField>
+          <LabelField>VendorDisplayName</LabelField>
+        </DataSetReference>
+      </ValidValues>
+      <MultiValue>true</MultiValue>
+    </ReportParameter>
+    <ReportParameter Name="Superseded">
       <DataType>Integer</DataType>
       <DefaultValue>
         <Values>
-          <Value>1</Value>
+          <Value>0</Value>
         </Values>
       </DefaultValue>
-      <Prompt>Targeted/Approved (Multiple Selection)</Prompt>
+      <Prompt>Superseded (Multiple Selection)</Prompt>
       <ValidValues>
         <ParameterValues>
           <ParameterValue>
@@ -3660,14 +3766,14 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
       </ValidValues>
       <MultiValue>true</MultiValue>
     </ReportParameter>
-    <ReportParameter Name="Superseded">
+    <ReportParameter Name="Targeted">
       <DataType>Integer</DataType>
       <DefaultValue>
         <Values>
-          <Value>0</Value>
+          <Value>1</Value>
         </Values>
       </DefaultValue>
-      <Prompt>Superseded (Multiple Selection)</Prompt>
+      <Prompt>Targeted/Approved (Multiple Selection)</Prompt>
       <ValidValues>
         <ParameterValues>
           <ParameterValue>
@@ -3749,12 +3855,12 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
         <CellDefinition>
           <ColumnIndex>1</ColumnIndex>
           <RowIndex>3</RowIndex>
-          <ParameterName>Superseded</ParameterName>
+          <ParameterName>Targeted</ParameterName>
         </CellDefinition>
         <CellDefinition>
           <ColumnIndex>0</ColumnIndex>
           <RowIndex>3</RowIndex>
-          <ParameterName>Targeted</ParameterName>
+          <ParameterName>Superseded</ParameterName>
         </CellDefinition>
         <CellDefinition>
           <ColumnIndex>0</ColumnIndex>
@@ -3765,6 +3871,11 @@ Fields!ScanState.Value = "Scan failed", "#D46456",
           <ColumnIndex>1</ColumnIndex>
           <RowIndex>4</RowIndex>
           <ParameterName>UpdateCategoryOther</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>2</ColumnIndex>
+          <RowIndex>2</RowIndex>
+          <ParameterName>Vendors</ParameterName>
         </CellDefinition>
       </CellDefinitions>
     </GridLayoutDefinition>

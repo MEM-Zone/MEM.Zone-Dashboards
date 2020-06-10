@@ -32,8 +32,8 @@ DECLARE @TotalDevices AS INT = (
 
 /* Summarize device update scan states */
 SELECT
-    ScanStateID              = StateNames.StateID
-    , ScanState              = ISNULL(StateNames.StateName, 'Unknown')
+    ScanStateID              = ISNULL(StateNames.StateID, 0)
+    , ScanState              = ISNULL(StateNames.StateName, N'Scan state unknown')
     , DevicesByScanState     = COUNT(*)
     , TotalDevices           = @TotalDevices
 FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers

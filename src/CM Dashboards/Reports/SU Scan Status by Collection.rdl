@@ -106,15 +106,15 @@ DECLARE @HealthState TABLE (
 /* Populate HealthState table */
 INSERT INTO @HealthState (BitMask, StateName)
 VALUES
-    ('0',     'Healthy')
-    , ('1',   'Unmanaged')
-    , ('2',   'Inactive')
-    , ('4',   'Health Evaluation Failed')
-    , ('8',   'Update Scan Completed with Errors')
-    , ('16',  'Update Scan Failed')
-    , ('32',  'Update Scan Unknown')
-    , ('64',  'Update Scan Late')
-    , ('128', 'Update Sync Catalog is Outdated')
+    (0,     N'Healthy')
+    , (1,   N'Unmanaged')
+    , (2,   N'Inactive')
+    , (4,   N'Health Evaluation Failed')
+    , (8,   N'Update Scan Completed with Errors')
+    , (16,  N'Update Scan Failed')
+    , (32,  N'Update Scan Unknown')
+    , (64,  N'Update Scan Late')
+    , (128, N'Update Sync Catalog is Outdated')
 
 /* Variable declaration */
 DECLARE @UpdateSearchID INT   = (
@@ -130,17 +130,17 @@ SELECT
         IIF(CombinedResources.IsClient != 1, POWER(1, 1), 0)
         +
         IIF(
-            ClientSummary.ClientStateDescription = 'Inactive/Pass'
+            ClientSummary.ClientStateDescription = N'Inactive/Pass'
             OR
-            ClientSummary.ClientStateDescription = 'Inactive/Fail'
+            ClientSummary.ClientStateDescription = N'Inactive/Fail'
             OR
-            ClientSummary.ClientStateDescription = 'Inactive/Unknown'
+            ClientSummary.ClientStateDescription = N'Inactive/Unknown'
             , POWER(2, 1), 0)
         +
         IIF(
-            ClientSummary.ClientStateDescription = 'Active/Fail'
+            ClientSummary.ClientStateDescription = N'Active/Fail'
             OR
-            ClientSummary.ClientStateDescription = 'Inactive/Fail'
+            ClientSummary.ClientStateDescription = N'Inactive/Fail'
             , POWER(4, 1), 0
         )
         +
@@ -173,25 +173,25 @@ SELECT
         CASE
             WHEN OperatingSystem.Caption0 != '' THEN
                 CONCAT(
-                    REPLACE(OperatingSystem.Caption0, 'Microsoft ', ''),         -- Remove 'Microsoft ' from OperatingSystem
-                    REPLACE(OperatingSystem.CSDVersion0, 'Service Pack ', ' SP') -- Replace 'Service Pack ' with ' SP' in OperatingSystem
+                    REPLACE(OperatingSystem.Caption0, N'Microsoft ', N''),         -- Remove 'Microsoft ' from OperatingSystem
+                    REPLACE(OperatingSystem.CSDVersion0, N'Service Pack ', N' SP') -- Replace 'Service Pack ' with ' SP' in OperatingSystem
                 )
             ELSE (
 
             /* Workaround for systems not in GS_OPERATING_SYSTEM table */
                 CASE
-                    WHEN CombinedResources.DeviceOS LIKE '%Workstation 6.1%'    THEN 'Windows 7'
-                    WHEN CombinedResources.DeviceOS LIKE '%Workstation 6.2%'    THEN 'Windows 8'
-                    WHEN CombinedResources.DeviceOS LIKE '%Workstation 6.3%'    THEN 'Windows 8.1'
-                    WHEN CombinedResources.DeviceOS LIKE '%Workstation 10.0%'   THEN 'Windows 10'
-                    WHEN CombinedResources.DeviceOS LIKE '%Server 6.0'          THEN 'Windows Server 2008'
-                    WHEN CombinedResources.DeviceOS LIKE '%Server 6.1'          THEN 'Windows Server 2008R2'
-                    WHEN CombinedResources.DeviceOS LIKE '%Server 6.2'          THEN 'Windows Server 2012'
-                    WHEN CombinedResources.DeviceOS LIKE '%Server 6.3'          THEN 'Windows Server 2012 R2'
-                    WHEN Systems.Operating_System_Name_And0 LIKE '%Server 10%'  THEN (
+                    WHEN CombinedResources.DeviceOS LIKE N'%Workstation 6.1%'    THEN N'Windows 7'
+                    WHEN CombinedResources.DeviceOS LIKE N'%Workstation 6.2%'    THEN N'Windows 8'
+                    WHEN CombinedResources.DeviceOS LIKE N'%Workstation 6.3%'    THEN N'Windows 8.1'
+                    WHEN CombinedResources.DeviceOS LIKE N'%Workstation 10.0%'   THEN N'Windows 10'
+                    WHEN CombinedResources.DeviceOS LIKE N'%Server 6.0'          THEN N'Windows Server 2008'
+                    WHEN CombinedResources.DeviceOS LIKE N'%Server 6.1'          THEN N'Windows Server 2008R2'
+                    WHEN CombinedResources.DeviceOS LIKE N'%Server 6.2'          THEN N'Windows Server 2012'
+                    WHEN CombinedResources.DeviceOS LIKE N'%Server 6.3'          THEN N'Windows Server 2012 R2'
+                    WHEN Systems.Operating_System_Name_And0 LIKE N'%Server 10%'  THEN (
                         CASE
-                            WHEN CAST(REPLACE(Build01, '.', '') AS INTEGER) &gt; 10017763 THEN 'Windows Server 2019'
-                            ELSE 'Windows Server 2016'
+                            WHEN CAST(REPLACE(Build01, N'.', N'') AS INTEGER) &gt; 10017763 THEN N'Windows Server 2019'
+                            ELSE N'Windows Server 2016'
                         END
                     )
                     ELSE Systems.Operating_System_Name_And0
@@ -202,7 +202,7 @@ SELECT
     , ClientState             = (
         CASE CombinedResources.IsClient
             WHEN 1 THEN ClientSummary.ClientStateDescription
-            ELSE 'Unmanaged'
+            ELSE N'Unmanaged'
         END
     )
     , ClientVersion           = Systems.Client_Version0
@@ -225,8 +225,8 @@ FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers
             @UpdateSearchID = UpdateScan.UpdateSource_ID OR @UpdateSearchID IS NULL
         )
     LEFT JOIN fn_rbac_StateNames(@UserSIDs) AS StateNames ON StateNames.StateID = UpdateScan.LastScanState
-        AND StateNames.TopicType       = 501 -- Update source scan summarization TopicTypeID
-    CROSS APPLY (
+        AND StateNames.TopicType = 501 -- Update source scan summarization TopicTypeID
+    OUTER APPLY (
         SELECT SUPSyncStatus.SyncCatalogVersion
         FROM vSMS_SUPSyncStatus AS SUPSyncStatus
         WHERE SUPSyncStatus.WSUSServerName = (
@@ -235,16 +235,16 @@ FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers
                 , UpdateScan.LastScanPackageLocation
                 , SUBSTRING(
                     UpdateScan.LastScanPackageLocation
-                    , CHARINDEX('/', UpdateScan.LastScanPackageLocation) + 2
+                    , CHARINDEX(N'/', UpdateScan.LastScanPackageLocation) + 2
                     , (
                         (LEN(UpdateScan.LastScanPackageLocation)) - CHARINDEX(':', REVERSE(UpdateScan.LastScanPackageLocation))
-                    ) - CHARINDEX(':', UpdateScan.LastScanPackageLocation) - 2
+                    ) - CHARINDEX(N':', UpdateScan.LastScanPackageLocation) - 2
                 )
             )
         )
     ) AS SyncSourceInfo
 WHERE CollectionMembers.CollectionID   = @CollectionID
-    AND CollectionMembers.ResourceType = 5   -- Select devices only
+    AND CollectionMembers.ResourceType = 5 -- Select devices only
     AND ISNULL(StateNames.StateID, 0) IN (@ScanStates)
 
 /* #endregion */
@@ -2658,7 +2658,6 @@ ORDER BY StateName</CommandText>
                           <PaddingBottom>2pt</PaddingBottom>
                         </Style>
                       </Textbox>
-                      <rd:Selected>true</rd:Selected>
                     </CellContents>
                   </TablixHeader>
                   <TablixMembers>

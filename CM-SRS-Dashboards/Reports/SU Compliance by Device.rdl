@@ -48,6 +48,9 @@ SELECT dbo.fn_rbac_GetAdminIDsfromUserSIDs (@UserTokenSIDs) AS UserSIDs</Command
           <QueryParameter Name="@ExcludeArticleIDs">
             <Value>=Parameters!ExcludeArticleIDs.Value</Value>
           </QueryParameter>
+          <QueryParameter Name="@Vendors">
+            <Value>=Parameters!Vendors.Value</Value>
+          </QueryParameter>
           <QueryParameter Name="@Categories">
             <Value>=Parameters!Categories.Value</Value>
           </QueryParameter>
@@ -83,15 +86,16 @@ SELECT dbo.fn_rbac_GetAdminIDsfromUserSIDs (@UserTokenSIDs) AS UserSIDs</Command
 /* #region QueryBody */
 
 /* Testing variables !! Need to be commented for Production !! */
--- DECLARE @UserSIDs          AS NVARCHAR(10)  = 'Disabled';
--- DECLARE @Locale            AS INT           = 2;
--- DECLARE @NameOrResourceID  AS NVARCHAR(50)  = 'BCU-SRV-LIBERTY';
--- DECLARE @Categories        AS NVARCHAR(250) = 'Updates';
--- DECLARE @Status            AS INT           = 2;
--- DECLARE @Targeted          AS INT           = 1;
--- DECLARE @Superseded        AS INT           = 0;
--- DECLARE @ArticleID         AS NVARCHAR(10)  = '';
--- DECLARE @ExcludeArticleIDs AS NVARCHAR(250) = '';
+ --DECLARE @UserSIDs          AS NVARCHAR(10) = 'Disabled';
+ --DECLARE @Locale            AS INT          = 2;
+ --DECLARE @NameOrResourceID  AS NVARCHAR(50) = 'DCM-SRV-RDS-01';
+ --DECLARE @Categories        AS NVARCHAR(50) = 'Updates';
+ --DECLARE @Vendors           AS NVARCHAR(50) = 'Microsoft';
+ --DECLARE @Status            AS INT          = 2;
+ --DECLARE @Targeted          AS INT          = 1;
+ --DECLARE @Superseded        AS INT          = 0;
+ --DECLARE @ArticleID         AS NVARCHAR(50) = '';
+ --DECLARE @ExcludeArticleIDs AS NVARCHAR(50) = '';
 
 /* Variable declaration */
 DECLARE @LCID              AS INT           = dbo.fn_LShortNameToLCID (@Locale);
@@ -99,7 +103,7 @@ DECLARE @DeviceFQDN        AS NVARCHAR(50);
 DECLARE @ResourceID        AS INT;
 
 /* Check if @NameOrResourceID is positive Integer (ResourceID) */
-IF @NameOrResourceID LIKE '%[^0-9]%'
+IF @NameOrResourceID LIKE N'%[^0-9]%'
     BEGIN
 
         /* Get ResourceID from Device Name */
@@ -119,7 +123,7 @@ SET @DeviceFQDN = (
     SELECT
         IIF(
             SystemNames.Resource_Names0 IS NOT NULL, UPPER(SystemNames.Resource_Names0)
-            , IIF(Systems.Full_Domain_Name0 IS NOT NULL, Systems.Name0 + '.' + Systems.Full_Domain_Name0, Systems.Name0)
+            , IIF(Systems.Full_Domain_Name0 IS NOT NULL, Systems.Name0 + N'.' + Systems.Full_Domain_Name0, Systems.Name0)
         )
     FROM fn_rbac_R_System(@UserSIDs) AS Systems
         JOIN fn_rbac_RA_System_ResourceNames(@UserSIDs) AS SystemNames ON SystemNames.ResourceID = Systems.ResourceID
@@ -129,7 +133,8 @@ SET @DeviceFQDN = (
 SELECT
     DeviceFQDN            = @DeviceFQDN
     , Title               = UpdateCIs.Title
-    , Classification      = Category.CategoryInstanceName
+    , Classification      = CICategoryClassification.CategoryInstanceName
+    , Vendor              = CICategoryCompany.CategoryInstanceName
     , ArticleID           = UpdateCIs.ArticleID
     , IsTargeted          = IIF(Targeted.ResourceID IS NOT NULL, '*', NULL)
     , IsDeployed          = IIF(UpdateCIs.IsDeployed    = 1, '*', NULL)
@@ -153,27 +158,30 @@ SELECT
 FROM fn_rbac_UpdateComplianceStatus(@UserSIDs) AS ComplianceStatus
     JOIN fn_rbac_UpdateInfo(@LCID, @UserSIDs) AS UpdateCIs ON UpdateCIs.CI_ID = ComplianceStatus.CI_ID
         AND UpdateCIs.IsSuperseded IN (@Superseded)
-        AND UpdateCIs.CIType_ID IN (1, 8)                             -- Filter on 1 Software Updates, 8 Software Update Bundle (v_CITypes)
-        AND UpdateCIs.ArticleID NOT IN (                              -- Filter on ArticleID csv list
+        AND UpdateCIs.CIType_ID IN (1, 8)                                  -- Filter on 1 Software Updates, 8 Software Update Bundle (v_CITypes)
+        AND UpdateCIs.ArticleID NOT IN (                                   -- Filter on ArticleID csv list
             SELECT VALUE FROM STRING_SPLIT(@ExcludeArticleIDs, ',')
         )
-        AND UpdateCIs.Title NOT LIKE (                                -- Filter Preview Updates
-            '[1-9][0-9][0-9][0-9]-[0-9][0-9]_Preview_of_%'
+        AND UpdateCIs.Title NOT LIKE (                                     -- Filter Preview Updates
+            N'[1-9][0-9][0-9][0-9]-[0-9][0-9]_Preview_of_%'
         )
-    JOIN fn_rbac_CICategoryInfo_All(@LCID, @UserSIDs) AS Category ON Category.CI_ID = UpdateCIs.CI_ID
-        AND Category.CategoryTypeName = 'UpdateClassification'
-        AND Category.CategoryInstanceName IN (@Categories)            -- Filter on Selected Update Classification Categories
-    LEFT JOIN fn_rbac_CITargetedMachines(@UserSIDs) AS Targeted ON Targeted.CI_ID = UpdateCIs.CI_ID
+    JOIN fn_rbac_CICategoryInfo_All(@LCID, @UserSIDs) AS CICategoryCompany ON CICategoryCompany.CI_ID = UpdateCIs.CI_ID
+        AND CICategoryCompany.CategoryTypeName = N'Company'
+        AND CICategoryCompany.CategoryInstanceName IN (@Vendors)           -- Filter on Selected Update Vendors
+    JOIN fn_rbac_CICategoryInfo_All(@LCID, @UserSIDs) AS CICategoryClassification ON CICategoryClassification.CI_ID = UpdateCIs.CI_ID
+        AND CICategoryClassification.CategoryTypeName = N'UpdateClassification'
+        AND CICategoryClassification.CategoryInstanceName IN (@Categories) -- Filter on Selected Update Classification Categories
+    LEFT JOIN fn_rbac_CITargetedMachines(@UserSIDs) AS Targeted ON Targeted.CI_ID = ComplianceStatus.CI_ID
         AND Targeted.ResourceID = ComplianceStatus.ResourceID
     OUTER APPLY (
         SELECT EnforcementDeadline = MIN(Assignment.EnforcementDeadline)
         FROM fn_rbac_CIAssignment(@UserSIDs) AS Assignment
             JOIN fn_rbac_CIAssignmentToCI(@UserSIDs) AS AssignmentToCI ON AssignmentToCI.AssignmentID = Assignment.AssignmentID
-                AND AssignmentToCI.CI_ID = UpdateCIs.CI_ID
+                AND AssignmentToCI.CI_ID = ComplianceStatus.CI_ID
     ) AS EnforcementDeadline
 WHERE ComplianceStatus.ResourceID = @ResourceID
-    AND ComplianceStatus.Status IN (@Status)                          -- Filter on 'Unknown', 'Required' or 'Installed' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
-    AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted)         -- Filter on 'Targeted' or 'NotTargeted'
+    AND ComplianceStatus.Status IN (@Status)                               -- Filter on 'Unknown', 'Required' or 'Installed' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
+    AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted)              -- Filter on 'Targeted' or 'NotTargeted'
     AND IIF(UpdateCIs.ArticleID = @ArticleID, 1, 0) = IIF(@ArticleID &lt;&gt; '', 1, 0)
 
 /* #endregion */
@@ -193,6 +201,10 @@ WHERE ComplianceStatus.ResourceID = @ResourceID
         </Field>
         <Field Name="Classification">
           <DataField>Classification</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Vendor">
+          <DataField>Vendor</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
         <Field Name="ArticleID">
@@ -266,15 +278,54 @@ WHERE ComplianceStatus.ResourceID = @ResourceID
 /* Variable declaration */
 DECLARE @LCID AS INT = dbo.fn_LShortNameToLCID (@Locale);
 
-SELECT DISTINCT CategoryInstanceName
+SELECT DISTINCT
+    Category = CategoryInstanceName
 FROM fn_CICategoryInfo(@LCID)
-WHERE CategoryTypeName = 'UpdateClassification'
-ORDER BY CategoryInstanceName</CommandText>
+WHERE CategoryTypeName = N'UpdateClassification'
+ORDER BY Category</CommandText>
+        <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
       <Fields>
-        <Field Name="CategoryInstanceName">
-          <DataField>CategoryInstanceName</DataField>
+        <Field Name="Category">
+          <DataField>Category</DataField>
           <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="CategoryDisplayName">
+          <Value>=IIF(Fields!Category.Value &lt;&gt; "", Fields!Category.Value, SrsResources.Localization.GetString("AllValues", User!Language))</Value>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="UpdateVendors">
+      <Query>
+        <DataSourceName>CMSQLDatabase</DataSourceName>
+        <QueryParameters>
+          <QueryParameter Name="@Locale">
+            <Value>=Parameters!Locale.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@UserSIDs">
+            <Value>=Parameters!UserSIDs.Value</Value>
+          </QueryParameter>
+        </QueryParameters>
+        <CommandText>/* Get Update Vendors */
+DECLARE @LCID AS INT = dbo.fn_LShortNameToLCID(@Locale);
+
+SELECT
+    Vendor = UpdateCategoryInstance.CategoryInstanceName
+FROM
+    fn_rbac_ListUpdateCategoryInstances(@LCID, @UserSIDs) AS UpdateCategoryInstance
+WHERE (
+    UpdateCategoryInstance.CategoryTypeName = N'Company'
+        AND UpdateCategoryInstance.AllowSubscription = 1
+)
+ORDER BY Vendor</CommandText>
+      </Query>
+      <Fields>
+        <Field Name="Vendor">
+          <DataField>Vendor</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="VendorDisplayName">
+          <Value>=IIF(Fields!Vendor.Value &lt;&gt; "", Fields!Vendor.Value, SrsResources.Localization.GetString("AllValues", User!Language))</Value>
         </Field>
       </Fields>
     </DataSet>
@@ -2575,7 +2626,7 @@ ORDER BY CategoryInstanceName</CommandText>
               <TablixMembers>
                 <TablixMember>
                   <TablixHeader>
-                    <Size>49.39851cm</Size>
+                    <Size>52.35443cm</Size>
                     <CellContents>
                       <Textbox Name="TH_DeviceFQDN">
                         <CanGrow>true</CanGrow>
@@ -2695,7 +2746,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                   </TextRun>
                                 </TextRuns>
                                 <Style>
-                                  <TextAlign>Left</TextAlign>
+                                  <TextAlign>Center</TextAlign>
                                 </Style>
                               </Paragraph>
                             </Paragraphs>
@@ -2736,19 +2787,19 @@ ORDER BY CategoryInstanceName</CommandText>
                       <TablixMembers>
                         <TablixMember>
                           <TablixHeader>
-                            <Size>2.35389cm</Size>
+                            <Size>2.95592cm</Size>
                             <CellContents>
-                              <Textbox Name="TH_ArticleID">
+                              <Textbox Name="TH_Vendor">
                                 <CanGrow>true</CanGrow>
                                 <UserSort>
-                                  <SortExpression>=Fields!ArticleID.Value</SortExpression>
+                                  <SortExpression>=Fields!Vendor.Value</SortExpression>
                                 </UserSort>
                                 <KeepTogether>true</KeepTogether>
                                 <Paragraphs>
                                   <Paragraph>
                                     <TextRuns>
                                       <TextRun>
-                                        <Value>=SrsResources.Localization.GetString("ArticleID", User!Language)</Value>
+                                        <Value>=SrsResources.Localization.GetString("Vendor0", User!Language)</Value>
                                         <Style>
                                           <FontFamily>Segoe UI</FontFamily>
                                         </Style>
@@ -2796,19 +2847,19 @@ ORDER BY CategoryInstanceName</CommandText>
                           <TablixMembers>
                             <TablixMember>
                               <TablixHeader>
-                                <Size>2.35479cm</Size>
+                                <Size>2.35389cm</Size>
                                 <CellContents>
-                                  <Textbox Name="TH_IsRequired">
+                                  <Textbox Name="TH_ArticleID">
                                     <CanGrow>true</CanGrow>
                                     <UserSort>
-                                      <SortExpression>=Fields!IsRequired.Value</SortExpression>
+                                      <SortExpression>=Fields!ArticleID.Value</SortExpression>
                                     </UserSort>
                                     <KeepTogether>true</KeepTogether>
                                     <Paragraphs>
                                       <Paragraph>
                                         <TextRuns>
                                           <TextRun>
-                                            <Value>=SrsResources.Localization.GetString("Required", User!Language)</Value>
+                                            <Value>=SrsResources.Localization.GetString("ArticleID", User!Language)</Value>
                                             <Style>
                                               <FontFamily>Segoe UI</FontFamily>
                                             </Style>
@@ -2856,19 +2907,19 @@ ORDER BY CategoryInstanceName</CommandText>
                               <TablixMembers>
                                 <TablixMember>
                                   <TablixHeader>
-                                    <Size>2.5cm</Size>
+                                    <Size>2.35479cm</Size>
                                     <CellContents>
-                                      <Textbox Name="TH_IsTargeted">
+                                      <Textbox Name="TH_IsRequired">
                                         <CanGrow>true</CanGrow>
                                         <UserSort>
-                                          <SortExpression>=Fields!IsTargeted.Value</SortExpression>
+                                          <SortExpression>=Fields!IsRequired.Value</SortExpression>
                                         </UserSort>
                                         <KeepTogether>true</KeepTogether>
                                         <Paragraphs>
                                           <Paragraph>
                                             <TextRuns>
                                               <TextRun>
-                                                <Value>=SrsResources.Localization.GetString("Targeted", User!Language)</Value>
+                                                <Value>=SrsResources.Localization.GetString("Required", User!Language)</Value>
                                                 <Style>
                                                   <FontFamily>Segoe UI</FontFamily>
                                                 </Style>
@@ -2918,17 +2969,17 @@ ORDER BY CategoryInstanceName</CommandText>
                                       <TablixHeader>
                                         <Size>2.5cm</Size>
                                         <CellContents>
-                                          <Textbox Name="TH_IsDeployed">
+                                          <Textbox Name="TH_IsTargeted">
                                             <CanGrow>true</CanGrow>
                                             <UserSort>
-                                              <SortExpression>=Fields!IsDeployed.Value</SortExpression>
+                                              <SortExpression>=Fields!IsTargeted.Value</SortExpression>
                                             </UserSort>
                                             <KeepTogether>true</KeepTogether>
                                             <Paragraphs>
                                               <Paragraph>
                                                 <TextRuns>
                                                   <TextRun>
-                                                    <Value>=SrsResources.Localization.GetString("Deployed", User!Language)</Value>
+                                                    <Value>=SrsResources.Localization.GetString("Targeted", User!Language)</Value>
                                                     <Style>
                                                       <FontFamily>Segoe UI</FontFamily>
                                                     </Style>
@@ -2976,19 +3027,19 @@ ORDER BY CategoryInstanceName</CommandText>
                                       <TablixMembers>
                                         <TablixMember>
                                           <TablixHeader>
-                                            <Size>2.34063cm</Size>
+                                            <Size>2.5cm</Size>
                                             <CellContents>
-                                              <Textbox Name="TH_IsInstalled">
+                                              <Textbox Name="TH_IsDeployed">
                                                 <CanGrow>true</CanGrow>
                                                 <UserSort>
-                                                  <SortExpression>=Fields!IsInstalled.Value</SortExpression>
+                                                  <SortExpression>=Fields!IsDeployed.Value</SortExpression>
                                                 </UserSort>
                                                 <KeepTogether>true</KeepTogether>
                                                 <Paragraphs>
                                                   <Paragraph>
                                                     <TextRuns>
                                                       <TextRun>
-                                                        <Value>=SrsResources.Localization.GetString("Installed", User!Language)</Value>
+                                                        <Value>=SrsResources.Localization.GetString("Deployed", User!Language)</Value>
                                                         <Style>
                                                           <FontFamily>Segoe UI</FontFamily>
                                                         </Style>
@@ -3036,19 +3087,19 @@ ORDER BY CategoryInstanceName</CommandText>
                                           <TablixMembers>
                                             <TablixMember>
                                               <TablixHeader>
-                                                <Size>2.87042cm</Size>
+                                                <Size>2.34063cm</Size>
                                                 <CellContents>
-                                                  <Textbox Name="TH_IsSuperseded">
+                                                  <Textbox Name="TH_IsInstalled">
                                                     <CanGrow>true</CanGrow>
                                                     <UserSort>
-                                                      <SortExpression>=Fields!IsSuperseded.Value</SortExpression>
+                                                      <SortExpression>=Fields!IsInstalled.Value</SortExpression>
                                                     </UserSort>
                                                     <KeepTogether>true</KeepTogether>
                                                     <Paragraphs>
                                                       <Paragraph>
                                                         <TextRuns>
                                                           <TextRun>
-                                                            <Value>=SrsResources.Localization.GetString("Superseded", User!Language)</Value>
+                                                            <Value>=SrsResources.Localization.GetString("Installed", User!Language)</Value>
                                                             <Style>
                                                               <FontFamily>Segoe UI</FontFamily>
                                                             </Style>
@@ -3096,19 +3147,19 @@ ORDER BY CategoryInstanceName</CommandText>
                                               <TablixMembers>
                                                 <TablixMember>
                                                   <TablixHeader>
-                                                    <Size>2.15604cm</Size>
+                                                    <Size>2.87042cm</Size>
                                                     <CellContents>
-                                                      <Textbox Name="TH_IsExpired">
+                                                      <Textbox Name="TH_IsSuperseded">
                                                         <CanGrow>true</CanGrow>
                                                         <UserSort>
-                                                          <SortExpression>=Fields!IsExpired.Value</SortExpression>
+                                                          <SortExpression>=Fields!IsSuperseded.Value</SortExpression>
                                                         </UserSort>
                                                         <KeepTogether>true</KeepTogether>
                                                         <Paragraphs>
                                                           <Paragraph>
                                                             <TextRuns>
                                                               <TextRun>
-                                                                <Value>Expired</Value>
+                                                                <Value>=SrsResources.Localization.GetString("Superseded", User!Language)</Value>
                                                                 <Style>
                                                                   <FontFamily>Segoe UI</FontFamily>
                                                                 </Style>
@@ -3156,19 +3207,19 @@ ORDER BY CategoryInstanceName</CommandText>
                                                   <TablixMembers>
                                                     <TablixMember>
                                                       <TablixHeader>
-                                                        <Size>2.5cm</Size>
+                                                        <Size>2.15604cm</Size>
                                                         <CellContents>
-                                                          <Textbox Name="TH_EnforcementDeadline">
+                                                          <Textbox Name="TH_IsExpired">
                                                             <CanGrow>true</CanGrow>
                                                             <UserSort>
-                                                              <SortExpression>=Fields!EnforcementDeadline.Value</SortExpression>
+                                                              <SortExpression>=Fields!IsExpired.Value</SortExpression>
                                                             </UserSort>
                                                             <KeepTogether>true</KeepTogether>
                                                             <Paragraphs>
                                                               <Paragraph>
                                                                 <TextRuns>
                                                                   <TextRun>
-                                                                    <Value>=SrsResources.Localization.GetString("Deadline", User!Language)</Value>
+                                                                    <Value>Expired</Value>
                                                                     <Style>
                                                                       <FontFamily>Segoe UI</FontFamily>
                                                                     </Style>
@@ -3216,19 +3267,19 @@ ORDER BY CategoryInstanceName</CommandText>
                                                       <TablixMembers>
                                                         <TablixMember>
                                                           <TablixHeader>
-                                                            <Size>3.08208cm</Size>
+                                                            <Size>2.5cm</Size>
                                                             <CellContents>
-                                                              <Textbox Name="TH_EnforcementSource">
+                                                              <Textbox Name="TH_EnforcementDeadline">
                                                                 <CanGrow>true</CanGrow>
                                                                 <UserSort>
-                                                                  <SortExpression>=Fields!EnforcementSource.Value</SortExpression>
+                                                                  <SortExpression>=Fields!EnforcementDeadline.Value</SortExpression>
                                                                 </UserSort>
                                                                 <KeepTogether>true</KeepTogether>
                                                                 <Paragraphs>
                                                                   <Paragraph>
                                                                     <TextRuns>
                                                                       <TextRun>
-                                                                        <Value>=SrsResources.Localization.GetString("EnforcementSource", User!Language)</Value>
+                                                                        <Value>=SrsResources.Localization.GetString("Deadline", User!Language)</Value>
                                                                         <Style>
                                                                           <FontFamily>Segoe UI</FontFamily>
                                                                         </Style>
@@ -3276,19 +3327,19 @@ ORDER BY CategoryInstanceName</CommandText>
                                                           <TablixMembers>
                                                             <TablixMember>
                                                               <TablixHeader>
-                                                                <Size>2.5cm</Size>
+                                                                <Size>3.08208cm</Size>
                                                                 <CellContents>
-                                                                  <Textbox Name="TH_LastErrorCode">
+                                                                  <Textbox Name="TH_EnforcementSource">
                                                                     <CanGrow>true</CanGrow>
                                                                     <UserSort>
-                                                                      <SortExpression>=Fields!LastErrorCode.Value</SortExpression>
+                                                                      <SortExpression>=Fields!EnforcementSource.Value</SortExpression>
                                                                     </UserSort>
                                                                     <KeepTogether>true</KeepTogether>
                                                                     <Paragraphs>
                                                                       <Paragraph>
                                                                         <TextRuns>
                                                                           <TextRun>
-                                                                            <Value>=SrsResources.Localization.GetString("LastErrorCode", User!Language)</Value>
+                                                                            <Value>=SrsResources.Localization.GetString("EnforcementSource", User!Language)</Value>
                                                                             <Style>
                                                                               <FontFamily>Segoe UI</FontFamily>
                                                                             </Style>
@@ -3338,17 +3389,17 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                   <TablixHeader>
                                                                     <Size>2.5cm</Size>
                                                                     <CellContents>
-                                                                      <Textbox Name="TH_MaxExecutionTime">
+                                                                      <Textbox Name="TH_LastErrorCode">
                                                                         <CanGrow>true</CanGrow>
                                                                         <UserSort>
-                                                                          <SortExpression>=Fields!MaxExecutionTime.Value</SortExpression>
+                                                                          <SortExpression>=Fields!LastErrorCode.Value</SortExpression>
                                                                         </UserSort>
                                                                         <KeepTogether>true</KeepTogether>
                                                                         <Paragraphs>
                                                                           <Paragraph>
                                                                             <TextRuns>
                                                                               <TextRun>
-                                                                                <Value>=SrsResources.Localization.GetString("Max Execution Time", User!Language)</Value>
+                                                                                <Value>=SrsResources.Localization.GetString("LastErrorCode", User!Language)</Value>
                                                                                 <Style>
                                                                                   <FontFamily>Segoe UI</FontFamily>
                                                                                 </Style>
@@ -3396,19 +3447,19 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                   <TablixMembers>
                                                                     <TablixMember>
                                                                       <TablixHeader>
-                                                                        <Size>2.76458cm</Size>
+                                                                        <Size>2.5cm</Size>
                                                                         <CellContents>
-                                                                          <Textbox Name="TH_DateRevised">
+                                                                          <Textbox Name="TH_MaxExecutionTime">
                                                                             <CanGrow>true</CanGrow>
                                                                             <UserSort>
-                                                                              <SortExpression>=Fields!DateRevised.Value</SortExpression>
+                                                                              <SortExpression>=Fields!MaxExecutionTime.Value</SortExpression>
                                                                             </UserSort>
                                                                             <KeepTogether>true</KeepTogether>
                                                                             <Paragraphs>
                                                                               <Paragraph>
                                                                                 <TextRuns>
                                                                                   <TextRun>
-                                                                                    <Value>=SrsResources.Localization.GetString("DateRevised", User!Language)</Value>
+                                                                                    <Value>=SrsResources.Localization.GetString("Max Execution Time", User!Language)</Value>
                                                                                     <Style>
                                                                                       <FontFamily>Segoe UI</FontFamily>
                                                                                     </Style>
@@ -3456,19 +3507,19 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                       <TablixMembers>
                                                                         <TablixMember>
                                                                           <TablixHeader>
-                                                                            <Size>6.68042cm</Size>
+                                                                            <Size>2.76458cm</Size>
                                                                             <CellContents>
-                                                                              <Textbox Name="TH_UpdateUniqueID">
+                                                                              <Textbox Name="TH_DateRevised">
                                                                                 <CanGrow>true</CanGrow>
                                                                                 <UserSort>
-                                                                                  <SortExpression>=Fields!UpdateUniqueID.Value</SortExpression>
+                                                                                  <SortExpression>=Fields!DateRevised.Value</SortExpression>
                                                                                 </UserSort>
                                                                                 <KeepTogether>true</KeepTogether>
                                                                                 <Paragraphs>
                                                                                   <Paragraph>
                                                                                     <TextRuns>
                                                                                       <TextRun>
-                                                                                        <Value>=SrsResources.Localization.GetString("UniqueUpdateID", User!Language)</Value>
+                                                                                        <Value>=SrsResources.Localization.GetString("DateRevised", User!Language)</Value>
                                                                                         <Style>
                                                                                           <FontFamily>Segoe UI</FontFamily>
                                                                                         </Style>
@@ -3514,7 +3565,69 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                             </CellContents>
                                                                           </TablixHeader>
                                                                           <TablixMembers>
-                                                                            <TablixMember />
+                                                                            <TablixMember>
+                                                                              <TablixHeader>
+                                                                                <Size>6.68042cm</Size>
+                                                                                <CellContents>
+                                                                                  <Textbox Name="TH_UpdateUniqueID">
+                                                                                    <CanGrow>true</CanGrow>
+                                                                                    <UserSort>
+                                                                                      <SortExpression>=Fields!UpdateUniqueID.Value</SortExpression>
+                                                                                    </UserSort>
+                                                                                    <KeepTogether>true</KeepTogether>
+                                                                                    <Paragraphs>
+                                                                                      <Paragraph>
+                                                                                        <TextRuns>
+                                                                                          <TextRun>
+                                                                                            <Value>=SrsResources.Localization.GetString("UniqueUpdateID", User!Language)</Value>
+                                                                                            <Style>
+                                                                                              <FontFamily>Segoe UI</FontFamily>
+                                                                                            </Style>
+                                                                                          </TextRun>
+                                                                                        </TextRuns>
+                                                                                        <Style>
+                                                                                          <TextAlign>Center</TextAlign>
+                                                                                        </Style>
+                                                                                      </Paragraph>
+                                                                                    </Paragraphs>
+                                                                                    <Style>
+                                                                                      <Border>
+                                                                                        <Style>None</Style>
+                                                                                      </Border>
+                                                                                      <TopBorder>
+                                                                                        <Color>LightGrey</Color>
+                                                                                        <Style>Solid</Style>
+                                                                                        <Width>0.25pt</Width>
+                                                                                      </TopBorder>
+                                                                                      <BottomBorder>
+                                                                                        <Color>LightGrey</Color>
+                                                                                        <Style>Solid</Style>
+                                                                                        <Width>0.25pt</Width>
+                                                                                      </BottomBorder>
+                                                                                      <LeftBorder>
+                                                                                        <Color>LightGrey</Color>
+                                                                                        <Style>Solid</Style>
+                                                                                        <Width>0.25pt</Width>
+                                                                                      </LeftBorder>
+                                                                                      <RightBorder>
+                                                                                        <Color>LightGrey</Color>
+                                                                                        <Style>Solid</Style>
+                                                                                        <Width>0.25pt</Width>
+                                                                                      </RightBorder>
+                                                                                      <BackgroundColor>#ebebeb</BackgroundColor>
+                                                                                      <VerticalAlign>Middle</VerticalAlign>
+                                                                                      <PaddingLeft>2pt</PaddingLeft>
+                                                                                      <PaddingRight>2pt</PaddingRight>
+                                                                                      <PaddingTop>2pt</PaddingTop>
+                                                                                      <PaddingBottom>2pt</PaddingBottom>
+                                                                                    </Style>
+                                                                                  </Textbox>
+                                                                                </CellContents>
+                                                                              </TablixHeader>
+                                                                              <TablixMembers>
+                                                                                <TablixMember />
+                                                                              </TablixMembers>
+                                                                            </TablixMember>
                                                                           </TablixMembers>
                                                                         </TablixMember>
                                                                       </TablixMembers>
@@ -3580,6 +3693,9 @@ ORDER BY CategoryInstanceName</CommandText>
                     </SortExpression>
                     <SortExpression>
                       <Value>=Fields!Classification.Value</Value>
+                    </SortExpression>
+                    <SortExpression>
+                      <Value>=Fields!Vendor.Value</Value>
                     </SortExpression>
                     <SortExpression>
                       <Value>=Fields!ArticleID.Value</Value>
@@ -3680,16 +3796,16 @@ ORDER BY CategoryInstanceName</CommandText>
                       <TablixMembers>
                         <TablixMember>
                           <TablixHeader>
-                            <Size>2.35389cm</Size>
+                            <Size>2.95592cm</Size>
                             <CellContents>
-                              <Textbox Name="TV_ArticleID">
+                              <Textbox Name="TV_Vendor">
                                 <CanGrow>true</CanGrow>
                                 <KeepTogether>true</KeepTogether>
                                 <Paragraphs>
                                   <Paragraph>
                                     <TextRuns>
                                       <TextRun>
-                                        <Value>=Fields!ArticleID.Value</Value>
+                                        <Value>=Fields!Vendor.Value</Value>
                                         <Style>
                                           <FontFamily>Segoe UI</FontFamily>
                                           <FontSize>9pt</FontSize>
@@ -3697,7 +3813,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                       </TextRun>
                                     </TextRuns>
                                     <Style>
-                                      <TextAlign>Center</TextAlign>
+                                      <TextAlign>Left</TextAlign>
                                     </Style>
                                   </Paragraph>
                                 </Paragraphs>
@@ -3718,16 +3834,16 @@ ORDER BY CategoryInstanceName</CommandText>
                           <TablixMembers>
                             <TablixMember>
                               <TablixHeader>
-                                <Size>2.35479cm</Size>
+                                <Size>2.35389cm</Size>
                                 <CellContents>
-                                  <Textbox Name="TV_IsRequired">
+                                  <Textbox Name="TV_ArticleID">
                                     <CanGrow>true</CanGrow>
                                     <KeepTogether>true</KeepTogether>
                                     <Paragraphs>
                                       <Paragraph>
                                         <TextRuns>
                                           <TextRun>
-                                            <Value>=Fields!IsRequired.Value</Value>
+                                            <Value>=Fields!ArticleID.Value</Value>
                                             <Style>
                                               <FontFamily>Segoe UI</FontFamily>
                                               <FontSize>9pt</FontSize>
@@ -3739,7 +3855,6 @@ ORDER BY CategoryInstanceName</CommandText>
                                         </Style>
                                       </Paragraph>
                                     </Paragraphs>
-                                    <ToolTip>=IIF(Fields!IsRequired.Value = "*", "Required for " &amp; First(Fields!DeviceFQDN.Value), Nothing)</ToolTip>
                                     <Style>
                                       <Border>
                                         <Style>None</Style>
@@ -3757,16 +3872,16 @@ ORDER BY CategoryInstanceName</CommandText>
                               <TablixMembers>
                                 <TablixMember>
                                   <TablixHeader>
-                                    <Size>2.5cm</Size>
+                                    <Size>2.35479cm</Size>
                                     <CellContents>
-                                      <Textbox Name="TV_IsTargeted">
+                                      <Textbox Name="TV_IsRequired">
                                         <CanGrow>true</CanGrow>
                                         <KeepTogether>true</KeepTogether>
                                         <Paragraphs>
                                           <Paragraph>
                                             <TextRuns>
                                               <TextRun>
-                                                <Value>=Fields!IsTargeted.Value</Value>
+                                                <Value>=Fields!IsRequired.Value</Value>
                                                 <Style>
                                                   <FontFamily>Segoe UI</FontFamily>
                                                   <FontSize>9pt</FontSize>
@@ -3778,7 +3893,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                             </Style>
                                           </Paragraph>
                                         </Paragraphs>
-                                        <ToolTip>=IIF(Fields!IsTargeted.Value = "*", "Targeting " &amp; First(Fields!DeviceFQDN.Value), Nothing)</ToolTip>
+                                        <ToolTip>=IIF(Fields!IsRequired.Value = "*", "Required for " &amp; First(Fields!DeviceFQDN.Value), Nothing)</ToolTip>
                                         <Style>
                                           <Border>
                                             <Style>None</Style>
@@ -3798,14 +3913,14 @@ ORDER BY CategoryInstanceName</CommandText>
                                       <TablixHeader>
                                         <Size>2.5cm</Size>
                                         <CellContents>
-                                          <Textbox Name="TV_IsDeployed">
+                                          <Textbox Name="TV_IsTargeted">
                                             <CanGrow>true</CanGrow>
                                             <KeepTogether>true</KeepTogether>
                                             <Paragraphs>
                                               <Paragraph>
                                                 <TextRuns>
                                                   <TextRun>
-                                                    <Value>=Fields!IsDeployed.Value</Value>
+                                                    <Value>=Fields!IsTargeted.Value</Value>
                                                     <Style>
                                                       <FontFamily>Segoe UI</FontFamily>
                                                       <FontSize>9pt</FontSize>
@@ -3817,7 +3932,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                 </Style>
                                               </Paragraph>
                                             </Paragraphs>
-                                            <ToolTip>=IIF(Fields!IsDeployed.Value = "*" And Fields!IsTargeted.Value = "*", "Deployed and targeting " &amp; First(Fields!DeviceFQDN.Value), IIF(Fields!IsDeployed.Value = "*", "Deployed but not targeting " &amp; First(Fields!DeviceFQDN.Value), Nothing))</ToolTip>
+                                            <ToolTip>=IIF(Fields!IsTargeted.Value = "*", "Targeting " &amp; First(Fields!DeviceFQDN.Value), Nothing)</ToolTip>
                                             <Style>
                                               <Border>
                                                 <Style>None</Style>
@@ -3835,16 +3950,16 @@ ORDER BY CategoryInstanceName</CommandText>
                                       <TablixMembers>
                                         <TablixMember>
                                           <TablixHeader>
-                                            <Size>2.34063cm</Size>
+                                            <Size>2.5cm</Size>
                                             <CellContents>
-                                              <Textbox Name="TV_IsInstalled">
+                                              <Textbox Name="TV_IsDeployed">
                                                 <CanGrow>true</CanGrow>
                                                 <KeepTogether>true</KeepTogether>
                                                 <Paragraphs>
                                                   <Paragraph>
                                                     <TextRuns>
                                                       <TextRun>
-                                                        <Value>=Fields!IsInstalled.Value</Value>
+                                                        <Value>=Fields!IsDeployed.Value</Value>
                                                         <Style>
                                                           <FontFamily>Segoe UI</FontFamily>
                                                           <FontSize>9pt</FontSize>
@@ -3856,7 +3971,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                     </Style>
                                                   </Paragraph>
                                                 </Paragraphs>
-                                                <ToolTip>=IIF(Fields!IsInstalled.Value = "*", "Installed on " &amp; First(Fields!DeviceFQDN.Value), Nothing)</ToolTip>
+                                                <ToolTip>=IIF(Fields!IsDeployed.Value = "*" And Fields!IsTargeted.Value = "*", "Deployed and targeting " &amp; First(Fields!DeviceFQDN.Value), IIF(Fields!IsDeployed.Value = "*", "Deployed but not targeting " &amp; First(Fields!DeviceFQDN.Value), Nothing))</ToolTip>
                                                 <Style>
                                                   <Border>
                                                     <Style>None</Style>
@@ -3874,16 +3989,16 @@ ORDER BY CategoryInstanceName</CommandText>
                                           <TablixMembers>
                                             <TablixMember>
                                               <TablixHeader>
-                                                <Size>2.87042cm</Size>
+                                                <Size>2.34063cm</Size>
                                                 <CellContents>
-                                                  <Textbox Name="TV_IsSuperseded">
+                                                  <Textbox Name="TV_IsInstalled">
                                                     <CanGrow>true</CanGrow>
                                                     <KeepTogether>true</KeepTogether>
                                                     <Paragraphs>
                                                       <Paragraph>
                                                         <TextRuns>
                                                           <TextRun>
-                                                            <Value>=Fields!IsSuperseded.Value</Value>
+                                                            <Value>=Fields!IsInstalled.Value</Value>
                                                             <Style>
                                                               <FontFamily>Segoe UI</FontFamily>
                                                               <FontSize>9pt</FontSize>
@@ -3895,7 +4010,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                         </Style>
                                                       </Paragraph>
                                                     </Paragraphs>
-                                                    <ToolTip>=IIF(Fields!IsSuperseded.Value = "*", "Update is superseded", Nothing)</ToolTip>
+                                                    <ToolTip>=IIF(Fields!IsInstalled.Value = "*", "Installed on " &amp; First(Fields!DeviceFQDN.Value), Nothing)</ToolTip>
                                                     <Style>
                                                       <Border>
                                                         <Style>None</Style>
@@ -3913,16 +4028,16 @@ ORDER BY CategoryInstanceName</CommandText>
                                               <TablixMembers>
                                                 <TablixMember>
                                                   <TablixHeader>
-                                                    <Size>2.15604cm</Size>
+                                                    <Size>2.87042cm</Size>
                                                     <CellContents>
-                                                      <Textbox Name="TV_IsExpired">
+                                                      <Textbox Name="TV_IsSuperseded">
                                                         <CanGrow>true</CanGrow>
                                                         <KeepTogether>true</KeepTogether>
                                                         <Paragraphs>
                                                           <Paragraph>
                                                             <TextRuns>
                                                               <TextRun>
-                                                                <Value>=Fields!IsExpired.Value</Value>
+                                                                <Value>=Fields!IsSuperseded.Value</Value>
                                                                 <Style>
                                                                   <FontFamily>Segoe UI</FontFamily>
                                                                   <FontSize>9pt</FontSize>
@@ -3934,7 +4049,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                             </Style>
                                                           </Paragraph>
                                                         </Paragraphs>
-                                                        <ToolTip>=IIF(Fields!IsExpired.Value = "*", "Update is expired", Nothing)</ToolTip>
+                                                        <ToolTip>=IIF(Fields!IsSuperseded.Value = "*", "Update is superseded", Nothing)</ToolTip>
                                                         <Style>
                                                           <Border>
                                                             <Style>None</Style>
@@ -3952,16 +4067,16 @@ ORDER BY CategoryInstanceName</CommandText>
                                                   <TablixMembers>
                                                     <TablixMember>
                                                       <TablixHeader>
-                                                        <Size>2.5cm</Size>
+                                                        <Size>2.15604cm</Size>
                                                         <CellContents>
-                                                          <Textbox Name="TV_EnforcementDeadline">
+                                                          <Textbox Name="TV_IsExpired">
                                                             <CanGrow>true</CanGrow>
                                                             <KeepTogether>true</KeepTogether>
                                                             <Paragraphs>
                                                               <Paragraph>
                                                                 <TextRuns>
                                                                   <TextRun>
-                                                                    <Value>=Fields!EnforcementDeadline.Value</Value>
+                                                                    <Value>=Fields!IsExpired.Value</Value>
                                                                     <Style>
                                                                       <FontFamily>Segoe UI</FontFamily>
                                                                       <FontSize>9pt</FontSize>
@@ -3973,6 +4088,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                 </Style>
                                                               </Paragraph>
                                                             </Paragraphs>
+                                                            <ToolTip>=IIF(Fields!IsExpired.Value = "*", "Update is expired", Nothing)</ToolTip>
                                                             <Style>
                                                               <Border>
                                                                 <Style>None</Style>
@@ -3990,16 +4106,16 @@ ORDER BY CategoryInstanceName</CommandText>
                                                       <TablixMembers>
                                                         <TablixMember>
                                                           <TablixHeader>
-                                                            <Size>3.08208cm</Size>
+                                                            <Size>2.5cm</Size>
                                                             <CellContents>
-                                                              <Textbox Name="TV_EnforcementSource">
+                                                              <Textbox Name="TV_EnforcementDeadline">
                                                                 <CanGrow>true</CanGrow>
                                                                 <KeepTogether>true</KeepTogether>
                                                                 <Paragraphs>
                                                                   <Paragraph>
                                                                     <TextRuns>
                                                                       <TextRun>
-                                                                        <Value>=Fields!EnforcementSource.Value</Value>
+                                                                        <Value>=Fields!EnforcementDeadline.Value</Value>
                                                                         <Style>
                                                                           <FontFamily>Segoe UI</FontFamily>
                                                                           <FontSize>9pt</FontSize>
@@ -4028,16 +4144,16 @@ ORDER BY CategoryInstanceName</CommandText>
                                                           <TablixMembers>
                                                             <TablixMember>
                                                               <TablixHeader>
-                                                                <Size>2.5cm</Size>
+                                                                <Size>3.08208cm</Size>
                                                                 <CellContents>
-                                                                  <Textbox Name="TV_LastErrorCode">
+                                                                  <Textbox Name="TV_EnforcementSource">
                                                                     <CanGrow>true</CanGrow>
                                                                     <KeepTogether>true</KeepTogether>
                                                                     <Paragraphs>
                                                                       <Paragraph>
                                                                         <TextRuns>
                                                                           <TextRun>
-                                                                            <Value>=Fields!LastErrorCode.Value</Value>
+                                                                            <Value>=Fields!EnforcementSource.Value</Value>
                                                                             <Style>
                                                                               <FontFamily>Segoe UI</FontFamily>
                                                                               <FontSize>9pt</FontSize>
@@ -4049,7 +4165,6 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                         </Style>
                                                                       </Paragraph>
                                                                     </Paragraphs>
-                                                                    <ToolTip>=SrsResources.Localization.GetErrorMessage(Fields!LastErrorCode.Value, User!Language)</ToolTip>
                                                                     <Style>
                                                                       <Border>
                                                                         <Style>None</Style>
@@ -4069,14 +4184,14 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                   <TablixHeader>
                                                                     <Size>2.5cm</Size>
                                                                     <CellContents>
-                                                                      <Textbox Name="TV_MaxExecutionTime">
+                                                                      <Textbox Name="TV_LastErrorCode">
                                                                         <CanGrow>true</CanGrow>
                                                                         <KeepTogether>true</KeepTogether>
                                                                         <Paragraphs>
                                                                           <Paragraph>
                                                                             <TextRuns>
                                                                               <TextRun>
-                                                                                <Value>=Fields!MaxExecutionTime.Value</Value>
+                                                                                <Value>=Fields!LastErrorCode.Value</Value>
                                                                                 <Style>
                                                                                   <FontFamily>Segoe UI</FontFamily>
                                                                                   <FontSize>9pt</FontSize>
@@ -4088,6 +4203,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                             </Style>
                                                                           </Paragraph>
                                                                         </Paragraphs>
+                                                                        <ToolTip>=SrsResources.Localization.GetErrorMessage(Fields!LastErrorCode.Value, User!Language)</ToolTip>
                                                                         <Style>
                                                                           <Border>
                                                                             <Style>None</Style>
@@ -4105,16 +4221,16 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                   <TablixMembers>
                                                                     <TablixMember>
                                                                       <TablixHeader>
-                                                                        <Size>2.76458cm</Size>
+                                                                        <Size>2.5cm</Size>
                                                                         <CellContents>
-                                                                          <Textbox Name="TV_DateRevised">
+                                                                          <Textbox Name="TV_MaxExecutionTime">
                                                                             <CanGrow>true</CanGrow>
                                                                             <KeepTogether>true</KeepTogether>
                                                                             <Paragraphs>
                                                                               <Paragraph>
                                                                                 <TextRuns>
                                                                                   <TextRun>
-                                                                                    <Value>=Fields!DateRevised.Value</Value>
+                                                                                    <Value>=Fields!MaxExecutionTime.Value</Value>
                                                                                     <Style>
                                                                                       <FontFamily>Segoe UI</FontFamily>
                                                                                       <FontSize>9pt</FontSize>
@@ -4143,16 +4259,16 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                       <TablixMembers>
                                                                         <TablixMember>
                                                                           <TablixHeader>
-                                                                            <Size>6.68042cm</Size>
+                                                                            <Size>2.76458cm</Size>
                                                                             <CellContents>
-                                                                              <Textbox Name="TV_UpdateUniqueID">
+                                                                              <Textbox Name="TV_DateRevised">
                                                                                 <CanGrow>true</CanGrow>
                                                                                 <KeepTogether>true</KeepTogether>
                                                                                 <Paragraphs>
                                                                                   <Paragraph>
                                                                                     <TextRuns>
                                                                                       <TextRun>
-                                                                                        <Value>=Fields!UpdateUniqueID.Value</Value>
+                                                                                        <Value>=Fields!DateRevised.Value</Value>
                                                                                         <Style>
                                                                                           <FontFamily>Segoe UI</FontFamily>
                                                                                           <FontSize>9pt</FontSize>
@@ -4160,7 +4276,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                                       </TextRun>
                                                                                     </TextRuns>
                                                                                     <Style>
-                                                                                      <TextAlign>Left</TextAlign>
+                                                                                      <TextAlign>Center</TextAlign>
                                                                                     </Style>
                                                                                   </Paragraph>
                                                                                 </Paragraphs>
@@ -4179,7 +4295,47 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                             </CellContents>
                                                                           </TablixHeader>
                                                                           <TablixMembers>
-                                                                            <TablixMember />
+                                                                            <TablixMember>
+                                                                              <TablixHeader>
+                                                                                <Size>6.68042cm</Size>
+                                                                                <CellContents>
+                                                                                  <Textbox Name="TV_UpdateUniqueID">
+                                                                                    <CanGrow>true</CanGrow>
+                                                                                    <KeepTogether>true</KeepTogether>
+                                                                                    <Paragraphs>
+                                                                                      <Paragraph>
+                                                                                        <TextRuns>
+                                                                                          <TextRun>
+                                                                                            <Value>=Fields!UpdateUniqueID.Value</Value>
+                                                                                            <Style>
+                                                                                              <FontFamily>Segoe UI</FontFamily>
+                                                                                              <FontSize>9pt</FontSize>
+                                                                                            </Style>
+                                                                                          </TextRun>
+                                                                                        </TextRuns>
+                                                                                        <Style>
+                                                                                          <TextAlign>Left</TextAlign>
+                                                                                        </Style>
+                                                                                      </Paragraph>
+                                                                                    </Paragraphs>
+                                                                                    <Style>
+                                                                                      <Border>
+                                                                                        <Style>None</Style>
+                                                                                      </Border>
+                                                                                      <BackgroundColor>=IIF(RowNumber(Nothing) Mod 2,"WhiteSmoke", Nothing)</BackgroundColor>
+                                                                                      <VerticalAlign>Middle</VerticalAlign>
+                                                                                      <PaddingLeft>2pt</PaddingLeft>
+                                                                                      <PaddingRight>2pt</PaddingRight>
+                                                                                      <PaddingTop>2pt</PaddingTop>
+                                                                                      <PaddingBottom>2pt</PaddingBottom>
+                                                                                    </Style>
+                                                                                  </Textbox>
+                                                                                </CellContents>
+                                                                              </TablixHeader>
+                                                                              <TablixMembers>
+                                                                                <TablixMember />
+                                                                              </TablixMembers>
+                                                                            </TablixMember>
                                                                           </TablixMembers>
                                                                         </TablixMember>
                                                                       </TablixMembers>
@@ -4310,9 +4466,9 @@ ORDER BY CategoryInstanceName</CommandText>
                       <TablixMembers>
                         <TablixMember>
                           <TablixHeader>
-                            <Size>2.35389cm</Size>
+                            <Size>2.95592cm</Size>
                             <CellContents>
-                              <Textbox Name="Textbox5">
+                              <Textbox Name="Textbox3">
                                 <CanGrow>true</CanGrow>
                                 <KeepTogether>true</KeepTogether>
                                 <Paragraphs>
@@ -4329,7 +4485,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                     <Style />
                                   </Paragraph>
                                 </Paragraphs>
-                                <rd:DefaultName>Textbox5</rd:DefaultName>
+                                <rd:DefaultName>Textbox3</rd:DefaultName>
                                 <Style>
                                   <Border>
                                     <Style>None</Style>
@@ -4357,9 +4513,9 @@ ORDER BY CategoryInstanceName</CommandText>
                           <TablixMembers>
                             <TablixMember>
                               <TablixHeader>
-                                <Size>2.35479cm</Size>
+                                <Size>2.35389cm</Size>
                                 <CellContents>
-                                  <Textbox Name="Textbox18">
+                                  <Textbox Name="Textbox5">
                                     <CanGrow>true</CanGrow>
                                     <KeepTogether>true</KeepTogether>
                                     <Paragraphs>
@@ -4376,7 +4532,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                         <Style />
                                       </Paragraph>
                                     </Paragraphs>
-                                    <rd:DefaultName>Textbox18</rd:DefaultName>
+                                    <rd:DefaultName>Textbox5</rd:DefaultName>
                                     <Style>
                                       <Border>
                                         <Style>None</Style>
@@ -4404,9 +4560,9 @@ ORDER BY CategoryInstanceName</CommandText>
                               <TablixMembers>
                                 <TablixMember>
                                   <TablixHeader>
-                                    <Size>2.5cm</Size>
+                                    <Size>2.35479cm</Size>
                                     <CellContents>
-                                      <Textbox Name="Textbox142">
+                                      <Textbox Name="Textbox18">
                                         <CanGrow>true</CanGrow>
                                         <KeepTogether>true</KeepTogether>
                                         <Paragraphs>
@@ -4423,7 +4579,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                             <Style />
                                           </Paragraph>
                                         </Paragraphs>
-                                        <rd:DefaultName>Textbox142</rd:DefaultName>
+                                        <rd:DefaultName>Textbox18</rd:DefaultName>
                                         <Style>
                                           <Border>
                                             <Style>None</Style>
@@ -4453,7 +4609,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                       <TablixHeader>
                                         <Size>2.5cm</Size>
                                         <CellContents>
-                                          <Textbox Name="Textbox145">
+                                          <Textbox Name="Textbox142">
                                             <CanGrow>true</CanGrow>
                                             <KeepTogether>true</KeepTogether>
                                             <Paragraphs>
@@ -4470,7 +4626,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                 <Style />
                                               </Paragraph>
                                             </Paragraphs>
-                                            <rd:DefaultName>Textbox145</rd:DefaultName>
+                                            <rd:DefaultName>Textbox142</rd:DefaultName>
                                             <Style>
                                               <Border>
                                                 <Style>None</Style>
@@ -4498,9 +4654,9 @@ ORDER BY CategoryInstanceName</CommandText>
                                       <TablixMembers>
                                         <TablixMember>
                                           <TablixHeader>
-                                            <Size>2.34063cm</Size>
+                                            <Size>2.5cm</Size>
                                             <CellContents>
-                                              <Textbox Name="Textbox26">
+                                              <Textbox Name="Textbox145">
                                                 <CanGrow>true</CanGrow>
                                                 <KeepTogether>true</KeepTogether>
                                                 <Paragraphs>
@@ -4517,7 +4673,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                     <Style />
                                                   </Paragraph>
                                                 </Paragraphs>
-                                                <rd:DefaultName>Textbox26</rd:DefaultName>
+                                                <rd:DefaultName>Textbox145</rd:DefaultName>
                                                 <Style>
                                                   <Border>
                                                     <Style>None</Style>
@@ -4545,9 +4701,9 @@ ORDER BY CategoryInstanceName</CommandText>
                                           <TablixMembers>
                                             <TablixMember>
                                               <TablixHeader>
-                                                <Size>2.87042cm</Size>
+                                                <Size>2.34063cm</Size>
                                                 <CellContents>
-                                                  <Textbox Name="Textbox34">
+                                                  <Textbox Name="Textbox26">
                                                     <CanGrow>true</CanGrow>
                                                     <KeepTogether>true</KeepTogether>
                                                     <Paragraphs>
@@ -4564,7 +4720,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                         <Style />
                                                       </Paragraph>
                                                     </Paragraphs>
-                                                    <rd:DefaultName>Textbox34</rd:DefaultName>
+                                                    <rd:DefaultName>Textbox26</rd:DefaultName>
                                                     <Style>
                                                       <Border>
                                                         <Style>None</Style>
@@ -4592,9 +4748,9 @@ ORDER BY CategoryInstanceName</CommandText>
                                               <TablixMembers>
                                                 <TablixMember>
                                                   <TablixHeader>
-                                                    <Size>2.15604cm</Size>
+                                                    <Size>2.87042cm</Size>
                                                     <CellContents>
-                                                      <Textbox Name="Textbox178">
+                                                      <Textbox Name="Textbox34">
                                                         <CanGrow>true</CanGrow>
                                                         <KeepTogether>true</KeepTogether>
                                                         <Paragraphs>
@@ -4611,7 +4767,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                             <Style />
                                                           </Paragraph>
                                                         </Paragraphs>
-                                                        <rd:DefaultName>Textbox178</rd:DefaultName>
+                                                        <rd:DefaultName>Textbox34</rd:DefaultName>
                                                         <Style>
                                                           <Border>
                                                             <Style>None</Style>
@@ -4639,9 +4795,9 @@ ORDER BY CategoryInstanceName</CommandText>
                                                   <TablixMembers>
                                                     <TablixMember>
                                                       <TablixHeader>
-                                                        <Size>2.5cm</Size>
+                                                        <Size>2.15604cm</Size>
                                                         <CellContents>
-                                                          <Textbox Name="Textbox181">
+                                                          <Textbox Name="Textbox178">
                                                             <CanGrow>true</CanGrow>
                                                             <KeepTogether>true</KeepTogether>
                                                             <Paragraphs>
@@ -4658,7 +4814,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                 <Style />
                                                               </Paragraph>
                                                             </Paragraphs>
-                                                            <rd:DefaultName>Textbox181</rd:DefaultName>
+                                                            <rd:DefaultName>Textbox178</rd:DefaultName>
                                                             <Style>
                                                               <Border>
                                                                 <Style>None</Style>
@@ -4686,9 +4842,9 @@ ORDER BY CategoryInstanceName</CommandText>
                                                       <TablixMembers>
                                                         <TablixMember>
                                                           <TablixHeader>
-                                                            <Size>3.08208cm</Size>
+                                                            <Size>2.5cm</Size>
                                                             <CellContents>
-                                                              <Textbox Name="Textbox184">
+                                                              <Textbox Name="Textbox181">
                                                                 <CanGrow>true</CanGrow>
                                                                 <KeepTogether>true</KeepTogether>
                                                                 <Paragraphs>
@@ -4705,7 +4861,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                     <Style />
                                                                   </Paragraph>
                                                                 </Paragraphs>
-                                                                <rd:DefaultName>Textbox184</rd:DefaultName>
+                                                                <rd:DefaultName>Textbox181</rd:DefaultName>
                                                                 <Style>
                                                                   <Border>
                                                                     <Style>None</Style>
@@ -4733,9 +4889,9 @@ ORDER BY CategoryInstanceName</CommandText>
                                                           <TablixMembers>
                                                             <TablixMember>
                                                               <TablixHeader>
-                                                                <Size>2.5cm</Size>
+                                                                <Size>3.08208cm</Size>
                                                                 <CellContents>
-                                                                  <Textbox Name="Textbox187">
+                                                                  <Textbox Name="Textbox184">
                                                                     <CanGrow>true</CanGrow>
                                                                     <KeepTogether>true</KeepTogether>
                                                                     <Paragraphs>
@@ -4752,7 +4908,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                         <Style />
                                                                       </Paragraph>
                                                                     </Paragraphs>
-                                                                    <rd:DefaultName>Textbox187</rd:DefaultName>
+                                                                    <rd:DefaultName>Textbox184</rd:DefaultName>
                                                                     <Style>
                                                                       <Border>
                                                                         <Style>None</Style>
@@ -4782,7 +4938,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                   <TablixHeader>
                                                                     <Size>2.5cm</Size>
                                                                     <CellContents>
-                                                                      <Textbox Name="Textbox190">
+                                                                      <Textbox Name="Textbox187">
                                                                         <CanGrow>true</CanGrow>
                                                                         <KeepTogether>true</KeepTogether>
                                                                         <Paragraphs>
@@ -4799,7 +4955,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                             <Style />
                                                                           </Paragraph>
                                                                         </Paragraphs>
-                                                                        <rd:DefaultName>Textbox190</rd:DefaultName>
+                                                                        <rd:DefaultName>Textbox187</rd:DefaultName>
                                                                         <Style>
                                                                           <Border>
                                                                             <Style>None</Style>
@@ -4827,9 +4983,9 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                   <TablixMembers>
                                                                     <TablixMember>
                                                                       <TablixHeader>
-                                                                        <Size>2.76458cm</Size>
+                                                                        <Size>2.5cm</Size>
                                                                         <CellContents>
-                                                                          <Textbox Name="Textbox193">
+                                                                          <Textbox Name="Textbox190">
                                                                             <CanGrow>true</CanGrow>
                                                                             <KeepTogether>true</KeepTogether>
                                                                             <Paragraphs>
@@ -4846,7 +5002,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                                 <Style />
                                                                               </Paragraph>
                                                                             </Paragraphs>
-                                                                            <rd:DefaultName>Textbox193</rd:DefaultName>
+                                                                            <rd:DefaultName>Textbox190</rd:DefaultName>
                                                                             <Style>
                                                                               <Border>
                                                                                 <Style>None</Style>
@@ -4874,9 +5030,9 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                       <TablixMembers>
                                                                         <TablixMember>
                                                                           <TablixHeader>
-                                                                            <Size>6.68042cm</Size>
+                                                                            <Size>2.76458cm</Size>
                                                                             <CellContents>
-                                                                              <Textbox Name="Textbox196">
+                                                                              <Textbox Name="Textbox193">
                                                                                 <CanGrow>true</CanGrow>
                                                                                 <KeepTogether>true</KeepTogether>
                                                                                 <Paragraphs>
@@ -4893,7 +5049,7 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                                     <Style />
                                                                                   </Paragraph>
                                                                                 </Paragraphs>
-                                                                                <rd:DefaultName>Textbox196</rd:DefaultName>
+                                                                                <rd:DefaultName>Textbox193</rd:DefaultName>
                                                                                 <Style>
                                                                                   <Border>
                                                                                     <Style>None</Style>
@@ -4919,7 +5075,56 @@ ORDER BY CategoryInstanceName</CommandText>
                                                                             </CellContents>
                                                                           </TablixHeader>
                                                                           <TablixMembers>
-                                                                            <TablixMember />
+                                                                            <TablixMember>
+                                                                              <TablixHeader>
+                                                                                <Size>6.68042cm</Size>
+                                                                                <CellContents>
+                                                                                  <Textbox Name="Textbox196">
+                                                                                    <CanGrow>true</CanGrow>
+                                                                                    <KeepTogether>true</KeepTogether>
+                                                                                    <Paragraphs>
+                                                                                      <Paragraph>
+                                                                                        <TextRuns>
+                                                                                          <TextRun>
+                                                                                            <Value />
+                                                                                            <Style>
+                                                                                              <FontFamily>Segoe UI</FontFamily>
+                                                                                              <FontWeight>Bold</FontWeight>
+                                                                                            </Style>
+                                                                                          </TextRun>
+                                                                                        </TextRuns>
+                                                                                        <Style />
+                                                                                      </Paragraph>
+                                                                                    </Paragraphs>
+                                                                                    <rd:DefaultName>Textbox196</rd:DefaultName>
+                                                                                    <Style>
+                                                                                      <Border>
+                                                                                        <Style>None</Style>
+                                                                                      </Border>
+                                                                                      <TopBorder>
+                                                                                        <Color>LightGrey</Color>
+                                                                                        <Style>Solid</Style>
+                                                                                        <Width>0.25pt</Width>
+                                                                                      </TopBorder>
+                                                                                      <BottomBorder>
+                                                                                        <Color>LightGrey</Color>
+                                                                                        <Style>Solid</Style>
+                                                                                        <Width>0.25pt</Width>
+                                                                                      </BottomBorder>
+                                                                                      <BackgroundColor>#ebebeb</BackgroundColor>
+                                                                                      <VerticalAlign>Middle</VerticalAlign>
+                                                                                      <PaddingLeft>2pt</PaddingLeft>
+                                                                                      <PaddingRight>2pt</PaddingRight>
+                                                                                      <PaddingTop>2pt</PaddingTop>
+                                                                                      <PaddingBottom>2pt</PaddingBottom>
+                                                                                    </Style>
+                                                                                  </Textbox>
+                                                                                </CellContents>
+                                                                              </TablixHeader>
+                                                                              <TablixMembers>
+                                                                                <TablixMember />
+                                                                              </TablixMembers>
+                                                                            </TablixMember>
                                                                           </TablixMembers>
                                                                         </TablixMember>
                                                                       </TablixMembers>
@@ -4956,7 +5161,7 @@ ORDER BY CategoryInstanceName</CommandText>
             <Top>5.32095cm</Top>
             <Left>0.12413cm</Left>
             <Height>2.57638cm</Height>
-            <Width>56.96097cm</Width>
+            <Width>59.91689cm</Width>
             <ZIndex>12</ZIndex>
             <Style>
               <Border>
@@ -4968,7 +5173,7 @@ ORDER BY CategoryInstanceName</CommandText>
             <Top>1.18642cm</Top>
             <Left>0.127cm</Left>
             <Height>0cm</Height>
-            <Width>57.00857cm</Width>
+            <Width>59.91402cm</Width>
             <ZIndex>13</ZIndex>
             <Style>
               <Border>
@@ -4998,7 +5203,7 @@ ORDER BY CategoryInstanceName</CommandText>
             <Top>5.05991cm</Top>
             <Left>0.127cm</Left>
             <Height>0cm</Height>
-            <Width>57.00857cm</Width>
+            <Width>59.91402cm</Width>
             <ZIndex>14</ZIndex>
             <Style>
               <Border>
@@ -5032,7 +5237,7 @@ ORDER BY CategoryInstanceName</CommandText>
           </Border>
         </Style>
       </Body>
-      <Width>57.30761cm</Width>
+      <Width>60.19977cm</Width>
       <Page>
         <PageHeader>
           <Height>1.0664cm</Height>
@@ -5078,7 +5283,7 @@ ORDER BY CategoryInstanceName</CommandText>
               <Top>0.13441cm</Top>
               <Left>0.127cm</Left>
               <Height>0cm</Height>
-              <Width>57.00857cm</Width>
+              <Width>59.91402cm</Width>
               <ZIndex>1</ZIndex>
               <Style>
                 <Border>
@@ -5151,7 +5356,7 @@ ORDER BY CategoryInstanceName</CommandText>
               <Top>0.1905cm</Top>
               <Left>0.127cm</Left>
               <Height>0cm</Height>
-              <Width>57.00857cm</Width>
+              <Width>59.91402cm</Width>
               <ZIndex>1</ZIndex>
               <Style>
                 <Border>
@@ -5244,15 +5449,32 @@ ORDER BY CategoryInstanceName</CommandText>
       <DefaultValue>
         <DataSetReference>
           <DataSetName>UpdateCategories</DataSetName>
-          <ValueField>CategoryInstanceName</ValueField>
+          <ValueField>Category</ValueField>
         </DataSetReference>
       </DefaultValue>
       <Prompt>Update Categories (Multiple Selection)</Prompt>
       <ValidValues>
         <DataSetReference>
           <DataSetName>UpdateCategories</DataSetName>
-          <ValueField>CategoryInstanceName</ValueField>
-          <LabelField>CategoryInstanceName</LabelField>
+          <ValueField>Category</ValueField>
+          <LabelField>CategoryDisplayName</LabelField>
+        </DataSetReference>
+      </ValidValues>
+      <MultiValue>true</MultiValue>
+    </ReportParameter>
+    <ReportParameter Name="Vendors">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>Microsoft</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>Vendors (Multiple Selection)</Prompt>
+      <ValidValues>
+        <DataSetReference>
+          <DataSetName>UpdateVendors</DataSetName>
+          <ValueField>Vendor</ValueField>
+          <LabelField>VendorDisplayName</LabelField>
         </DataSetReference>
       </ValidValues>
       <MultiValue>true</MultiValue>
@@ -5380,7 +5602,7 @@ ORDER BY CategoryInstanceName</CommandText>
           <ParameterName>Categories</ParameterName>
         </CellDefinition>
         <CellDefinition>
-          <ColumnIndex>1</ColumnIndex>
+          <ColumnIndex>2</ColumnIndex>
           <RowIndex>3</RowIndex>
           <ParameterName>Status</ParameterName>
         </CellDefinition>
@@ -5403,6 +5625,11 @@ ORDER BY CategoryInstanceName</CommandText>
           <ColumnIndex>1</ColumnIndex>
           <RowIndex>5</RowIndex>
           <ParameterName>ExcludeArticleIDs</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>1</ColumnIndex>
+          <RowIndex>3</RowIndex>
+          <ParameterName>Vendors</ParameterName>
         </CellDefinition>
       </CellDefinitions>
     </GridLayoutDefinition>

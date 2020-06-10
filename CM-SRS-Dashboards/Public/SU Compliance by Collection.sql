@@ -22,15 +22,16 @@
 /* #region QueryBody */
 
 /* Testing variables !! Need to be commented for Production !! */
--- DECLARE @UserSIDs              AS NVARCHAR(10)  = 'Disabled';
--- DECLARE @CollectionID          AS NVARCHAR(10)  = 'SMS00001';
--- DECLARE @Locale                AS INT           = 2;
--- DECLARE @Categories            AS NVARCHAR(250) = 'Tools';
--- DECLARE @Compliant             AS INT           = 0;
--- DECLARE @Targeted              AS INT           = 1;
--- DECLARE @Superseded            AS INT           = 0;
--- DECLARE @ArticleID             AS NVARCHAR(10)  = '';
--- DECLARE @ExcludeArticleIDs     AS NVARCHAR(250) = '';
+-- DECLARE @UserSIDs              AS NVARCHAR(10) = 'Disabled';
+-- DECLARE @CollectionID          AS NVARCHAR(10) = 'SMS00001';
+-- DECLARE @Locale                AS INT          = 2;
+-- DECLARE @Categories            AS NVARCHAR(50) = 'Security Updates';
+-- DECLARE @Vendors               AS NVARCHAR(50) = 'Microsoft';
+-- DECLARE @Compliant             AS INT          = 0;
+-- DECLARE @Targeted              AS INT          = 1;
+-- DECLARE @Superseded            AS INT          = 0;
+-- DECLARE @ArticleID             AS NVARCHAR(10) = '';
+-- DECLARE @ExcludeArticleIDs     AS NVARCHAR(50) = '';
 
 /* Variable declaration */
 DECLARE @LCID                  AS INT = dbo.fn_LShortNameToLCID(@Locale);
@@ -53,16 +54,16 @@ DECLARE @HealthState TABLE (
 /* Populate HealthState table */
 INSERT INTO @HealthState (BitMask, StateName)
 VALUES
-    ('0',     'Healthy')
-    , ('1',   'Unmanaged')
-    , ('2',   'Inactive')
-    , ('4',   'Health Evaluation Failed')
-    , ('8',   'Pending Restart')
-    , ('16',  'Update Scan Failed')
-    , ('32',  'Update Scan Late')
-    , ('64',  'No Maintenance Window')
-    , ('128', 'Distant Maintenance Window')
-    , ('256', 'Expired Maintenance Window')
+    (0,     N'Healthy')
+    , (1,   N'Unmanaged')
+    , (2,   N'Inactive')
+    , (4,   N'Health Evaluation Failed')
+    , (8,   N'Pending Restart')
+    , (16,  N'Update Scan Failed')
+    , (32,  N'Update Scan Late')
+    , (64,  N'No Maintenance Window')
+    , (128, N'Distant Maintenance Window')
+    , (256, N'Expired Maintenance Window')
 
 /* Initialize ClientState descriptor table */
 DECLARE @ClientState TABLE (
@@ -73,11 +74,11 @@ DECLARE @ClientState TABLE (
 /* Populate ClientState table */
 INSERT INTO @ClientState (BitMask, StateName)
 VALUES
-    ('0', 'No Reboot')
-    , ('1', 'Configuration Manager')
-    , ('2', 'File Rename')
-    , ('4', 'Windows Update')
-    , ('8', 'Add or Remove Feature')
+    (0, N'No Reboot')
+    , (1, N'Configuration Manager')
+    , (2, N'File Rename')
+    , (4, N'Windows Update')
+    , (8, N'Add or Remove Feature')
 
 CREATE TABLE #MaintenanceInfo (
     ResourceID          INT
@@ -122,24 +123,27 @@ AS (
         , Missing       = COUNT(*)
     FROM fn_rbac_R_System(@UserSIDs) AS Systems
         JOIN fn_rbac_UpdateComplianceStatus(@UserSIDs) AS ComplianceStatus ON ComplianceStatus.ResourceID = Systems.ResourceID
-            AND ComplianceStatus.Status = 2                                      -- Filter on 'Required' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
+            AND ComplianceStatus.Status = 2                                    -- Filter on 'Required' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
         JOIN fn_rbac_ClientCollectionMembers(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = ComplianceStatus.ResourceID
         JOIN fn_rbac_UpdateInfo(@LCID, @UserSIDs) AS UpdateCIs ON UpdateCIs.CI_ID = ComplianceStatus.CI_ID
             AND UpdateCIs.IsSuperseded IN (@Superseded)
-            AND UpdateCIs.CIType_ID IN (1, 8)                                    -- Filter on 1 Software Updates, 8 Software Update Bundle (v_CITypes)
-            AND UpdateCIs.ArticleID NOT IN (                                     -- Filter on ArticleID csv list
+            AND UpdateCIs.CIType_ID IN (1, 8)                                  -- Filter on 1 Software Updates, 8 Software Update Bundle (v_CITypes)
+            AND UpdateCIs.ArticleID NOT IN (                                   -- Filter on ArticleID csv list
                 SELECT VALUE FROM STRING_SPLIT(@ExcludeArticleIDs, ',')
             )
-            AND UpdateCIs.Title NOT LIKE (                                       -- Filter Preview updates
-                '[1-9][0-9][0-9][0-9]-[0-9][0-9]_Preview_of_%'
+            AND UpdateCIs.Title NOT LIKE (                                     -- Filter Preview updates
+                N'[1-9][0-9][0-9][0-9]-[0-9][0-9]_Preview_of_%'
             )
-        JOIN fn_rbac_CICategoryInfo_All(@LCID, @UserSIDs) AS CICategory ON CICategory.CI_ID = ComplianceStatus.CI_ID
-            AND CICategory.CategoryTypeName = 'UpdateClassification'
-            AND CICategory.CategoryInstanceName IN (@Categories)                 -- Filter on Selected Update Classification Categories
+        JOIN fn_rbac_CICategoryInfo_All(@LCID, @UserSIDs) AS CICategoryCompany ON CICategoryCompany.CI_ID = UpdateCIs.CI_ID
+            AND CICategoryCompany.CategoryTypeName = N'Company'
+            AND CICategoryCompany.CategoryInstanceName IN (@Vendors)           -- Filter on Selected Update Vendors
+        JOIN fn_rbac_CICategoryInfo_All(@LCID, @UserSIDs) AS CICategory ON CICategory.CI_ID = UpdateCIs.CI_ID
+            AND CICategory.CategoryTypeName = N'UpdateClassification'
+            AND CICategory.CategoryInstanceName IN (@Categories)               -- Filter on Selected Update Classification Categories
         LEFT JOIN fn_rbac_CITargetedMachines(@UserSIDs) AS Targeted ON Targeted.ResourceID = ComplianceStatus.ResourceID
             AND Targeted.CI_ID = ComplianceStatus.CI_ID
     WHERE CollectionMembers.CollectionID = @CollectionID
-        AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted)                -- Filter on 'Targeted' or 'NotTargeted'
+        AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted)              -- Filter on 'Targeted' or 'NotTargeted'
         AND IIF(UpdateCIs.ArticleID = @ArticleID, 1, 0) = IIF(@ArticleID <> '', 1, 0)
     GROUP BY
         Systems.ResourceID
@@ -154,17 +158,17 @@ SELECT
         IIF(CombinedResources.IsClient != 1, POWER(1, 1), 0)
         +
         IIF(
-            ClientSummary.ClientStateDescription = 'Inactive/Pass'
+            ClientSummary.ClientStateDescription = N'Inactive/Pass'
             OR
-            ClientSummary.ClientStateDescription = 'Inactive/Fail'
+            ClientSummary.ClientStateDescription = N'Inactive/Fail'
             OR
-            ClientSummary.ClientStateDescription = 'Inactive/Unknown'
+            ClientSummary.ClientStateDescription = N'Inactive/Unknown'
             , POWER(2, 1), 0)
         +
         IIF(
-            ClientSummary.ClientStateDescription = 'Active/Fail'
+            ClientSummary.ClientStateDescription = N'Active/Fail'
             OR
-            ClientSummary.ClientStateDescription = 'Inactive/Fail'
+            ClientSummary.ClientStateDescription = N'Inactive/Fail'
             , POWER(4, 1), 0
         )
         +
@@ -184,32 +188,32 @@ SELECT
     , Device            = (
             IIF(
                 SystemNames.Resource_Names0 IS NOT NULL, UPPER(SystemNames.Resource_Names0)
-                , IIF(Systems.Full_Domain_Name0 IS NOT NULL, Systems.Name0 + '.' + Systems.Full_Domain_Name0, Systems.Name0)
+                , IIF(Systems.Full_Domain_Name0 IS NOT NULL, Systems.Name0 + N'.' + Systems.Full_Domain_Name0, Systems.Name0)
             )
     )
     , OperatingSystem   = (
         CASE
-            WHEN OperatingSystem.Caption0 != '' THEN
+            WHEN OperatingSystem.Caption0 != N'' THEN
                 CONCAT(
-                    REPLACE(OperatingSystem.Caption0, 'Microsoft ', ''),          -- Remove 'Microsoft ' from OperatingSystem
-                    REPLACE(OperatingSystem.CSDVersion0, 'Service Pack ', ' SP')  -- Replace 'Service Pack ' with ' SP' in OperatingSystem
+                    REPLACE(OperatingSystem.Caption0, N'Microsoft ', N''),         -- Remove 'Microsoft ' from OperatingSystem
+                    REPLACE(OperatingSystem.CSDVersion0, N'Service Pack ', N' SP') -- Replace 'Service Pack ' with ' SP' in OperatingSystem
                 )
             ELSE (
 
             /* Workaround for systems not in GS_OPERATING_SYSTEM table */
                 CASE
-                    WHEN CombinedResources.DeviceOS LIKE '%Workstation 6.1%'    THEN 'Windows 7'
-                    WHEN CombinedResources.DeviceOS LIKE '%Workstation 6.2%'    THEN 'Windows 8'
-                    WHEN CombinedResources.DeviceOS LIKE '%Workstation 6.3%'    THEN 'Windows 8.1'
-                    WHEN CombinedResources.DeviceOS LIKE '%Workstation 10.0%'   THEN 'Windows 10'
-                    WHEN CombinedResources.DeviceOS LIKE '%Server 6.0'          THEN 'Windows Server 2008'
-                    WHEN CombinedResources.DeviceOS LIKE '%Server 6.1'          THEN 'Windows Server 2008R2'
-                    WHEN CombinedResources.DeviceOS LIKE '%Server 6.2'          THEN 'Windows Server 2012'
-                    WHEN CombinedResources.DeviceOS LIKE '%Server 6.3'          THEN 'Windows Server 2012 R2'
-                    WHEN Systems.Operating_System_Name_And0 LIKE '%Server 10%'  THEN (
+                    WHEN CombinedResources.DeviceOS LIKE N'%Workstation 6.1%'    THEN N'Windows 7'
+                    WHEN CombinedResources.DeviceOS LIKE N'%Workstation 6.2%'    THEN N'Windows 8'
+                    WHEN CombinedResources.DeviceOS LIKE N'%Workstation 6.3%'    THEN N'Windows 8.1'
+                    WHEN CombinedResources.DeviceOS LIKE N'%Workstation 10.0%'   THEN N'Windows 10'
+                    WHEN CombinedResources.DeviceOS LIKE N'%Server 6.0'          THEN N'Windows Server 2008'
+                    WHEN CombinedResources.DeviceOS LIKE N'%Server 6.1'          THEN N'Windows Server 2008R2'
+                    WHEN CombinedResources.DeviceOS LIKE N'%Server 6.2'          THEN N'Windows Server 2012'
+                    WHEN CombinedResources.DeviceOS LIKE N'%Server 6.3'          THEN N'Windows Server 2012 R2'
+                    WHEN Systems.Operating_System_Name_And0 LIKE N'%Server 10%'  THEN (
                         CASE
-                            WHEN CAST(REPLACE(Build01, '.', '') AS INTEGER) > 10017763 THEN 'Windows Server 2019'
-                            ELSE 'Windows Server 2016'
+                            WHEN CAST(REPLACE(Build01, N'.', N'') AS INTEGER) > 10017763 THEN N'Windows Server 2019'
+                            ELSE N'Windows Server 2016'
                         END
                     )
                     ELSE Systems.Operating_System_Name_And0
@@ -273,7 +277,7 @@ WHERE CollectionMembers.CollectionID = @CollectionID
     ) IN (@Compliant)
 
 /* Perform cleanup */
-IF OBJECT_ID('tempdb..#MaintenanceInfo', 'U') IS NOT NULL
+IF OBJECT_ID(N'tempdb..#MaintenanceInfo', N'U') IS NOT NULL
     DROP TABLE #MaintenanceInfo;
 
 /* #endregion */

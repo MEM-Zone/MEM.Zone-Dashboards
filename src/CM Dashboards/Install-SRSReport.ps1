@@ -39,7 +39,7 @@
 .EXAMPLE
     .\Install-SRSReport.ps1 -Path 'C:\DAS\Reports\SU Compliance by Collection.rdl' -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -Overwrite
 .EXAMPLE
-    .\Install-SRSReport.ps1 -Path 'C:\DAS\Reports' -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -DataSourceRoot -Overwrite -ExcludeExtensions
+    .\Install-SRSReport.ps1 -Path 'C:\DAS\Reports' -ReportServerUri 'http://CM-SQL-RS-01A/ReportServer' -ReportFolder '/ConfigMgr_XXX/SRSDashboards' -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -DataSourceRoot '/ConfigMgr_XXX/{DataSourceGUID}' -ExcludeExtensions -Overwrite
 .EXAMPLE
     .\Install-SRSReport.ps1 -ServerInstance 'CM-SQL-RS-01A' -Database 'CM_XXX' -ExtensionsOnly -UseSQLAuthentication -Verbose
 .INPUTS
