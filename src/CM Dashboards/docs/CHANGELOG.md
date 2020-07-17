@@ -1,12 +1,68 @@
 # Changelog for CM SRS Dashboards
 
+## 3.0.0 - 2020-07-17
+
+### SU Compliance by Collection Changes (3.0.0)
+
+* Fixed `Total` value on gauges percentage tooltips and tablix now display the correct value
+* Fixed squashed page number
+* Fixed maintenance window not displaying on some systems
+* Fixed expired maintenance window is now displaying correctly
+* Fixed header rows are now properly displayed on all report pages #19 (For real now!)
+* Changed `ufn_CM_GetNextMaintenanceWindow` also returns `StartTime`
+* Changed `Last Boot Time` to `Uptime (Days)`
+* Changed `Last Update Scan Time` to `Last Update Scan (Days)`
+* Changed `Health Status` to display Health Check Values instead of `Yes` / `No`
+* Changed `Pending Restart` to display `Restart Reason` instead of `Yes` / `No`
+* Changed some column widths to improve readability
+* Added `Free Space (GB)` column
+* Added `Last Boot Time` to `Uptime` value as tooltip
+* Added `Last Update Scan Time` to `Last Update Scan (Days)` value as tooltip
+* Added `Total Devices` on the top of the report
+* Added maintenance window state support
+* Added `Disabled Maintenance Window`, `Short Maintenance Window`, `Uptime Threshold Exeeded`, `Required VS Uptime`, `Free Space Threshold Exeeded` health checks
+* Added `Health Thresholds` for `Distant Maintenance Window`, `Short Maintenance Window`, `Last Scan Time`, `Uptime`, `Free Space`
+* Added `Health Thresholds` csv report parameter so the values are not hardcoded
+* Added `Health States` descriptions as a `Health State` value tooltip
+* Added Query optimizations
+* Removed `Total` tool tip from all gauge name descriptions
+
+### SU Compliance by Device Changes (3.0.0)
+
+* Fixed `Total` value on gauges percentage tooltips and tablix now display the correct value
+* Fixed header rows are now properly displayed on all report pages #19 (For real now!)
+* Fixed squashed page number
+* Added `Total Updates` on the top of the report
+* Removed `Total` tool tip from all gauge name descriptions
+
+## SU Scan Status by Collection Changes (3.0.0)
+
+* Fixed report crash when devices use a CMG
+* Fixed `Total` value on gauges percentage tooltips and tablix now display the correct value
+* Fixed header rows are now properly displayed on all report pages #19 (For real now!)
+* Fixed squashed page number
+* Changed `Last Update Scan Time` to `Last Update Scan (Days)`
+* Changed `Health Status` to display Health Check Values instead of `Yes` / `No`
+* Added `Total Updates` on the top of the report
+* Added `Last Update Scan Time` to `Last Update Scan (Days)` value as tooltip
+* Added Query optimizations
+* Removed `Total` tool tip from all gauge name descriptions
+
+## AL Alerts Changes (3.0.0)
+
+* Fixed `Total` value on gauges percentage tooltips and tablix now display the correct value
+* Fixed squashed page number
+* Fixed `Name` null value if update group is deleted
+* Added `Total Alerts` on the top of the report
+* Removed `Total` tool tip from all gauge name descriptions
+
 ## 2.3.0 - 2020-06-10
 
-* Added `Update Vendor` support for 3rd party update filtering #21
+* Added `Update Vendor` support for `3rd party` update filtering #21
 * Fixed `SU Scan Status by Collection` is not devices without client #24
 * Fixed `Unknown scan state` actionable chart action error #23
 * Fixed the number of updates showing up in `Devices Missing a Specific Update` by limiting them to `TOP 30` #22
-* Fixed some others small bugs
+* Fixed some others small bug or inconsistencies, replaced some functions with the `RBAC` versions
 * Improved performance by not letting SQL convert to `NVARCHAR` where not needed #25
 
 ## 2.2.1 - 2020-05-18

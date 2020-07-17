@@ -22,15 +22,20 @@
 '/*##=============================================*/
 '/* #region FunctionBody */
 
-Function GetHealthStates (ByVal intBitMask As Integer) As String
+Function GetHealthStates (ByVal intBitMask As Integer, blnDetailed As Boolean) As String
     Dim astrHealthStates() As String = {
-        "Healthy", "Unmanaged", "Inactive", "Health Evaluation Failed", "Pending Restart", "Update Scan Failed",
-        "Update Scan Late", "No Service Window", "Distant Service Window", "Expired Maintenance Window"
+        "Healthy", "Unmanaged", "Inactive", "Health Evaluation Failed", "Scan Completed with Errors", "Scan Failed",
+        "Scan Unknown", "Scan Late", "Sync Catalog Outdated"
+    }
+    Dim astrHealthStatesDetailed() As String = {
+        "Healthy", "Unmanaged", "Client Inactive", "Client Health Evaluation Failed", "Update Scan Completed with Errors",
+        "Update Scan Failed", "Update Scan Unknown", "Update Scan Late", "Update Sync Catalog is Outdated"
     }
     Dim iaHealthStates As Integer
     Dim intStep As Integer
     Dim strResolvedHealthStates As String = ""
     Try
+        If blnDetailed Then astrHealthStates = astrHealthStatesDetailed
         If intBitMask <> 0 Then
             For iaHealthStates = 0 To UBound(astrHealthStates)
                 If intBitMask And intStep Then

@@ -43,13 +43,14 @@
 /* #endregion */
 
 /* #region create ufn_CM_GetNextMaintenanceWindow */
-CREATE FUNCTION [dbo].[ufn_CM_GetNextMaintenanceWindow](
+CREATE FUNCTION [dbo].[ufn_CM_GetNextMaintenanceWindow] (
     @ScheduleToken      AS CHAR(16)
     , @RecurrenceType   AS INT
 )
 RETURNS @NextServiceWindow TABLE (
     ScheduleToken       CHAR(16)
     , RecurrenceType    INT
+    , StartTime         DATETIME
     , NextServiceWindow DATETIME
     , Duration          INT
     , IsGMTTime         BIT
@@ -72,17 +73,17 @@ AS
         --3 Occurs every 1 week(s) on Monday effective 1/1/2012 4:00 AM 00811A9E081A2000
 
         -- http://msdn.microsoft.com/en-us/library/cc143300.aspx Jump
-        DECLARE @RecurrenceType_NONE INT
-            , @RecurrenceType_DAILY INT
-            , @RecurrenceType_WEEKLY INT
+        DECLARE @RecurrenceType_NONE           INT
+            , @RecurrenceType_DAILY            INT
+            , @RecurrenceType_WEEKLY           INT
             , @RecurrenceType_MONTHLYBYWEEKDAY INT
-            , @RecurrenceType_MONTHLYBYDATE INT
+            , @RecurrenceType_MONTHLYBYDATE    INT
 
-        SELECT @RecurrenceType_NONE = 1
-            , @RecurrenceType_DAILY = 2
-            , @RecurrenceType_WEEKLY = 3
+        SELECT @RecurrenceType_NONE            = 1
+            , @RecurrenceType_DAILY            = 2
+            , @RecurrenceType_WEEKLY           = 3
             , @RecurrenceType_MONTHLYBYWEEKDAY = 4
-            , @RecurrenceType_MONTHLYBYDATE = 5
+            , @RecurrenceType_MONTHLYBYDATE    = 5
 
         -- http://msdn.microsoft.com/en-us/library/cc143505.aspx Jump
 
@@ -292,7 +293,7 @@ AS
         END
 
         /* Create result table */
-        INSERT INTO @NextServiceWindow VALUES (@ScheduleToken, @RecurrenceType, @NextMaintenanceWindow, @Duration, @IsGMTTime)
+        INSERT INTO @NextServiceWindow VALUES (@ScheduleToken, @RecurrenceType, @StartTime, @NextMaintenanceWindow, @Duration, @IsGMTTime)
 
         /* Return result */
         RETURN

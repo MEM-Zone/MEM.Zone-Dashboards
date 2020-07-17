@@ -30,11 +30,12 @@ DECLARE @UserSIDs         AS NVARCHAR(10) = 'Disabled';
 DECLARE @LCID                  AS INT = dbo.fn_LShortNameToLCID(@Locale);
 
 SELECT
-    Alert.TypeID
+    Alert.ID
+    , Alert.TypeID
     , Alert.TypeInstanceID
     , Name                       = (
         CASE
-            WHEN Alert.Name = N'$SUMCompliance2UpdateGroupDeploymentName' THEN Alert.InstanceNameParam1
+            WHEN Alert.Name = N'$SUMCompliance2UpdateGroupDeploymentName' THEN IIF(Alert.InstanceNameParam1 IS NULL, N'Update Group Deleted', Alert.InstanceNameParam1)
             WHEN Alert.Name = N'$AntimalwareClientVersionAlertName'       THEN N'Antimalware clients out of date'
             ELSE Alert.Name
         END
@@ -66,7 +67,8 @@ FROM fnListAlerts(@LCID, @UserSIDs) AS Alert
 WHERE Alert.FeatureArea IN (@AlertFeatureArea)
    AND Alert.AlertState IN (@AlertState)
 
-select  * from fnListGeneralAlerts(1033,'0x01050000000000051500000019A3885163E6C6B9E6C9C9E356040000') AS SMS_ALERT  where ((SMS_ALERT.AlertState = 0 AND SMS_ALERT.FeatureArea = 4) AND SMS_ALERT.IsIgnored = 0)
+-- Check if we can use this
+--select  * from fnListGeneralAlerts(1033,'0x01050000000000051500000019A3885163E6C6B9E6C9C9E356040000') AS SMS_ALERT  where ((SMS_ALERT.AlertState = 0 AND SMS_ALERT.FeatureArea = 4) AND SMS_ALERT.IsIgnored = 0)
 
 /* #endregion */
 /*##=============================================*/

@@ -274,7 +274,7 @@ SELECT
         +
         IIF(ISNULL(NextServiceWindow, 0) = 0 AND @HelperFunctionExists = 1, POWER(64, 1), 0)
         +
-        IIF(NextServiceWindow &gt; (SELECT DATEADD(dd, 30, CURRENT_TIMESTAMP)), POWER(128, 1), 0)
+        IIF(NextServiceWindow &gt; (SELECT DATEADD(dd, 45, CURRENT_TIMESTAMP)), POWER(128, 1), 0)
         +
         IIF(NextServiceWindow &lt; (CURRENT_TIMESTAMP), POWER(256, 1), 0)
     )

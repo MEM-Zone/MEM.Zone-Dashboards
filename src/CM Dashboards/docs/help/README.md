@@ -27,6 +27,7 @@ See [changelog](https://SCCM.Zone/CM-SRS-Dashboards-CHANGELOG).
 * SU DAS Overall Compliance (Main Dashboard Report)
 * AL Alerts
 * SU Compliance by Collection
+* SU Compliance by Collection - Deprecated
 * SU Compliance by Device
 * SU Scan Status
 * SU SUP Sync Status

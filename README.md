@@ -52,6 +52,7 @@ See [changelog](https://SCCM.Zone/CM-SRS-Dashboards-CHANGELOG).
         +-- Reports
             +-- AL Alerts.rdl
             +-- SU Compliance by Collection.rdl
+            +-- SU Compliance by Collection - Deprecated.rdl
             +-- SU Compliance by Device.rdl
             +-- SU DAS Overall Compliance.rdl
             +-- SU Scan Status by Collection.rdl
@@ -104,7 +105,7 @@ See [changelog](https://SCCM.Zone/CM-SRS-Dashboards-CHANGELOG).
 [release-date]: https://github.com/SCCM-Zone/CM-SRS-Dashboards/releases
 [issues-badge]: https://img.shields.io/github/issues/SCCM-Zone/CM-SRS-Dashboards
 [issues]: https://github.com/SCCM-Zone/CM-SRS-Dashboards/issues?q=is%3Aopen+is%3Aissue
-[commits-since-badge]: https://img.shields.io/github/commits-since/SCCM-Zone/CM-SRS-Dashboards/v2.3.0
+[commits-since-badge]: https://img.shields.io/github/commits-since/SCCM-Zone/CM-SRS-Dashboards/v3.0.0
 [commits-since]: https://github.com/SCCM-Zone/CM-SRS-Dashboards/commits/master
 [discord-badge]: https://img.shields.io/discord/666618982844989460?logo=discord
 [discord]: https://discord.gg/ZCkVcmP

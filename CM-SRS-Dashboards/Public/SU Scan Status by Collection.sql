@@ -20,15 +20,29 @@
 /* #region QueryBody */
 
 /* Testing variables !! Need to be commented for Production !! */
--- DECLARE @UserSIDs     AS NVARCHAR(10)  = 'Disabled';
--- DECLARE @CollectionID AS NVARCHAR(10)  = 'SMS00001';
--- DECLARE @ScanStates   AS INT           = 3; -- Completed
+-- DECLARE @UserSIDs             AS NVARCHAR(10)  = 'Disabled';
+-- DECLARE @CollectionID         AS NVARCHAR(10)  = 'SMS00001';
+-- DECLARE @ScanStates           AS INT           = 3; -- Completed
+-- DECLARE @HealthThresholds     AS NVARCHAR(20) = '14,14';
 
-/* Initialize HealthState descriptor table */
-DECLARE @HealthState TABLE (
-    BitMask     INT
-    , StateName NVARCHAR(250)
+/* Variable declaration */
+DECLARE @UpdateSearchID INT   = (
+    SELECT TOP 1 UpdateSource.UpdateSource_ID
+    FROM fn_rbac_SoftwareUpdateSource(@UserSIDs) AS UpdateSource
+    WHERE IsPublishingEnabled = 1 -- Get only the UpdateSource_ID where publishing is enabled
 )
+
+/* Initialize memory tables */
+DECLARE @HealthThresholdVariables TABLE (ID INT IDENTITY(1,1), Threshold INT);
+DECLARE @HealthState              TABLE (BitMask INT, StateName NVARCHAR(250))
+
+/* Populate @HealthThresholdVariables table */
+INSERT INTO @HealthThresholdVariables (Threshold)
+SELECT VALUE FROM STRING_SPLIT(@HealthThresholds, ',')
+
+/* Set Health Threshold variables */
+DECLARE @HT_LastScanTime          AS INT = (SELECT Threshold FROM @HealthThresholdVariables WHERE ID = 1); -- Days
+DECLARE @HT_SyncCatalog           AS INT = (SELECT Threshold FROM @HealthThresholdVariables WHERE ID = 2); -- Days
 
 /* Populate HealthState table */
 INSERT INTO @HealthState (BitMask, StateName)
@@ -43,43 +57,44 @@ VALUES
     , (64,  N'Update Scan Late')
     , (128, N'Update Sync Catalog is Outdated')
 
-/* Variable declaration */
-DECLARE @UpdateSearchID INT   = (
-    SELECT TOP 1 UpdateSource.UpdateSource_ID
-    FROM fn_rbac_SoftwareUpdateSource(@UserSIDs) AS UpdateSource
-    WHERE IsPublishingEnabled = 1 -- Get only the UpdateSource_ID where publishing is enabled
-)
-
 /* Gets the device update scan states */
 SELECT
     ResourceID                = Systems.ResourceID
     , HealthStates            = (
+        -- Unmanaged
         IIF(CombinedResources.IsClient != 1, POWER(1, 1), 0)
+        -- Inactive
         +
         IIF(
             ClientSummary.ClientStateDescription = N'Inactive/Pass'
-            OR
-            ClientSummary.ClientStateDescription = N'Inactive/Fail'
-            OR
-            ClientSummary.ClientStateDescription = N'Inactive/Unknown'
+                OR ClientSummary.ClientStateDescription = N'Inactive/Fail'
+                OR ClientSummary.ClientStateDescription = N'Inactive/Unknown'
             , POWER(2, 1), 0)
+        -- Health Evaluation Failed
         +
         IIF(
             ClientSummary.ClientStateDescription = N'Active/Fail'
-            OR
-            ClientSummary.ClientStateDescription = N'Inactive/Fail'
+                OR ClientSummary.ClientStateDescription = N'Inactive/Fail'
             , POWER(4, 1), 0
         )
+        -- Scan Completed with errors
         +
-        IIF(StateNames.StateID = 6, POWER(8, 1), 0)                                -- Scan Completed with errors
+        IIF(StateNames.StateID = 6, POWER(8, 1), 0)
+        -- Scan failed
         +
-        IIF(StateNames.StateID = 5, POWER(16, 1), 0)                               -- Scan failed
+        IIF(StateNames.StateID = 5, POWER(16, 1), 0)
+        -- Scan state unknown
         +
-        IIF(StateNames.StateID = 0 OR StateNames.StateID IS NULL, POWER(32, 1), 0) -- Scan state unknown
+        IIF(StateNames.StateID = 0 OR StateNames.StateID IS NULL, POWER(32, 1), 0)
+        -- Scan Late
         +
-        IIF(UpdateScan.LastScanTime < (SELECT DATEADD(dd, -14, CURRENT_TIMESTAMP)), POWER(64, 1), 0)
+        IIF(UpdateScan.LastScanTime < (SELECT DATEADD(dd, -@HT_LastScanTime, CURRENT_TIMESTAMP)), POWER(64, 1), 0)
+        -- Update Sync Catalog is Outdated
         +
-        IIF(NULLIF(SyncSourceInfo.SyncCatalogVersion, '') IS NULL OR SyncSourceInfo.SyncCatalogVersion - UpdateScan.LastScanPackageVersion > 14, POWER(128, 1), 0)
+        IIF(
+            NULLIF(SyncSourceInfo.SyncCatalogVersion, '') IS NULL
+                OR SyncSourceInfo.SyncCatalogVersion - UpdateScan.LastScanPackageVersion > @HT_SyncCatalog
+            , POWER(128, 1), 0)
     )
     , ScanState               = (
         CASE
@@ -134,9 +149,8 @@ SELECT
     )
     , ClientVersion           = Systems.Client_Version0
     , WUAVersion              = UpdateScan.LastWUAVersion
-    , LastScanTime            = (
-        CONVERT(NVARCHAR(16), UpdateScan.LastScanTime, 120)
-    )
+    , LastUpdateScan          = DATEDIFF(dd, UpdateScan.LastScanTime, CURRENT_TIMESTAMP)
+    , LastUpdateScanTime      = CONVERT(NVARCHAR(16), UpdateScan.LastScanTime, 120)
     , LastScanPackageLocation = NULLIF(UpdateScan.LastScanPackageLocation, '')
     , LastScanPackageVersion  = UpdateScan.LastScanPackageVersion
     , SyncCatalogVersion      = SyncSourceInfo.SyncCatalogVersion
@@ -152,26 +166,14 @@ FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers
             @UpdateSearchID = UpdateScan.UpdateSource_ID OR @UpdateSearchID IS NULL
         )
     LEFT JOIN fn_rbac_StateNames(@UserSIDs) AS StateNames ON StateNames.StateID = UpdateScan.LastScanState
-        AND StateNames.TopicType = 501 -- Update source scan summarization TopicTypeID
+        AND StateNames.TopicType = 501                                             -- Update source scan summarization TopicTypeID
     OUTER APPLY (
-        SELECT SUPSyncStatus.SyncCatalogVersion
+        SELECT TOP 1 SUPSyncStatus.SyncCatalogVersion
         FROM vSMS_SUPSyncStatus AS SUPSyncStatus
-        WHERE SUPSyncStatus.WSUSServerName = (
-            IIF(
-                LEN(UpdateScan.LastScanPackageLocation) = 0
-                , UpdateScan.LastScanPackageLocation
-                , SUBSTRING(
-                    UpdateScan.LastScanPackageLocation
-                    , CHARINDEX(N'/', UpdateScan.LastScanPackageLocation) + 2
-                    , (
-                        (LEN(UpdateScan.LastScanPackageLocation)) - CHARINDEX(':', REVERSE(UpdateScan.LastScanPackageLocation))
-                    ) - CHARINDEX(N':', UpdateScan.LastScanPackageLocation) - 2
-                )
-            )
-        )
+        WHERE SUPSyncStatus.WSUSSourceServer = 'Microsoft Update'                  -- Select a WSUS Server that syncs directly with Microsoft
     ) AS SyncSourceInfo
 WHERE CollectionMembers.CollectionID   = @CollectionID
-    AND CollectionMembers.ResourceType = 5 -- Select devices only
+    AND CollectionMembers.ResourceType = 5                                         -- Select devices only
     AND ISNULL(StateNames.StateID, 0) IN (@ScanStates)
 
 /* #endregion */
