@@ -1,5 +1,12 @@
 # Changelog for CM SRS Dashboards
 
+## 3.0.1 - 2020-07-21
+
+* Changed `README.md` location is now located in `docs`
+* Updated requirements and some of the docs
+* Removed some SQL nonsense from the `ufn_CM_GetNextMaintenanceWindow`
+* Updated `Reports` outside of `src`.
+
 ## 3.0.0 - 2020-07-17
 
 ### SU Compliance by Collection Changes (3.0.0)

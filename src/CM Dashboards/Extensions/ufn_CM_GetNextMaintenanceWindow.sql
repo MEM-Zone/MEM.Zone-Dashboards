@@ -32,7 +32,6 @@
 
 /* #region SSMS */
 -- USE [CM_<SITE_CODE>]
--- SET NOCOUNT ON
 
 /* Drop function if it exists */
 -- IF OBJECT_ID('[dbo].[ufn_CM_GetNextMaintenanceWindow]') IS NOT NULL

@@ -567,7 +567,7 @@ ORDER BY Vendor</CommandText>
                 <Left>18</Left>
                 <Height>18</Height>
                 <Width>64</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ArticleID.Value)</ToolTip>
+                <ToolTip>="Total: " &amp; CountDistinct(Fields!ArticleID.Value)</ToolTip>
                 <ParentItem>RadialGauges.RG_Expired</ParentItem>
               </GaugeLabel>
               <GaugeLabel Name="GL_ExpiredDescription">
@@ -594,7 +594,6 @@ ORDER BY Vendor</CommandText>
                 <Left>23</Left>
                 <Height>21</Height>
                 <Width>54</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ArticleID.Value)</ToolTip>
               </GaugeLabel>
             </GaugeLabels>
             <AutoLayout>true</AutoLayout>
@@ -979,7 +978,7 @@ ORDER BY Vendor</CommandText>
                 <Left>18</Left>
                 <Height>18</Height>
                 <Width>64</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ArticleID.Value)</ToolTip>
+                <ToolTip>="Total: " &amp; CountDistinct(Fields!ArticleID.Value)</ToolTip>
                 <ParentItem>RadialGauges.RG_Compliance</ParentItem>
               </GaugeLabel>
               <GaugeLabel Name="GL_ComplianceDescription">
@@ -1006,7 +1005,6 @@ ORDER BY Vendor</CommandText>
                 <Left>23</Left>
                 <Height>21</Height>
                 <Width>54</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ArticleID.Value)</ToolTip>
               </GaugeLabel>
             </GaugeLabels>
             <AutoLayout>true</AutoLayout>
@@ -1284,7 +1282,7 @@ ORDER BY Vendor</CommandText>
                 <Left>18</Left>
                 <Height>18</Height>
                 <Width>64</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ArticleID.Value)</ToolTip>
+                <ToolTip>="Total: " &amp; CountDistinct(Fields!ArticleID.Value)</ToolTip>
                 <ParentItem>RadialGauges.RG_Deployed</ParentItem>
               </GaugeLabel>
               <GaugeLabel Name="GL_DeployedDescription">
@@ -1311,7 +1309,6 @@ ORDER BY Vendor</CommandText>
                 <Left>23</Left>
                 <Height>21</Height>
                 <Width>54</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ArticleID.Value)</ToolTip>
               </GaugeLabel>
             </GaugeLabels>
             <AutoLayout>true</AutoLayout>
@@ -1589,7 +1586,7 @@ ORDER BY Vendor</CommandText>
                 <Left>18</Left>
                 <Height>18</Height>
                 <Width>64</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ArticleID.Value)</ToolTip>
+                <ToolTip>="Total: " &amp; CountDistinct(Fields!ArticleID.Value)</ToolTip>
                 <ParentItem>RadialGauges.RG_Superseded</ParentItem>
               </GaugeLabel>
               <GaugeLabel Name="GL_SupersededDescription">
@@ -1616,7 +1613,6 @@ ORDER BY Vendor</CommandText>
                 <Left>23</Left>
                 <Height>21</Height>
                 <Width>54</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ArticleID.Value)</ToolTip>
               </GaugeLabel>
             </GaugeLabels>
             <AutoLayout>true</AutoLayout>
@@ -1894,7 +1890,7 @@ ORDER BY Vendor</CommandText>
                 <Left>18</Left>
                 <Height>18</Height>
                 <Width>64</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ArticleID.Value)</ToolTip>
+                <ToolTip>="Total: " &amp; CountDistinct(Fields!ArticleID.Value)</ToolTip>
                 <ParentItem>RadialGauges.RG_Error</ParentItem>
               </GaugeLabel>
               <GaugeLabel Name="GL_ErrorDescription">
@@ -1921,7 +1917,6 @@ ORDER BY Vendor</CommandText>
                 <Left>23</Left>
                 <Height>21</Height>
                 <Width>54</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ArticleID.Value)</ToolTip>
               </GaugeLabel>
             </GaugeLabels>
             <AutoLayout>true</AutoLayout>
@@ -2224,7 +2219,7 @@ ORDER BY Vendor</CommandText>
                 <Left>18</Left>
                 <Height>18</Height>
                 <Width>64</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ArticleID.Value)</ToolTip>
+                <ToolTip>="Total: " &amp; CountDistinct(Fields!ArticleID.Value)</ToolTip>
                 <ParentItem>RadialGauges.RG_Targeted</ParentItem>
               </GaugeLabel>
               <GaugeLabel Name="GL_TargetedDescription">
@@ -2251,7 +2246,6 @@ ORDER BY Vendor</CommandText>
                 <Left>23</Left>
                 <Height>21</Height>
                 <Width>54</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ArticleID.Value)</ToolTip>
               </GaugeLabel>
             </GaugeLabels>
             <AutoLayout>true</AutoLayout>
@@ -2405,46 +2399,6 @@ ORDER BY Vendor</CommandText>
               </TablixColumns>
               <TablixRows>
                 <TablixRow>
-                  <Height>0.77638cm</Height>
-                  <TablixCells>
-                    <TablixCell>
-                      <CellContents>
-                        <Textbox Name="Textbox19">
-                          <CanGrow>true</CanGrow>
-                          <KeepTogether>true</KeepTogether>
-                          <Paragraphs>
-                            <Paragraph>
-                              <TextRuns>
-                                <TextRun>
-                                  <Value />
-                                  <Style>
-                                    <FontFamily>Segoe UI</FontFamily>
-                                    <FontWeight>Bold</FontWeight>
-                                  </Style>
-                                </TextRun>
-                              </TextRuns>
-                              <Style>
-                                <TextAlign>Center</TextAlign>
-                              </Style>
-                            </Paragraph>
-                          </Paragraphs>
-                          <rd:DefaultName>Textbox19</rd:DefaultName>
-                          <Style>
-                            <Border>
-                              <Style>None</Style>
-                            </Border>
-                            <VerticalAlign>Middle</VerticalAlign>
-                            <PaddingLeft>2pt</PaddingLeft>
-                            <PaddingRight>2pt</PaddingRight>
-                            <PaddingTop>2pt</PaddingTop>
-                            <PaddingBottom>2pt</PaddingBottom>
-                          </Style>
-                        </Textbox>
-                      </CellContents>
-                    </TablixCell>
-                  </TablixCells>
-                </TablixRow>
-                <TablixRow>
                   <Height>0.6cm</Height>
                   <TablixCells>
                     <TablixCell>
@@ -2572,7 +2526,7 @@ ORDER BY Vendor</CommandText>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=CountDistinct(Fields!Title.Value)</Value>
+                                  <Value>=CountDistinct(Fields!ArticleID.Value)</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
                                     <FontWeight>Bold</FontWeight>
@@ -2624,47 +2578,6 @@ ORDER BY Vendor</CommandText>
             </TablixColumnHierarchy>
             <TablixRowHierarchy>
               <TablixMembers>
-                <TablixMember>
-                  <TablixHeader>
-                    <Size>52.35443cm</Size>
-                    <CellContents>
-                      <Textbox Name="TH_DeviceFQDN">
-                        <CanGrow>true</CanGrow>
-                        <KeepTogether>true</KeepTogether>
-                        <Paragraphs>
-                          <Paragraph>
-                            <TextRuns>
-                              <TextRun>
-                                <Value>=First(Fields!DeviceFQDN.Value)</Value>
-                                <Style>
-                                  <FontFamily>Segoe UI</FontFamily>
-                                  <FontSize>14pt</FontSize>
-                                  <FontWeight>Bold</FontWeight>
-                                </Style>
-                              </TextRun>
-                            </TextRuns>
-                            <Style>
-                              <TextAlign>Left</TextAlign>
-                            </Style>
-                          </Paragraph>
-                        </Paragraphs>
-                        <Style>
-                          <Border>
-                            <Style>None</Style>
-                          </Border>
-                          <VerticalAlign>Middle</VerticalAlign>
-                          <PaddingLeft>2pt</PaddingLeft>
-                          <PaddingRight>2pt</PaddingRight>
-                          <PaddingTop>2pt</PaddingTop>
-                          <PaddingBottom>2pt</PaddingBottom>
-                        </Style>
-                      </Textbox>
-                    </CellContents>
-                  </TablixHeader>
-                  <KeepWithGroup>After</KeepWithGroup>
-                  <RepeatOnNewPage>true</RepeatOnNewPage>
-                  <KeepTogether>true</KeepTogether>
-                </TablixMember>
                 <TablixMember>
                   <TablixHeader>
                     <Size>8.55212cm</Size>
@@ -3657,6 +3570,7 @@ ORDER BY Vendor</CommandText>
                       </TablixMembers>
                     </TablixMember>
                   </TablixMembers>
+                  <FixedData>true</FixedData>
                   <KeepWithGroup>After</KeepWithGroup>
                   <RepeatOnNewPage>true</RepeatOnNewPage>
                   <KeepTogether>true</KeepTogether>
@@ -5158,9 +5072,9 @@ ORDER BY Vendor</CommandText>
               </TablixMembers>
             </TablixRowHierarchy>
             <DataSetName>DeviceUpdateInfo</DataSetName>
-            <Top>5.32095cm</Top>
+            <Top>6.0512cm</Top>
             <Left>0.12413cm</Left>
-            <Height>2.57638cm</Height>
+            <Height>1.8cm</Height>
             <Width>59.91689cm</Width>
             <ZIndex>12</ZIndex>
             <Style>
@@ -5229,8 +5143,135 @@ ORDER BY Vendor</CommandText>
               </RightBorder>
             </Style>
           </Line>
+          <Textbox Name="TX_TotalDevices">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Total Updates</Value>
+                    <Style>
+                      <FontFamily>Segoe UI</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Center</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <Top>0.9803in</Top>
+            <Left>10.20001in</Left>
+            <Height>0.23622in</Height>
+            <Width>1.50536in</Width>
+            <ZIndex>15</ZIndex>
+            <Style>
+              <Border />
+              <VerticalAlign>Bottom</VerticalAlign>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="TX_TotalDevicesValue">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=CountDistinct(Fields!ArticleID.Value, "DeviceUpdateInfo")</Value>
+                    <Style>
+                      <FontFamily>Segoe UI</FontFamily>
+                      <FontSize>15pt</FontSize>
+                      <FontWeight>Normal</FontWeight>
+                      <TextDecoration>None</TextDecoration>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Center</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <Top>1.2193in</Top>
+            <Left>10.20001in</Left>
+            <Height>0.3765in</Height>
+            <Width>1.50536in</Width>
+            <ZIndex>16</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <VerticalAlign>Top</VerticalAlign>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Line Name="LN_TotalDevicesRight">
+            <Top>1.44cm</Top>
+            <Left>29.87276cm</Left>
+            <Height>3.39395cm</Height>
+            <Width>0cm</Width>
+            <ZIndex>17</ZIndex>
+            <Style>
+              <Border>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+              </Border>
+              <TopBorder>
+                <Color>LightGrey</Color>
+              </TopBorder>
+              <BottomBorder>
+                <Color>LightGrey</Color>
+              </BottomBorder>
+              <LeftBorder>
+                <Color>LightGrey</Color>
+              </LeftBorder>
+              <RightBorder>
+                <Color>LightGrey</Color>
+              </RightBorder>
+            </Style>
+          </Line>
+          <Textbox Name="TX_DeviceFQDN">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=First(Fields!DeviceFQDN.Value, "DeviceUpdateInfo")</Value>
+                    <Style>
+                      <FontFamily>Segoe UI</FontFamily>
+                      <FontSize>12pt</FontSize>
+                      <FontWeight>Bold</FontWeight>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <Top>5.32276cm</Top>
+            <Left>0.127cm</Left>
+            <Height>0.6cm</Height>
+            <Width>8.54925cm</Width>
+            <ZIndex>18</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
         </ReportItems>
-        <Height>7.89733cm</Height>
+        <Height>7.8512cm</Height>
         <Style>
           <Border>
             <Style>None</Style>
@@ -5317,7 +5358,7 @@ ORDER BY Vendor</CommandText>
           </Style>
         </PageHeader>
         <PageFooter>
-          <Height>1.25148cm</Height>
+          <Height>1.225cm</Height>
           <PrintOnFirstPage>true</PrintOnFirstPage>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>
@@ -5328,7 +5369,7 @@ ORDER BY Vendor</CommandText>
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>="Page: " + Globals!PageNumber.ToString() + "of " + Globals!TotalPages.ToString()</Value>
+                      <Value>="Page: " + Globals!PageNumber.ToString() + " of " + Globals!TotalPages.ToString()</Value>
                       <Style>
                         <FontFamily>Segoe UI</FontFamily>
                         <FontWeight>Bold</FontWeight>
@@ -5413,7 +5454,7 @@ ORDER BY Vendor</CommandText>
       <cl:ComponentMetadata>
         <cl:ComponentId>7b5f538e-1262-4705-a7df-7d4d398a195e</cl:ComponentId>
         <cl:SourcePath>/Report Parts/UserTokenSIDs</cl:SourcePath>
-        <cl:SyncDate>2015-02-25T11:56:20.9330000+02:00</cl:SyncDate>
+        <cl:SyncDate>2015-02-25T10:56:20.9330000+01:00</cl:SyncDate>
       </cl:ComponentMetadata>
     </ReportParameter>
     <ReportParameter Name="UserSIDs">
@@ -5428,7 +5469,7 @@ ORDER BY Vendor</CommandText>
       <cl:ComponentMetadata>
         <cl:ComponentId>2c7b7dc1-c255-43f4-b6eb-9836f5be644e</cl:ComponentId>
         <cl:SourcePath>/Report Parts/UserSIDs</cl:SourcePath>
-        <cl:SyncDate>2015-02-25T11:56:21.3870000+02:00</cl:SyncDate>
+        <cl:SyncDate>2015-02-25T10:56:21.3870000+01:00</cl:SyncDate>
       </cl:ComponentMetadata>
     </ReportParameter>
     <ReportParameter Name="Locale">

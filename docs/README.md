@@ -74,6 +74,7 @@ See [changelog](https://SCCM.Zone/CM-SRS-Dashboards-CHANGELOG).
 
 * Microsoft Endpoint Management Configuration Manager (MEMCM) with Windows Update Services (WSUS) integration.
 * Microsoft SQL Server Reporting Services (SSRS) 2017 or above.
+* Microsoft SQL [Compatibility Level](https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-database-transact-sql-compatibility-level?view=sql-server-ver15) 130 or above.
 
 ### SQL User Defined Funtions (UDF)
 
@@ -109,6 +110,7 @@ Get-Help .\Install-SRSReport.ps1
 >**Notes**
 > If you don't use `Windows Authentication` (you should!) in your SQL server you can use the `-UseSQLAuthentication` switch.
 > PowerShell script needs to be run as administrator.
+> If you have problems installing the SQL extensions run the script on the SQL server directly and specify the `-ExtensionsOnly` switch. If this still doesn't work check out the [`Manual Installation Steps`](#Create-the-SQL-Helper-Function).
 
 ## Installation - Manual
 
@@ -139,4 +141,4 @@ The `ufn_CM_GetNextMaintenanceWindow` is needed in order to display the next mai
 > **Notes**
 > You need to have access to add the function and grant SELECT on `ufn_CM_GetNextMaintenanceWindow`, `fnListAlerts`, `vSMS_ServiceWindow` and `vSMS_SUPSyncStatus` for the `smsschm_users` (MEMCM reporting).
 > If the `ufn_CM_GetNextMaintenanceWindow` is not present you will get a 'Missing helper function!' instead of the next maintenance window.
-> To resolve the error codes, see the restart reason or health states just hover over the table cell.
+> To resolve the error codes, or get more info, just hover over the table cell.

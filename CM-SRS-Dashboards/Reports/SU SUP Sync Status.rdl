@@ -1952,7 +1952,7 @@ FROM vSMS_SUPSyncStatus AS SUPSyncStatus
           </Style>
         </PageHeader>
         <PageFooter>
-          <Height>1.27794cm</Height>
+          <Height>1.225cm</Height>
           <PrintOnFirstPage>true</PrintOnFirstPage>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>
@@ -1963,7 +1963,7 @@ FROM vSMS_SUPSyncStatus AS SUPSyncStatus
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>="Page: " + Globals!PageNumber.ToString() + "of " + Globals!TotalPages.ToString()</Value>
+                      <Value>="Page: " + Globals!PageNumber.ToString() + " of " + Globals!TotalPages.ToString()</Value>
                       <Style>
                         <FontFamily>Segoe UI</FontFamily>
                         <FontWeight>Bold</FontWeight>
@@ -2048,7 +2048,7 @@ FROM vSMS_SUPSyncStatus AS SUPSyncStatus
       <cl:ComponentMetadata>
         <cl:ComponentId>7b5f538e-1262-4705-a7df-7d4d398a195e</cl:ComponentId>
         <cl:SourcePath>/Report Parts/UserTokenSIDs</cl:SourcePath>
-        <cl:SyncDate>2015-02-25T11:56:20.9330000+02:00</cl:SyncDate>
+        <cl:SyncDate>2015-02-25T10:56:20.9330000+01:00</cl:SyncDate>
       </cl:ComponentMetadata>
     </ReportParameter>
     <ReportParameter Name="UserSIDs">
@@ -2063,7 +2063,7 @@ FROM vSMS_SUPSyncStatus AS SUPSyncStatus
       <cl:ComponentMetadata>
         <cl:ComponentId>2c7b7dc1-c255-43f4-b6eb-9836f5be644e</cl:ComponentId>
         <cl:SourcePath>/Report Parts/UserSIDs</cl:SourcePath>
-        <cl:SyncDate>2015-02-25T11:56:21.3870000+02:00</cl:SyncDate>
+        <cl:SyncDate>2015-02-25T10:56:21.3870000+01:00</cl:SyncDate>
       </cl:ComponentMetadata>
     </ReportParameter>
     <ReportParameter Name="Locale">

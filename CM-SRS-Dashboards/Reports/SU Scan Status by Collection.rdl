@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition">
-  <Description>Lists the windows update agent scan status for a 'Collection'. Can be filtered by 'State Names'.  Hover to resolve 'State' , 'Health' states or 'Last Scan Error' codes.</Description>
+  <Description>Lists the windows update agent scan status for a 'Collection'. Can be filtered by 'State Names'.  Hover to resolve 'State' , 'Last Scan Error' codes or detailed 'Health Thresholds'. 'Health Thresholds' must be specified as a csv value.</Description>
   <AutoRefresh>0</AutoRefresh>
   <DataSources>
     <DataSource Name="CMSQLDatabase">
@@ -64,6 +64,9 @@ ORDER BY Name</CommandText>
           <QueryParameter Name="@UserSIDs">
             <Value>=Parameters!UserSIDs.Value</Value>
           </QueryParameter>
+          <QueryParameter Name="@HealthThresholds">
+            <Value>=Parameters!HealthThresholds.Value</Value>
+          </QueryParameter>
           <QueryParameter Name="@CollectionID">
             <Value>=Parameters!CollectionID.Value</Value>
           </QueryParameter>
@@ -93,15 +96,29 @@ ORDER BY Name</CommandText>
 /* #region QueryBody */
 
 /* Testing variables !! Need to be commented for Production !! */
--- DECLARE @UserSIDs     AS NVARCHAR(10)  = 'Disabled';
--- DECLARE @CollectionID AS NVARCHAR(10)  = 'SMS00001';
--- DECLARE @ScanStates   AS INT           = 3; -- Completed
+-- DECLARE @UserSIDs             AS NVARCHAR(10)  = 'Disabled';
+-- DECLARE @CollectionID         AS NVARCHAR(10)  = 'SMS00001';
+-- DECLARE @ScanStates           AS INT           = 3; -- Completed
+-- DECLARE @HealthThresholds     AS NVARCHAR(20) = '14,14';
 
-/* Initialize HealthState descriptor table */
-DECLARE @HealthState TABLE (
-    BitMask     INT
-    , StateName NVARCHAR(250)
+/* Variable declaration */
+DECLARE @UpdateSearchID INT   = (
+    SELECT TOP 1 UpdateSource.UpdateSource_ID
+    FROM fn_rbac_SoftwareUpdateSource(@UserSIDs) AS UpdateSource
+    WHERE IsPublishingEnabled = 1 -- Get only the UpdateSource_ID where publishing is enabled
 )
+
+/* Initialize memory tables */
+DECLARE @HealthThresholdVariables TABLE (ID INT IDENTITY(1,1), Threshold INT);
+DECLARE @HealthState              TABLE (BitMask INT, StateName NVARCHAR(250))
+
+/* Populate @HealthThresholdVariables table */
+INSERT INTO @HealthThresholdVariables (Threshold)
+SELECT VALUE FROM STRING_SPLIT(@HealthThresholds, ',')
+
+/* Set Health Threshold variables */
+DECLARE @HT_LastScanTime          AS INT = (SELECT Threshold FROM @HealthThresholdVariables WHERE ID = 1); -- Days
+DECLARE @HT_SyncCatalog           AS INT = (SELECT Threshold FROM @HealthThresholdVariables WHERE ID = 2); -- Days
 
 /* Populate HealthState table */
 INSERT INTO @HealthState (BitMask, StateName)
@@ -116,43 +133,44 @@ VALUES
     , (64,  N'Update Scan Late')
     , (128, N'Update Sync Catalog is Outdated')
 
-/* Variable declaration */
-DECLARE @UpdateSearchID INT   = (
-    SELECT TOP 1 UpdateSource.UpdateSource_ID
-    FROM fn_rbac_SoftwareUpdateSource(@UserSIDs) AS UpdateSource
-    WHERE IsPublishingEnabled = 1 -- Get only the UpdateSource_ID where publishing is enabled
-)
-
 /* Gets the device update scan states */
 SELECT
     ResourceID                = Systems.ResourceID
     , HealthStates            = (
+        -- Unmanaged
         IIF(CombinedResources.IsClient != 1, POWER(1, 1), 0)
+        -- Inactive
         +
         IIF(
             ClientSummary.ClientStateDescription = N'Inactive/Pass'
-            OR
-            ClientSummary.ClientStateDescription = N'Inactive/Fail'
-            OR
-            ClientSummary.ClientStateDescription = N'Inactive/Unknown'
+                OR ClientSummary.ClientStateDescription = N'Inactive/Fail'
+                OR ClientSummary.ClientStateDescription = N'Inactive/Unknown'
             , POWER(2, 1), 0)
+        -- Health Evaluation Failed
         +
         IIF(
             ClientSummary.ClientStateDescription = N'Active/Fail'
-            OR
-            ClientSummary.ClientStateDescription = N'Inactive/Fail'
+                OR ClientSummary.ClientStateDescription = N'Inactive/Fail'
             , POWER(4, 1), 0
         )
+        -- Scan Completed with errors
         +
-        IIF(StateNames.StateID = 6, POWER(8, 1), 0)                                -- Scan Completed with errors
+        IIF(StateNames.StateID = 6, POWER(8, 1), 0)
+        -- Scan failed
         +
-        IIF(StateNames.StateID = 5, POWER(16, 1), 0)                               -- Scan failed
+        IIF(StateNames.StateID = 5, POWER(16, 1), 0)
+        -- Scan state unknown
         +
-        IIF(StateNames.StateID = 0 OR StateNames.StateID IS NULL, POWER(32, 1), 0) -- Scan state unknown
+        IIF(StateNames.StateID = 0 OR StateNames.StateID IS NULL, POWER(32, 1), 0)
+        -- Scan Late
         +
-        IIF(UpdateScan.LastScanTime &lt; (SELECT DATEADD(dd, -14, CURRENT_TIMESTAMP)), POWER(64, 1), 0)
+        IIF(UpdateScan.LastScanTime &lt; (SELECT DATEADD(dd, -@HT_LastScanTime, CURRENT_TIMESTAMP)), POWER(64, 1), 0)
+        -- Update Sync Catalog is Outdated
         +
-        IIF(NULLIF(SyncSourceInfo.SyncCatalogVersion, '') IS NULL OR SyncSourceInfo.SyncCatalogVersion - UpdateScan.LastScanPackageVersion &gt; 14, POWER(128, 1), 0)
+        IIF(
+            NULLIF(SyncSourceInfo.SyncCatalogVersion, '') IS NULL
+                OR SyncSourceInfo.SyncCatalogVersion - UpdateScan.LastScanPackageVersion &gt; @HT_SyncCatalog
+            , POWER(128, 1), 0)
     )
     , ScanState               = (
         CASE
@@ -207,9 +225,8 @@ SELECT
     )
     , ClientVersion           = Systems.Client_Version0
     , WUAVersion              = UpdateScan.LastWUAVersion
-    , LastScanTime            = (
-        CONVERT(NVARCHAR(16), UpdateScan.LastScanTime, 120)
-    )
+    , LastUpdateScan          = DATEDIFF(dd, UpdateScan.LastScanTime, CURRENT_TIMESTAMP)
+    , LastUpdateScanTime      = CONVERT(NVARCHAR(16), UpdateScan.LastScanTime, 120)
     , LastScanPackageLocation = NULLIF(UpdateScan.LastScanPackageLocation, '')
     , LastScanPackageVersion  = UpdateScan.LastScanPackageVersion
     , SyncCatalogVersion      = SyncSourceInfo.SyncCatalogVersion
@@ -225,26 +242,14 @@ FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers
             @UpdateSearchID = UpdateScan.UpdateSource_ID OR @UpdateSearchID IS NULL
         )
     LEFT JOIN fn_rbac_StateNames(@UserSIDs) AS StateNames ON StateNames.StateID = UpdateScan.LastScanState
-        AND StateNames.TopicType = 501 -- Update source scan summarization TopicTypeID
+        AND StateNames.TopicType = 501                                             -- Update source scan summarization TopicTypeID
     OUTER APPLY (
-        SELECT SUPSyncStatus.SyncCatalogVersion
+        SELECT TOP 1 SUPSyncStatus.SyncCatalogVersion
         FROM vSMS_SUPSyncStatus AS SUPSyncStatus
-        WHERE SUPSyncStatus.WSUSServerName = (
-            IIF(
-                LEN(UpdateScan.LastScanPackageLocation) = 0
-                , UpdateScan.LastScanPackageLocation
-                , SUBSTRING(
-                    UpdateScan.LastScanPackageLocation
-                    , CHARINDEX(N'/', UpdateScan.LastScanPackageLocation) + 2
-                    , (
-                        (LEN(UpdateScan.LastScanPackageLocation)) - CHARINDEX(':', REVERSE(UpdateScan.LastScanPackageLocation))
-                    ) - CHARINDEX(N':', UpdateScan.LastScanPackageLocation) - 2
-                )
-            )
-        )
+        WHERE SUPSyncStatus.WSUSSourceServer = 'Microsoft Update'                  -- Select a WSUS Server that syncs directly with Microsoft
     ) AS SyncSourceInfo
 WHERE CollectionMembers.CollectionID   = @CollectionID
-    AND CollectionMembers.ResourceType = 5 -- Select devices only
+    AND CollectionMembers.ResourceType = 5                                         -- Select devices only
     AND ISNULL(StateNames.StateID, 0) IN (@ScanStates)
 
 /* #endregion */
@@ -290,8 +295,12 @@ WHERE CollectionMembers.CollectionID   = @CollectionID
           <DataField>WUAVersion</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
-        <Field Name="LastScanTime">
-          <DataField>LastScanTime</DataField>
+        <Field Name="LastUpdateScan">
+          <DataField>LastUpdateScan</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="LastUpdateScanTime">
+          <DataField>LastUpdateScanTime</DataField>
           <rd:TypeName>System.String</rd:TypeName>
         </Field>
         <Field Name="LastScanPackageLocation">
@@ -648,7 +657,6 @@ ORDER BY StateName</CommandText>
                 <Left>23</Left>
                 <Height>21</Height>
                 <Width>54</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ResourceID.Value)</ToolTip>
               </GaugeLabel>
             </GaugeLabels>
             <AutoLayout>true</AutoLayout>
@@ -747,7 +755,7 @@ ORDER BY StateName</CommandText>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>Lists the windows update agent scan status for a 'Collection'. Can be filtered by 'State Names'.  Hover to resolve 'State' , 'Health' states or 'Last Scan Error' codes.</Value>
+                                  <Value>Lists the windows update agent scan status for a 'Collection'. Can be filtered by 'State Names'.  Hover to resolve 'State' , 'Last Scan Error' codes or detailed 'Health Thresholds'. 'Health Thresholds' must be specified as a csv value.</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
                                     <FontSize>9pt</FontSize>
@@ -1060,7 +1068,6 @@ ORDER BY StateName</CommandText>
                 <Left>23</Left>
                 <Height>21</Height>
                 <Width>54</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ResourceID.Value)</ToolTip>
               </GaugeLabel>
             </GaugeLabels>
             <AutoLayout>true</AutoLayout>
@@ -1365,7 +1372,6 @@ ORDER BY StateName</CommandText>
                 <Left>22</Left>
                 <Height>21</Height>
                 <Width>54</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ResourceID.Value)</ToolTip>
               </GaugeLabel>
             </GaugeLabels>
             <AutoLayout>true</AutoLayout>
@@ -1670,7 +1676,6 @@ ORDER BY StateName</CommandText>
                 <Left>23</Left>
                 <Height>21</Height>
                 <Width>54</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ResourceID.Value)</ToolTip>
               </GaugeLabel>
             </GaugeLabels>
             <AutoLayout>true</AutoLayout>
@@ -1975,7 +1980,6 @@ ORDER BY StateName</CommandText>
                 <Left>23</Left>
                 <Height>21</Height>
                 <Width>54</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ResourceID.Value)</ToolTip>
               </GaugeLabel>
             </GaugeLabels>
             <AutoLayout>true</AutoLayout>
@@ -2305,7 +2309,6 @@ ORDER BY StateName</CommandText>
                 <Left>23</Left>
                 <Height>21</Height>
                 <Width>54</Width>
-                <ToolTip>="Total: " &amp; Count(Fields!ResourceID.Value)</ToolTip>
               </GaugeLabel>
             </GaugeLabels>
             <AutoLayout>true</AutoLayout>
@@ -2565,7 +2568,7 @@ ORDER BY StateName</CommandText>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=CountDistinct(Fields!Device.Value)</Value>
+                                  <Value>=CountDistinct(Fields!ResourceID.Value)</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
                                     <FontWeight>Bold</FontWeight>
@@ -2619,7 +2622,7 @@ ORDER BY StateName</CommandText>
               <TablixMembers>
                 <TablixMember>
                   <TablixHeader>
-                    <Size>2.25227cm</Size>
+                    <Size>2.65796cm</Size>
                     <CellContents>
                       <Textbox Name="TH_ScanState">
                         <CanGrow>true</CanGrow>
@@ -2631,7 +2634,7 @@ ORDER BY StateName</CommandText>
                           <Paragraph>
                             <TextRuns>
                               <TextRun>
-                                <Value>=SrsResources.Localization.GetString("State", User!Language)</Value>
+                                <Value>=SrsResources.Localization.GetString("Scan State", User!Language)</Value>
                                 <Style>
                                   <FontFamily>Segoe UI</FontFamily>
                                 </Style>
@@ -2663,9 +2666,9 @@ ORDER BY StateName</CommandText>
                   <TablixMembers>
                     <TablixMember>
                       <TablixHeader>
-                        <Size>2.0206cm</Size>
+                        <Size>3.05488cm</Size>
                         <CellContents>
-                          <Textbox Name="TH_HealthState">
+                          <Textbox Name="TH_HealthStates">
                             <CanGrow>true</CanGrow>
                             <UserSort>
                               <SortExpression>=IIF(Fields!HealthStates.Value = 0, "Yes", "No")</SortExpression>
@@ -2675,7 +2678,7 @@ ORDER BY StateName</CommandText>
                               <Paragraph>
                                 <TextRuns>
                                   <TextRun>
-                                    <Value>=SrsResources.Localization.GetString("Healthy", User!Language)</Value>
+                                    <Value>=SrsResources.Localization.GetString("Health States", User!Language)</Value>
                                     <Style>
                                       <FontFamily>Segoe UI</FontFamily>
                                     </Style>
@@ -2704,7 +2707,7 @@ ORDER BY StateName</CommandText>
                       <TablixMembers>
                         <TablixMember>
                           <TablixHeader>
-                            <Size>5.8602cm</Size>
+                            <Size>7.38608cm</Size>
                             <CellContents>
                               <Textbox Name="TH_Device">
                                 <CanGrow>true</CanGrow>
@@ -2909,19 +2912,19 @@ ORDER BY StateName</CommandText>
                                           <TablixMembers>
                                             <TablixMember>
                                               <TablixHeader>
-                                                <Size>2.8175cm</Size>
+                                                <Size>2.94979cm</Size>
                                                 <CellContents>
-                                                  <Textbox Name="TH_LastScanTime">
+                                                  <Textbox Name="TH_LastUpdateScan">
                                                     <CanGrow>true</CanGrow>
                                                     <UserSort>
-                                                      <SortExpression>=Fields!LastScanTime.Value</SortExpression>
+                                                      <SortExpression>=Fields!LastUpdateScan.Value</SortExpression>
                                                     </UserSort>
                                                     <KeepTogether>true</KeepTogether>
                                                     <Paragraphs>
                                                       <Paragraph>
                                                         <TextRuns>
                                                           <TextRun>
-                                                            <Value>=SrsResources.Localization.GetString("LastScanTime", User!Language)</Value>
+                                                            <Value>=SrsResources.Localization.GetString("Last Update Scan (Days)", User!Language)</Value>
                                                             <Style>
                                                               <FontFamily>Segoe UI</FontFamily>
                                                             </Style>
@@ -2950,7 +2953,7 @@ ORDER BY StateName</CommandText>
                                               <TablixMembers>
                                                 <TablixMember>
                                                   <TablixHeader>
-                                                    <Size>6.79869cm</Size>
+                                                    <Size>7.60213cm</Size>
                                                     <CellContents>
                                                       <Textbox Name="TH_LastScanPackageLocation">
                                                         <CanGrow>true</CanGrow>
@@ -3136,6 +3139,7 @@ ORDER BY StateName</CommandText>
                       </TablixMembers>
                     </TablixMember>
                   </TablixMembers>
+                  <FixedData>true</FixedData>
                   <KeepWithGroup>After</KeepWithGroup>
                   <RepeatOnNewPage>true</RepeatOnNewPage>
                   <KeepTogether>true</KeepTogether>
@@ -3178,7 +3182,7 @@ ORDER BY StateName</CommandText>
                     </SortExpression>
                   </SortExpressions>
                   <TablixHeader>
-                    <Size>2.25227cm</Size>
+                    <Size>2.65796cm</Size>
                     <CellContents>
                       <Textbox Name="TV_ScanState">
                         <CanGrow>true</CanGrow>
@@ -3226,7 +3230,7 @@ ORDER BY StateName</CommandText>
                             <Style>Solid</Style>
                             <Width>1pt</Width>
                           </RightBorder>
-                          <BackgroundColor>=IIF((Fields!ScanState.Value = "Completed" Or Fields!ScanState.Value = "Running" Or Fields!ScanState.Value = "Waiting") And Code.GetHealthStates(Fields!HealthStates.Value) = "Healthy", "#55bFA4", IIF(Fields!ScanState.Value &lt;&gt; "Error" And Fields!ScanState.Value &lt;&gt; "Failed", "#FFE279", "#D46456"))</BackgroundColor>
+                          <BackgroundColor>=IIF((Fields!ScanState.Value = "Completed" Or Fields!ScanState.Value = "Running" Or Fields!ScanState.Value = "Waiting") And Code.GetHealthStates(Fields!HealthStates.Value, False) = "Healthy", "#55bFA4", IIF(Fields!ScanState.Value &lt;&gt; "Error" And Fields!ScanState.Value &lt;&gt; "Failed", "#FFE279", "#D46456"))</BackgroundColor>
                           <VerticalAlign>Middle</VerticalAlign>
                           <PaddingLeft>2pt</PaddingLeft>
                           <PaddingRight>2pt</PaddingRight>
@@ -3239,16 +3243,16 @@ ORDER BY StateName</CommandText>
                   <TablixMembers>
                     <TablixMember>
                       <TablixHeader>
-                        <Size>2.0206cm</Size>
+                        <Size>3.05488cm</Size>
                         <CellContents>
-                          <Textbox Name="TV_HealthState">
+                          <Textbox Name="TV_HealthStates">
                             <CanGrow>true</CanGrow>
                             <KeepTogether>true</KeepTogether>
                             <Paragraphs>
                               <Paragraph>
                                 <TextRuns>
                                   <TextRun>
-                                    <Value>=IIF(Fields!HealthStates.Value = 0, "Yes", "No")</Value>
+                                    <Value>=Code.GetHealthStates(Fields!HealthStates.Value, False)</Value>
                                     <Style>
                                       <FontFamily>Segoe UI</FontFamily>
                                       <FontSize>9pt</FontSize>
@@ -3261,7 +3265,7 @@ ORDER BY StateName</CommandText>
                                 </Style>
                               </Paragraph>
                             </Paragraphs>
-                            <ToolTip>=Code.GetHealthStates(Fields!HealthStates.Value)</ToolTip>
+                            <ToolTip>=Code.GetHealthStates(Fields!HealthStates.Value, True)</ToolTip>
                             <Style>
                               <Border>
                                 <Color>LightGrey</Color>
@@ -3300,7 +3304,7 @@ ORDER BY StateName</CommandText>
                       <TablixMembers>
                         <TablixMember>
                           <TablixHeader>
-                            <Size>5.8602cm</Size>
+                            <Size>7.38608cm</Size>
                             <CellContents>
                               <Textbox Name="TV_Device">
                                 <CanGrow>true</CanGrow>
@@ -3489,16 +3493,16 @@ ORDER BY StateName</CommandText>
                                           <TablixMembers>
                                             <TablixMember>
                                               <TablixHeader>
-                                                <Size>2.8175cm</Size>
+                                                <Size>2.94979cm</Size>
                                                 <CellContents>
-                                                  <Textbox Name="TV_LastScanTime">
+                                                  <Textbox Name="TV_LastUpdateScan">
                                                     <CanGrow>true</CanGrow>
                                                     <KeepTogether>true</KeepTogether>
                                                     <Paragraphs>
                                                       <Paragraph>
                                                         <TextRuns>
                                                           <TextRun>
-                                                            <Value>=Fields!LastScanTime.Value</Value>
+                                                            <Value>=Fields!LastUpdateScan.Value</Value>
                                                             <Style>
                                                               <FontFamily>Segoe UI</FontFamily>
                                                               <FontSize>9pt</FontSize>
@@ -3510,6 +3514,7 @@ ORDER BY StateName</CommandText>
                                                         </Style>
                                                       </Paragraph>
                                                     </Paragraphs>
+                                                    <ToolTip>=Fields!LastUpdateScanTime.Value</ToolTip>
                                                     <Style>
                                                       <Border>
                                                         <Style>None</Style>
@@ -3527,7 +3532,7 @@ ORDER BY StateName</CommandText>
                                               <TablixMembers>
                                                 <TablixMember>
                                                   <TablixHeader>
-                                                    <Size>6.79869cm</Size>
+                                                    <Size>7.60213cm</Size>
                                                     <CellContents>
                                                       <Textbox Name="TV_LastScanPackageLocation">
                                                         <CanGrow>true</CanGrow>
@@ -3704,7 +3709,7 @@ ORDER BY StateName</CommandText>
                 </TablixMember>
                 <TablixMember>
                   <TablixHeader>
-                    <Size>2.25227cm</Size>
+                    <Size>2.65796cm</Size>
                     <CellContents>
                       <Textbox Name="TV_Total">
                         <CanGrow>true</CanGrow>
@@ -3755,7 +3760,7 @@ ORDER BY StateName</CommandText>
                   <TablixMembers>
                     <TablixMember>
                       <TablixHeader>
-                        <Size>2.0206cm</Size>
+                        <Size>3.05488cm</Size>
                         <CellContents>
                           <Textbox Name="Textbox11">
                             <CanGrow>true</CanGrow>
@@ -3802,7 +3807,7 @@ ORDER BY StateName</CommandText>
                       <TablixMembers>
                         <TablixMember>
                           <TablixHeader>
-                            <Size>5.8602cm</Size>
+                            <Size>7.38608cm</Size>
                             <CellContents>
                               <Textbox Name="Textbox107">
                                 <CanGrow>true</CanGrow>
@@ -4037,7 +4042,7 @@ ORDER BY StateName</CommandText>
                                           <TablixMembers>
                                             <TablixMember>
                                               <TablixHeader>
-                                                <Size>2.8175cm</Size>
+                                                <Size>2.94979cm</Size>
                                                 <CellContents>
                                                   <Textbox Name="Textbox18">
                                                     <CanGrow>true</CanGrow>
@@ -4084,7 +4089,7 @@ ORDER BY StateName</CommandText>
                                               <TablixMembers>
                                                 <TablixMember>
                                                   <TablixHeader>
-                                                    <Size>6.79869cm</Size>
+                                                    <Size>7.60213cm</Size>
                                                     <CellContents>
                                                       <Textbox Name="Textbox26">
                                                         <CanGrow>true</CanGrow>
@@ -4301,7 +4306,7 @@ ORDER BY StateName</CommandText>
             <Top>5.32131cm</Top>
             <Left>0.12413cm</Left>
             <Height>1.8cm</Height>
-            <Width>47.90377cm</Width>
+            <Width>51.80535cm</Width>
             <ZIndex>12</ZIndex>
             <Style>
               <Border>
@@ -4313,7 +4318,7 @@ ORDER BY StateName</CommandText>
             <Top>1.18642cm</Top>
             <Left>0.127cm</Left>
             <Height>0cm</Height>
-            <Width>47.90091cm</Width>
+            <Width>51.80249cm</Width>
             <ZIndex>13</ZIndex>
             <Style>
               <Border>
@@ -4343,7 +4348,7 @@ ORDER BY StateName</CommandText>
             <Top>5.05991cm</Top>
             <Left>0.127cm</Left>
             <Height>0cm</Height>
-            <Width>47.90091cm</Width>
+            <Width>51.80249cm</Width>
             <ZIndex>14</ZIndex>
             <Style>
               <Border>
@@ -4369,6 +4374,100 @@ ORDER BY StateName</CommandText>
               </RightBorder>
             </Style>
           </Line>
+          <Textbox Name="TX_TotalDevices">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>Total Devices</Value>
+                    <Style>
+                      <FontFamily>Segoe UI</FontFamily>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Center</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <Top>0.9803in</Top>
+            <Left>10.19862in</Left>
+            <Height>0.23622in</Height>
+            <Width>1.50536in</Width>
+            <ZIndex>15</ZIndex>
+            <Style>
+              <Border />
+              <VerticalAlign>Bottom</VerticalAlign>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="TX_TotalDevicesValue">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=CountDistinct(Fields!ResourceID.Value, "DevicesScanStateInfo")</Value>
+                    <Style>
+                      <FontFamily>Segoe UI</FontFamily>
+                      <FontSize>14pt</FontSize>
+                      <FontWeight>Normal</FontWeight>
+                      <TextDecoration>None</TextDecoration>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Center</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <Top>1.2193in</Top>
+            <Left>10.19862in</Left>
+            <Height>0.3765in</Height>
+            <Width>1.50536in</Width>
+            <ZIndex>16</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <VerticalAlign>Top</VerticalAlign>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Line Name="LN_TotalDevicesRight">
+            <Top>1.44cm</Top>
+            <Left>29.86923cm</Left>
+            <Height>3.39395cm</Height>
+            <Width>0cm</Width>
+            <ZIndex>17</ZIndex>
+            <Style>
+              <Border>
+                <Color>LightGrey</Color>
+                <Style>Solid</Style>
+              </Border>
+              <TopBorder>
+                <Color>LightGrey</Color>
+              </TopBorder>
+              <BottomBorder>
+                <Color>LightGrey</Color>
+              </BottomBorder>
+              <LeftBorder>
+                <Color>LightGrey</Color>
+              </LeftBorder>
+              <RightBorder>
+                <Color>LightGrey</Color>
+              </RightBorder>
+            </Style>
+          </Line>
         </ReportItems>
         <Height>7.14248cm</Height>
         <Style>
@@ -4377,7 +4476,7 @@ ORDER BY StateName</CommandText>
           </Border>
         </Style>
       </Body>
-      <Width>48.21635cm</Width>
+      <Width>52.1588cm</Width>
       <Page>
         <PageHeader>
           <Height>1.0664cm</Height>
@@ -4423,7 +4522,7 @@ ORDER BY StateName</CommandText>
               <Top>0.127cm</Top>
               <Left>0.127cm</Left>
               <Height>0cm</Height>
-              <Width>47.90091cm</Width>
+              <Width>51.80249cm</Width>
               <ZIndex>1</ZIndex>
               <Style>
                 <Border>
@@ -4457,7 +4556,7 @@ ORDER BY StateName</CommandText>
           </Style>
         </PageHeader>
         <PageFooter>
-          <Height>1.27794cm</Height>
+          <Height>1.225cm</Height>
           <PrintOnFirstPage>true</PrintOnFirstPage>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>
@@ -4468,7 +4567,7 @@ ORDER BY StateName</CommandText>
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>="Page: " + Globals!PageNumber.ToString() + "of " + Globals!TotalPages.ToString()</Value>
+                      <Value>="Page: " + Globals!PageNumber.ToString() + " of " + Globals!TotalPages.ToString()</Value>
                       <Style>
                         <FontFamily>Segoe UI</FontFamily>
                         <FontWeight>Bold</FontWeight>
@@ -4483,7 +4582,7 @@ ORDER BY StateName</CommandText>
               <Top>0.38806cm</Top>
               <Left>0.12413cm</Left>
               <Height>0.63492cm</Height>
-              <Width>2.79292cm</Width>
+              <Width>4.27287cm</Width>
               <Style>
                 <VerticalAlign>Middle</VerticalAlign>
                 <PaddingLeft>2pt</PaddingLeft>
@@ -4494,7 +4593,7 @@ ORDER BY StateName</CommandText>
             </Textbox>
             <Line Name="LN_ReportFooter">
               <Top>0.1905cm</Top>
-              <Left>0.127cm</Left>
+              <Left>4.02858cm</Left>
               <Height>0cm</Height>
               <Width>47.90091cm</Width>
               <ZIndex>1</ZIndex>
@@ -4553,7 +4652,7 @@ ORDER BY StateName</CommandText>
       <cl:ComponentMetadata>
         <cl:ComponentId>7b5f538e-1262-4705-a7df-7d4d398a195e</cl:ComponentId>
         <cl:SourcePath>/Report Parts/UserTokenSIDs</cl:SourcePath>
-        <cl:SyncDate>2015-02-25T11:56:20.9330000+02:00</cl:SyncDate>
+        <cl:SyncDate>2015-02-25T10:56:20.9330000+01:00</cl:SyncDate>
       </cl:ComponentMetadata>
     </ReportParameter>
     <ReportParameter Name="UserSIDs">
@@ -4568,7 +4667,7 @@ ORDER BY StateName</CommandText>
       <cl:ComponentMetadata>
         <cl:ComponentId>2c7b7dc1-c255-43f4-b6eb-9836f5be644e</cl:ComponentId>
         <cl:SourcePath>/Report Parts/UserSIDs</cl:SourcePath>
-        <cl:SyncDate>2015-02-25T11:56:21.3870000+02:00</cl:SyncDate>
+        <cl:SyncDate>2015-02-25T10:56:21.3870000+01:00</cl:SyncDate>
       </cl:ComponentMetadata>
     </ReportParameter>
     <ReportParameter Name="Locale">
@@ -4609,6 +4708,15 @@ ORDER BY StateName</CommandText>
       </ValidValues>
       <MultiValue>true</MultiValue>
     </ReportParameter>
+    <ReportParameter Name="HealthThresholds">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>14,14</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>Health Thresholds - LastScanTime, SyncCatalog (Days,Days)</Prompt>
+    </ReportParameter>
   </ReportParameters>
   <ReportParametersLayout>
     <GridLayoutDefinition>
@@ -4640,6 +4748,11 @@ ORDER BY StateName</CommandText>
           <RowIndex>2</RowIndex>
           <ParameterName>ScanStates</ParameterName>
         </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>2</ColumnIndex>
+          <RowIndex>2</RowIndex>
+          <ParameterName>HealthThresholds</ParameterName>
+        </CellDefinition>
       </CellDefinitions>
     </GridLayoutDefinition>
   </ReportParametersLayout>
@@ -4656,24 +4769,31 @@ ORDER BY StateName</CommandText>
 '.NOTES
 '    Created by Ioan Popovici.
 '.LINK
-'    https://SCCM.Zone
+'    https://SCCM.Zone/
 '.LINK
-'    https://SCCM.Zone/Issues
+'    https://SCCM.Zone/CM-SRS-Dashboards-GIT
+'.LINK
+'    https://SCCM.Zone/CM-SRS-Dashboards-ISSUES
 '
 '/*##=============================================*/
 '/*## SCRIPT BODY                                 */
 '/*##=============================================*/
 '/* #region FunctionBody */
 
-Function GetHealthStates (ByVal intBitMask As Integer) As String
+Function GetHealthStates (ByVal intBitMask As Integer, blnDetailed As Boolean) As String
     Dim astrHealthStates() As String = {
-        "Healthy", "Unmanaged", "Inactive", "Health Evaluation Failed", "Update Scan Completed with Errors", "Update Scan Failed",
-        "Update Scan Unknown", "Update Scan Late", "Update Sync Catalog is Outdated"
+        "Healthy", "Unmanaged", "Inactive", "Health Evaluation Failed", "Scan Completed with Errors", "Scan Failed",
+        "Scan Unknown", "Scan Late", "Sync Catalog Outdated"
+    }
+    Dim astrHealthStatesDetailed() As String = {
+        "Healthy", "Unmanaged", "Client Inactive", "Client Health Evaluation Failed", "Update Scan Completed with Errors",
+        "Update Scan Failed", "Update Scan Unknown", "Update Scan Late", "Update Sync Catalog is Outdated"
     }
     Dim iaHealthStates As Integer
     Dim intStep As Integer
     Dim strResolvedHealthStates As String = ""
     Try
+        If blnDetailed Then astrHealthStates = astrHealthStatesDetailed
         If intBitMask &lt;&gt; 0 Then
             For iaHealthStates = 0 To UBound(astrHealthStates)
                 If intBitMask And intStep Then
