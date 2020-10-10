@@ -1,4 +1,4 @@
-# Changelog # Changelog for MEM.Zone-Dashboards
+# Changelog for MEM.Zone-Dashboards
 
 ## 4.0.0 - 2020-10-09
 
