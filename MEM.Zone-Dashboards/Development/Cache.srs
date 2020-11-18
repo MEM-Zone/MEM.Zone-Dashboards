@@ -1,0 +1,44 @@
+=IIF(Parameters!Summarization.Value = True,
+    Switch(
+        Fields!Compliant.Value = 1, "Yes",
+        Fields!Compliant.Value = 2, "No",
+        True, "Unknown"
+    ),
+    Switch(
+        Fields!Compliant.Value = 1, "Compliant",
+        Fields!Compliant.Value = 2,
+            IIF(Code.GetStates(Fields!ComplianceStates.Value, "BitlockerComplianceStates", False) = "N/A"
+                , "Noncompliant"
+                , Code.GetStates(Fields!ComplianceStates.Value, "BitlockerComplianceStates", False)
+            ),
+        True, "Unknown"
+    )
+)
+
+=Switch(
+    Fields!Compliant.Value = 1 And Fields!ComplianceStatusDetails.Value = 0, "#55bfa4",
+    Fields!Compliant.Value = 1, "#F4BF65",
+    Fields!Compliant.Value = 2, "#D46456",
+    True, "#FFE279"
+)
+
+=IIF(Parameters!Summarization.Value = True,
+    IIF(Code.GetStates(Fields!ComplianceStates.Value, "BitlockerComplianceStates", True) = "N/A",
+        "Failed to apply policy. Check for corrupted local policy file.",
+        Code.GetStates(Fields!ComplianceStates.Value, "BitlockerComplianceStates", True)
+    ),
+    Join(LookupSet(Fields!EncodedDeviceName.Value, Fields!EncodedDeviceName.Value, Fields!VolumeName.Value & " " & Code.GetStates(Fields!ComplianceStates.Value, "BitlockerComplianceStates", False) & " (Error: " &
+    SWITCH(
+        Fields!ComplianceStatusDetails.Value = 0,  SrsResources.Localization.GetString("Bitlocker_Enterprise_Compliance_Details_No_Error", User!Language),
+        Fields!ComplianceStatusDetails.Value = 1,  SrsResources.Localization.GetString("Bitlocker_Enterprise_Compliance_Details_An_unknown_error_has_occurred", User!Language),
+        Fields!ComplianceStatusDetails.Value = 5,  SrsResources.Localization.GetString("Bitlocker_Enterprise_Compliance_Details_User_postponed_encryption", User!Language),
+        Fields!ComplianceStatusDetails.Value = 6,  SrsResources.Localization.GetString("Bitlocker_Enterprise_Compliance_Details_System_Partition_not_available_or_large_enough", User!Language),
+        Fields!ComplianceStatusDetails.Value = 7,  SrsResources.Localization.GetString("Bitlocker_Enterprise_Compliance_Details_Unable_to_find_compatible_TPM", User!Language),
+        Fields!ComplianceStatusDetails.Value = 8,  SrsResources.Localization.GetString("Bitlocker_Enterprise_Compliance_Details_TPM_visible_but_not_initialized", User!Language),
+        Fields!ComplianceStatusDetails.Value = 9,  SrsResources.Localization.GetString("Bitlocker_Enterprise_Compliance_Details_Policy_conflict", User!Language),
+        Fields!ComplianceStatusDetails.Value = 10, SrsResources.Localization.GetString("Bitlocker_Enterprise_Compliance_Details_Waiting_for_TPM_auto_provisioning", User!Language),
+        Fields!ComplianceStatusDetails.Value = 11, SrsResources.Localization.GetString("Bitlocker_Enterprise_Compliance_Details_Volume_is_locked", User!Language),
+        Fields!ComplianceStatusDetails.Value = 50, SrsResources.Localization.GetString("Bitlocker_Enterprise_Compliance_Details_Policy_Is_Not_Enforced", User!Language),
+        True , "N/A"
+    ) & ", NonComplianceReason: " & Code.GetStates(Fields!ReasonsForNonCompliance.Value, "BitlockerNonComplianceReasons", False) & ")", "ComplianceDetails"), " | ")
+)

@@ -20,31 +20,28 @@
 /* #region QueryBody */
 
 /* Testing variables !! Need to be commented for Production !! */
---DECLARE @UserSIDs        AS NVARCHAR(10) = 'Disabled';
---DECLARE @CollectionID    AS NVARCHAR(10) = 'VIT0086E';
---DECLARE @VolumeTypes     AS INT          =  1;
+--DECLARE @UserSIDs           AS NVARCHAR(10) = 'Disabled';
+--DECLARE @CollectionID       AS NVARCHAR(10) = 'VIT009C5';
+--DECLARE @VolumeTypes        AS INT          = 1;
+--DECLARE @Locale             AS INT          = 2;
+--DECLARE @PolicyID           AS NVARCHAR(10) = '18265398'
 
 /* Perform cleanup */
 IF OBJECT_ID(N'tempdb..#BitlockerResult', N'U') IS NOT NULL
     DROP TABLE #BitlockerResult;
 
 /* Variable declaration */
-DECLARE @Compliant       AS INT          = 1
-DECLARE @Noncompliant    AS INT          = 2
-DECLARE @BLMCollectionID AS NVARCHAR(10) = (
-    SELECT BLMCollectionID.CI_ID
-    FROM v_BLM_CI_ID_AND_COLL_ID AS BLMCollectionID
-    WHERE BLMCollectionID.CollectionID = @CollectionID
-)
+DECLARE @Compliant          AS INT          = 1;
+DECLARE @Noncompliant       AS INT          = 2;
 
 /* Initialize memory tables */
-DECLARE @HealthState             TABLE(BitMask INT, StateName NVARCHAR(250));
+DECLARE @ComplianceStates        TABLE(BitMask INT, StateName NVARCHAR(250));
 DECLARE @ReasonsForNonCompliance TABLE(BitMask INT, StateName NVARCHAR(250));
 
 /* Populate ReasonsForNonCompliance table */
 INSERT INTO @ReasonsForNonCompliance (BitMask, StateName)
 VALUES
-    (0,       N'Healthy')
+    (0,       N'N/A')
     , (1,     N'Cypher strength not AES 256')
     , (2,     N'Volume encrypted')
     , (4,     N'Volume decrypted')
@@ -63,10 +60,10 @@ VALUES
     , (32768, N'Minimum cypher strength XTS-AES-128 bit required')
     , (65536, N'Minimum cypher strength XTS-AES-256 bit required')
 
-/* Populate HealthState table */
-INSERT INTO @HealthState (BitMask, StateName)
+/* Populate ComplianceStates table */
+INSERT INTO @ComplianceStates (BitMask, StateName)
 VALUES
-    (0,      N'Healthy')
+    (0,      N'Compliant')
     , (1,    N'Unprotected')
     , (2,    N'Partially Protected')
     , (4,    N'Bitlocker Exemption')
@@ -78,13 +75,15 @@ VALUES
     , (256,  N'Decryption Paused')
     , (512,  N'Pending Key Upload')
     , (1024, N'Pending Key Rotation')
+    , (2048, N'Policy not Evaluated')
 
 /* Get compliance data data */
 ;
 WITH Bitlocker_CTE AS (
 SELECT
-    EncodedDeviceName         = MBAMPolicy.EncodedComputerName0
-    , Domain                  = ComputerSystem.Domain0
+    ResourceID                = Systems.ResourceID
+    , EncodedDeviceName       = MBAMPolicy.EncodedComputerName0
+    , Domain                  = LOWER(Systems.Full_Domain_Name0)
     , UserName                = SystemValid.User_Domain0 + N'\' + SystemValid.User_Name0
     , Compliant               = CIComplianceStatus.ComplianceState
     , Exemption               = ( -- ComplianceState: 1 = Compliant, 2 = NonCompliant
@@ -113,7 +112,8 @@ SELECT
     )
     , ReasonsForNonCompliance = IIF(CHARINDEX(N'1,', BitlockerDetails.ReasonsForNonCompliance0) > 0, N'1', BitlockerDetails.ReasonsForNonCompliance0)
     , LastPolicyEvaluation    = CONVERT(NVARCHAR(19), MAX(AssignmentStatus.LastEvaluationMessageTime), 120)
-    , DiskVolumes		      = (
+    , LastHWIScan             = CONVERT(NVARCHAR(19), MAX(WorkstationStatus.LastHWScan), 120)
+    , DiskVolumes             = (
             DENSE_RANK() OVER(PARTITION BY MBAMPolicy.EncodedComputerName0 ORDER BY BitlockerDetails.MbamPersistentVolumeId0)
             +
             DENSE_RANK() OVER(PARTITION BY MBAMPolicy.EncodedComputerName0 ORDER BY BitlockerDetails.MbamPersistentVolumeId0 DESC)
@@ -124,15 +124,18 @@ SELECT
     )
 FROM fn_rbac_ClientCollectionMembers(@UserSIDs) AS ClientCollectionMembers
     INNER JOIN fn_rbac_R_System_Valid(@UserSIDs) AS SystemValid ON SystemValid.ResourceID = ClientCollectionMembers.ResourceID
-    INNER JOIN fn_rbac_GS_COMPUTER_SYSTEM(@UserSIDs) AS ComputerSystem ON ComputerSystem.ResourceID = SystemValid.ResourceID
+    INNER JOIN fn_rbac_R_System(@UserSIDs) AS Systems ON Systems.ResourceID = SystemValid.ResourceID
     INNER JOIN v_SMSCICurrentComplianceStatus AS CIComplianceStatus ON CIComplianceStatus.ItemKey = SystemValid.ResourceID
     INNER JOIN fn_rbac_ConfigurationItems(@UserSIDs) AS ConfigurationItems ON ConfigurationItems.ModelID = CIComplianceStatus.ModelID
-    INNER JOIN fn_rbac_GS_MBAM_POLICY(@UserSIDs) AS MBAMPolicy ON MBAMPolicy.ResourceID = ClientCollectionMembers.ResourceID
-    INNER JOIN fn_rbac_CIAssignmentToCI(@UserSIDs) AS AssignmentCI ON AssignmentCI.CI_ID  = ConfigurationItems.CI_ID
+        AND ConfigurationItems.CI_ID = (@PolicyID)
+    INNER JOIN fn_rbac_CIAssignmentToCI(@UserSIDs) AS AssignmentCI ON AssignmentCI.CI_ID = ConfigurationItems.CI_ID
     INNER JOIN fn_rbac_CIAssignmentStatus(@UserSIDs) AS AssignmentStatus ON AssignmentStatus.AssignmentID = AssignmentCI.AssignmentID
         AND AssignmentStatus.ResourceID = SystemValid.ResourceID
+    INNER JOIN fn_rbac_GS_MBAM_POLICY(@UserSIDs) AS MBAMPolicy ON MBAMPolicy.ResourceID = SystemValid.ResourceID
+        AND MBAMPolicy.EncodedComputerName0 IS NOT NULL
     INNER JOIN fn_rbac_GS_BITLOCKER_DETAILS(@UserSIDs) AS BitlockerDetails ON BitlockerDetails.ResourceID = SystemValid.ResourceID
         AND BitlockerDetails.MbamVolumeType0 IN (@VolumeTypes)      -- 1 = OS, 2 = Fixed Data Volumes
+    LEFT OUTER JOIN fn_rbac_GS_WORKSTATION_STATUS(@UserSIDs) AS WorkstationStatus ON WorkstationStatus.ResourceID = SystemValid.ResourceID
     OUTER APPLY (
         SELECT
             Uploaded    = COUNT(RecoveryCoreKeys.RecoveryKey)                    OVER(PARTITION BY MBAMPolicy.EncodedComputerName0)
@@ -148,21 +151,20 @@ FROM fn_rbac_ClientCollectionMembers(@UserSIDs) AS ClientCollectionMembers
             )
         )
     ) AS Keys
-
-WHERE MBAMPolicy.EncodedComputerName0 IS NOT NULL
-    AND ClientCollectionMembers.CollectionID = @CollectionID
-    AND ConfigurationItems.CI_ID IN (@BLMCollectionID)
+WHERE ClientCollectionMembers.CollectionID = @CollectionID
 GROUP BY
-    MBAMPolicy.EncodedComputerName0
+    Systems.ResourceID
+    , MBAMPolicy.EncodedComputerName0
     , BitlockerDetails.Compliant0
     , BitlockerDetails.MbamVolumeType0
     , BitlockerDetails.DriveLetter0
     , BitlockerDetails.EncryptionMethod0
     , BitlockerDetails.ConversionStatus0
     , BitlockerDetails.ReasonsForNonCompliance0
+    , WorkstationStatus.LastHWScan
     , SystemValid.User_Name0
     , SystemValid.User_Domain0
-    , ComputerSystem.Domain0
+    , Systems.Full_Domain_Name0
     , CIComplianceStatus.ComplianceState
     , Keys.Uploaded
     , Keys.Disclosed
@@ -172,70 +174,76 @@ GROUP BY
     , MBAMMachineError0
 )
 SELECT
-    Compliant
-    , HealthStates            = (
-        -- Unprotected
+    ResourceID
+    , Compliant
+    , ComplianceStates        = (
+        -- Policy not Evaluated
         IIF(
-            ProtectedVolumes = 0
-            , POWER(1, 1), 0
-        )
-        -- Partially Protected
-        +
-        IIF(
-            ProtectedVolumes != 0 AND ProtectedVolumes < DiskVolumes
-            , POWER(2, 1), 0
-        )
-        -- Bitlocker Exemption
-        +
-        IIF(
-            Exemption != 0
-            , POWER(4, 1), 0
-        )
-        -- OS Drive Noncompliant
-        +
-        IIF(
-            VolumeType = 1 AND ComplianceStatus = 0 AND ProtectedVolumes != 0
-            , POWER(8, 1), 0
-        )
-        -- Data Drive Noncompliant
-        +
-        IIF(
-            VolumeType = 2 AND ComplianceStatus = 0 AND ProtectedVolumes != 0
-            , POWER(16, 1), 0
-        )
-        -- Encryption in Progress
-        +
-        IIF(
-            EncryptionStatus = 2
-            , POWER(32, 1), 0
-        )
-        -- Decryption in Progress
-        +
-        IIF(
-            EncryptionStatus = 3
-            , POWER(64, 1), 0
-        )
-        -- Encryption Paused
-        +
-        IIF(
-            EncryptionStatus = 4
-            , POWER(128, 1), 0
-        )
-        -- Decryption Paused
-        +
-        IIF(
-            EncryptionStatus = 5
-            , POWER(256, 1), 0
-        )
-        -- Pending Key Upload
-        +
-        IIF(ProtectedVolumes !=0 AND (UploadedKeys = 0 OR (UploadedKeys - DisclosedKeys) = 0)
-            , POWER(512, 1), 0
-        )
-        -- Pending Key Rotation
-        +
-        IIF(ProtectedVolumes !=0 AND UploadedKeys != 0  AND (UploadedKeys - DisclosedKeys) = 0
-            , POWER(1024, 1), 0
+            ComplianceStatusDetails = 50
+            , POWER(2048, 1),
+            -- Unprotected
+            IIF(
+                ProtectedVolumes = 0
+                , POWER(1, 1), 0
+            )
+            -- Partially Protected
+            +
+            IIF(
+                ProtectedVolumes != 0 AND ProtectedVolumes < DiskVolumes
+                , POWER(2, 1), 0
+            )
+            -- Bitlocker Exemption
+            +
+            IIF(
+                Exemption != 0
+                , POWER(4, 1), 0
+            )
+            -- OS Drive Noncompliant
+            +
+            IIF(
+                VolumeType = 1 AND ComplianceStatus = 0 AND ProtectedVolumes != 0
+                , POWER(8, 1), 0
+            )
+            -- Data Drive Noncompliant
+            +
+            IIF(
+                VolumeType = 2 AND ComplianceStatus = 0 AND ProtectedVolumes != 0
+                , POWER(16, 1), 0
+            )
+            -- Encryption in Progress
+            +
+            IIF(
+                EncryptionStatus = 2
+                , POWER(32, 1), 0
+            )
+            -- Decryption in Progress
+            +
+            IIF(
+                EncryptionStatus = 3
+                , POWER(64, 1), 0
+            )
+            -- Encryption Paused
+            +
+            IIF(
+                EncryptionStatus = 4
+                , POWER(128, 1), 0
+            )
+            -- Decryption Paused
+            +
+            IIF(
+                EncryptionStatus = 5
+                , POWER(256, 1), 0
+            )
+            -- Pending Key Upload
+            +
+            IIF(ProtectedVolumes != 0 AND UploadedKeys = 0
+                , POWER(512, 1), 0
+            )
+            -- Pending Key Rotation
+            +
+            IIF(ProtectedVolumes != 0 AND UploadedKeys != 0  AND (UploadedKeys - DisclosedKeys) <= 0
+                , POWER(1024, 1), 0
+            )
         )
     )
     , EncodedDeviceName
@@ -256,7 +264,7 @@ SELECT
     , EncryptionMethod
     , KeyUpload               = (
         IIF(
-            ProtectedVolumes !=0 AND UploadedKeys != 0
+            ProtectedVolumes != 0 AND UploadedKeys != 0
             , IIF(UploadedKeys - DisclosedKeys > 0 , N'Complete', N'Rotation Pending')
             , IIF(ProtectedVolumes = 0, N'N/A', N'No')
         )
@@ -317,18 +325,39 @@ SELECT
         IIF('16' IN (SELECT VALUE = LTRIM(RTRIM(VALUE)) FROM STRING_SPLIT(ReasonsForNonCompliance, N',')), POWER(65536, 1), 0)
     )
     , LastPolicyEvaluation
+    , LastHWIScan
     , DiskVolumes
     , ProtectedVolumes
 INTO #BitlockerResult
 FROM Bitlocker_CTE AS Bitlocker
 
-/* HealthStates summarization */
-SELECT
-    Compliant
-    , HealthStates            = HealthStatesSummarization.Value
-    , EncodedDeviceName
-    , Domain
-    , UserName
+/* CompliantState summarization */
+SELECT DISTINCT
+    Compliant           = IIF(
+        BitlockerResult.Compliant IS NULL
+        , N'3'
+        , BitlockerResult.Compliant
+    )
+    , ComplianceStates  = IIF(
+        CompliantStatesSummarization.Value IS NULL
+        , N'2048'
+        , CompliantStatesSummarization.Value
+    )
+    , EncodedDeviceName = IIF(
+        BitlockerResult.EncodedDeviceName IS NULL
+        , ClientCollectionMembers.Name
+        , BitlockerResult.EncodedDeviceName
+    )
+    , Domain            = IIF(
+        BitlockerResult.Domain IS NULL
+        , LOWER(Systems.Full_Domain_Name0)
+        , BitlockerResult.Domain
+    )
+    , UserName          = IIF(
+        BitlockerResult.UserName IS NULL
+        , Systems.User_Domain0 + N'\' + Systems.User_Name0
+        , BitlockerResult.UserName
+    )
     , Protected
     , Exemption
     , VolumeName
@@ -343,18 +372,28 @@ SELECT
     , ComplianceStatusDetails
     , ReasonsForNonCompliance
     , LastPolicyEvaluation
+    , LastHWIScan
     , DiskVolumes
     , ProtectedVolumes
-FROM #BitlockerResult
-    CROSS APPLY (
+FROM fn_rbac_ClientCollectionMembers(@UserSIDs) AS ClientCollectionMembers
+    JOIN fn_rbac_R_System(@UserSIDs) AS Systems ON Systems.ResourceID = ClientCollectionMembers.ResourceID
+    LEFT JOIN #BitlockerResult AS BitlockerResult ON BitlockerResult.ResourceID = ClientCollectionMembers.ResourceID
+    OUTER APPLY (
         SELECT
-            Value = SUM(HealthStates)
+            Value = SUM(ComplianceStates)
         FROM (
-            SELECT DISTINCT HealthStates
-            FROM #BitlockerResult AS #BitlockerResult2
-            WHERE #BitlockerResult2.EncodedDeviceName = #BitlockerResult.EncodedDeviceName
+            SELECT DISTINCT ComplianceStates
+            FROM #BitlockerResult AS InnerBitlockerResult
+            WHERE InnerBitlockerResult.EncodedDeviceName = BitlockerResult.EncodedDeviceName
         ) AS Result
-    ) AS HealthStatesSummarization
+    ) AS CompliantStatesSummarization
+WHERE ClientCollectionMembers.CollectionID = @CollectionID
+    AND ClientCollectionMembers.ResourceID IN (
+        SELECT DISTINCT ResourceID = ClientCollectionMembers.ResourceID
+        FROM v_BLM_CI_ID_AND_COLL_ID AS BLMCollectionID
+            JOIN fn_rbac_ClientCollectionMembers(@UserSIDs) AS ClientCollectionMembers ON ClientCollectionMembers.CollectionID = BLMCollectionID.CollectionID
+        WHERE BLMCollectionID.CI_ID = @PolicyID
+    )
 
 /* Perform cleanup */
 IF OBJECT_ID(N'tempdb..#BitlockerResult', N'U') IS NOT NULL

@@ -8,7 +8,7 @@ Function GetStates (ByVal intBitMask As Integer, astrCategory As String, blnDeta
 '.PARAMETER intBitMask
 '    Specifies the bitmask to apply.
 '.PARAMETER astrCategory
-'    Specifies the state category to resolve. Available values: (BitlockerComplianceStates, BitlockerHealthStates, UpdateHealthStates, UpdateScanStates)
+'    Specifies the state category to resolve. Available values: (BitlockerNonComplianceReasons, BitlockerComplianceStates, UpdateHealthStates, UpdateScanStates)
 '.PARAMETER blnDetailed
 '    Specifies if to return detailed information.
 '.EXAMPLE
@@ -24,7 +24,7 @@ Function GetStates (ByVal intBitMask As Integer, astrCategory As String, blnDeta
 '.LINK
 '    https://MEM.Zone/Dashboards-ISSUES
 '#>
-    Dim astrBitlockerComplianceStates() As String = {
+    Dim astrBitlockerNonComplianceReasons() As String = {
         "N/A",
         "Cypher strength not AES 256",
         "Volume not encrypted",
@@ -44,8 +44,8 @@ Function GetStates (ByVal intBitMask As Integer, astrCategory As String, blnDeta
         "Minimum cypher strength XTS-AES-128 bit required",
         "Minimum cypher strength XTS-AES-256 bit required"
     }
-    Dim astrBitlockerComplianceStatesDetailed() As String = {
-        "Healthy",
+    Dim astrBitlockerNonComplianceReasonsDetailed() As String = {
+        "N/A",
         "Cipher strength not AES 256",
         "MBAM Policy requires this volume to be encrypted but it is not",
         "MBAM Policy requires this volume to NOT be encrypted, but it is",
@@ -65,13 +65,13 @@ Function GetStates (ByVal intBitMask As Integer, astrCategory As String, blnDeta
         "Policy requires minimum cypher strength is XTS-AES-256 bit, actual cypher strength is weaker than that"
     }
 
-    Dim astrBitlockerHealthStates() As String = {
-        "Healthy", "Unprotected", "Partially Protected", "Exemption", "OS Drive Noncompliant", "Data Drive Noncompliant",
-        "Encryption in Progress", "Decryption in Progress", "Encryption Paused", "Decryption Paused", "Pending Key Upload", "Pending Key Rotation"
+    Dim astrBitlockerComplianceStates() As String = {
+        "N/A", "Unprotected", "Partially Protected", "Exemption", "OS Drive Noncompliant", "Data Drive Noncompliant",
+        "Encryption in Progress", "Decryption in Progress", "Encryption Paused", "Decryption Paused", "Pending Key Upload", "Pending Key Rotation", "Pending Policy Evaluation"
     }
-    Dim astrBitlockerHealthStatesDetailed() As String = {
-        "Healthy", "Unprotected", "Not all Drives Protected", "Bitlocker Exemption", "OS Drive is Noncompliant", "Data Drive is Noncompliant",
-        "Encryption is in Progress", "Decryption is in Progress", "Encryption Paused", "Decryption Paused", "Pending Key Upload", "Pending Key Rotation"
+    Dim astrBitlockerComplianceStatesDetailed() As String = {
+        "N/A", "Unprotected", "Not all Drives Protected", "Bitlocker Exemption", "OS Drive is Noncompliant", "Data Drive is Noncompliant",
+        "Encryption is in Progress", "Decryption is in Progress", "Encryption Paused", "Decryption Paused", "Pending Key Upload", "Pending Key Rotation", "Pending Policy Evaluation"
     }
 
     Dim astrUpdateHealthStates() As String = {
@@ -100,10 +100,10 @@ Function GetStates (ByVal intBitMask As Integer, astrCategory As String, blnDeta
 
     Try
         Select Case astrCategory
+            Case "BitlockerNonComplianceReasons"
+                astrStates = astrBitlockerNonComplianceReasons
             Case "BitlockerComplianceStates"
                 astrStates = astrBitlockerComplianceStates
-            Case "BitlockerHealthStates"
-                astrStates = astrBitlockerHealthStates
             Case "UpdateHealthStates"
                 astrStates = astrUpdateHealthStates
             Case "UpdateScanStates"
@@ -111,10 +111,10 @@ Function GetStates (ByVal intBitMask As Integer, astrCategory As String, blnDeta
         End Select
         If blnDetailed Then
             Select Case astrCategory
+                Case "BitlockerNonComplianceReasons"
+                    astrStates = astrBitlockerNonComplianceReasonsDetailed
                 Case "BitlockerComplianceStates"
                     astrStates = astrBitlockerComplianceStatesDetailed
-                Case "BitlockerHealthStates"
-                    astrStates = astrBitlockerHealthStatesDetailed
                 Case "UpdateHealthStates"
                     astrStates = astrUpdateHealthStatesDetailed
                 Case "UpdateScanStates"
@@ -132,12 +132,11 @@ Function GetStates (ByVal intBitMask As Integer, astrCategory As String, blnDeta
                     intStep = 2 ^ iaStates
             Next
         Else
-            If astrCategory = "BitlockerComplianceStates"
+            If InStr(astrCategory, "Bitlocker" ) <> 0
                 strResolvedStates = "N/A"
             Else
-                strResolvedStates = "Healthy"
+                strResolvedStates = "Compliant"
             End If
-
         End If
     Catch
         strResolvedStates = "Could not resolve states."

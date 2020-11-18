@@ -943,7 +943,7 @@ ORDER BY CategoryInstanceName</CommandText>
                   <Paragraph>
                     <TextRuns>
                       <TextRun>
-                        <Value>=Format(System.TimeZone.CurrentTimeZone().ToLocalTime(First(Fields!LastSuccessfulSyncTime.Value, "LastSuccessfulSyncTime")), "yyyy-MM-dd hh:mm")</Value>
+                        <Value>=Format(System.TimeZone.CurrentTimeZone().ToLocalTime(First(Fields!LastSuccessfulSyncTime.Value, "LastSuccessfulSyncTime")), "yyyy-MM-dd HH:mm")</Value>
                         <ActionInfo>
                           <Actions>
                             <Action>
@@ -953,7 +953,7 @@ ORDER BY CategoryInstanceName</CommandText>
                             </Action>
                           </Actions>
                         </ActionInfo>
-                        <ToolTip>=Format(First(Fields!LastSuccessfulSyncTime.Value, "LastSuccessfulSyncTime"), "yyyy-MM-dd hh:mm") &amp; " (UTC)"</ToolTip>
+                        <ToolTip>=Format(First(Fields!LastSuccessfulSyncTime.Value, "LastSuccessfulSyncTime"), "yyyy-MM-dd HH:mm") &amp; " (UTC)"</ToolTip>
                         <Style>
                           <FontFamily>Segoe UI</FontFamily>
                           <FontSize>15pt</FontSize>

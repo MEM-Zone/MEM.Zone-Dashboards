@@ -1,5 +1,16 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 4.1.0 - 2020-11-18
+
+* Changed `Bitlocker - Compliance by Collection` layout
+* Changed 12 hour to 24 hours in all reports
+* Added `Pending Policy Status` to `Bitlocker - Compliance by Collection`
+* Added `Bitlocker Policy` to `Bitlocker - Compliance by Collection`
+* Fixed `Bitlocker - Compliance by Collection` can now be run on any collection. Only devices that have the policy assigned will be displayed.
+* Fixed `Compliant` now shows `Unknown` if NULL in `Bitlocker - Compliance by Collection`
+* Fixed `Unknown` count on the `OS Drive Decrypted` gauge in `Bitlocker - Compliance by Collection`
+* Fixed various summarization errors in `Bitlocker - Compliance by Collection`
+
 ## 4.0.0 - 2020-10-09
 
 * Changed branding and links to `MEM.Zone Dashboards`

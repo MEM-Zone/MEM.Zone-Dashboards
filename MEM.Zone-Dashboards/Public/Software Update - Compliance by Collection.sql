@@ -171,6 +171,15 @@ AS (
             NULLIF(@ArticleID, N'') IS NULL
             , UpdateCIs.ArticleID, @ArticleID
         ) = UpdateCIs.ArticleID                                              -- Filter by ArticleID
+/*        AND UpdateCIs.ArticleID IN (
+            -- Filter on ArticleID csv list
+            SELECT VALUE FROM STRING_SPLIT(
+                IIF(NULLIF(@ArticleID, N'') IS NULL
+                , UpdateCIs.ArticleID
+                , @ArticleID)
+            , N',')
+        )
+*/
     GROUP BY Systems.ResourceID
 )
 
