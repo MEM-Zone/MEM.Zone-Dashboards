@@ -1,5 +1,10 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 4.1.1 - 2020-11-18
+
+* Added null fields descriptors for the `Bitlocker - Compliance by Collection` report.
+* Fixed `Compliant` user sorting
+
 ## 4.1.0 - 2020-11-18
 
 * Changed `Bitlocker - Compliance by Collection` layout
