@@ -154,6 +154,7 @@ Param (
 [string]$FilterConnection = -join ('Catalog=', $Database, ';')
 If (-not $Path) { $Path = Join-Path -Path $ScriptPath -ChildPath 'Reports' }
 If (-not $ExtensionsPath) { $ExtensionsPath = Join-Path -Path $ScriptPath -ChildPath 'Extensions' }
+If (-not $DependenciesPath) { $DependenciesPath = Join-Path -Path $ScriptPath -ChildPath 'Dependencies' }
 If (-not $DataSourceRoot) {
     [string]$SiteCode = $($Database.Split('_')[1])
     $DataSourceRoot = -join ('/ConfigMgr_', $SiteCode)
@@ -1091,7 +1092,7 @@ Function Add-RISQLExtension {
 Try {
 
     ## Clear screen
-    [System.Console]::Clear()
+    Clear-Host
 
     ## Show installation start
     Write-Verbose -Message 'Installation has started!'
@@ -1100,16 +1101,18 @@ Try {
     $TestReportingServicesTools = Get-Module -Name 'ReportingServicesTools' -ErrorAction 'SilentlyContinue'
     If (-not $TestReportingServicesTools -and -not $ExtensionsOnly) {
         #  Show progress
-        Show-Progress -Status "Asking for permission to install module --> [ReportingServicesTools]"
-        Do {
-            $AskUser = Read-Host -Prompt '[ReportingServicesTools] module is required for this installer. Allow installation? [y/n] (If you choose [n] the installer will exit!)'
+        Show-Progress -Status "Importing module --> [ReportingServicesTools]"
+        #  Unblock Dependencies
+        $Dependencies = Get-ChildItem -Path $DependenciesPath -Recurse -File
+        ForEach ($Dependency in $Dependencies) {
+            Show-Progress -Status "Unblocking dependency --> [$($Dependency.FullName)]" -Loop -Delay 100
+            Unblock-File -Path $Dependency.FullName
         }
-        Until ($AskUser -eq 'y' -or $AskUser -eq 'n')
-        If ($AskUser -eq 'n') { Exit }
-        #  Show progress
-        Show-Progress -Status "Installing module --> [ReportingServicesTools]"
-        Install-Module -Name 'ReportingServicesTools' -Confirm -Verbose
+        #  Import ReportingServicesTools module
+        [string]$ReportingServicesTools = Join-Path -Path $DependenciesPath -ChildPath 'ReportingServicesTools\0.0.6.7\ReportingServicesTools.psm1'
+        Import-Module -Name $ReportingServicesTools
     }
+
     ## Install only sql extensions
     If ($($PSCmdlet.ParameterSetName) -eq 'ExtensionsOnly') {
         #  Show progress

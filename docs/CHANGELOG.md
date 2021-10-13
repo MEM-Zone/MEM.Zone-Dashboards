@@ -1,5 +1,11 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 5.0.1 - 2021-10-14
+
+* Included `ReportingServicesTools` dependency in the package for the `Install-SRSReport` script.
+* Minor Documentation additions.
+* Changed `Operating System - Windows 11 Readines` to `Operating System - Windows 11 Readiness by Collection`.
+
 ## 5.0.0 - 2021-10-13
 
 * Added `Operating System - Version Compliance by Collection` report.

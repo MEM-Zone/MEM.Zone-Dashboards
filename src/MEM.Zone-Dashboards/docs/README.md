@@ -10,7 +10,10 @@
 This is a solution of dashboards and reports, for Microsoft Endpoint Configuration Manager.
 
 `_Dashboard - Software Updates` dashboard is navigable, independent of `Software Update Groups` and comes with an array of filtering options and sub-reports. All sub-reports can be run standalone.
+`Bitlocker - Compliance by Collection (MBAM)` report is a standalone complete solution for monitoring Bitlocker (MBAM) compliance and non-compliance reasons.
 `Bitlocker - Compliance by Collection` report is a standalone complete solution for monitoring Bitlocker compliance, key upload and non-compliance reasons.
+`Operating System - Version Compliance by Collection` report is a standalone solution for monitoring Feature Update or Windows Version Compliance.
+`Operating System - Windows 11 Readiness by Collection` report is a standalone solution for checking Windows 11 Upgrade Readiness.
 
 The installation can be done manually or via the included PowerShell installer.
 
@@ -37,13 +40,15 @@ See [help](https://MEM.Zone/Dashboards-Help).
 ## Dashboards and Reports
 
 * _Dashboard - Software Updates (Main Dashboard Report)
+* Bitlocker - Compliance by Collection (MBAM)
 * Bitlocker - Compliance by Collection
+* Operating System - Version Compliance by Collection
+* Operating System - Windows 11 Readiness by Collection
 * Site - Alerts
 * Software Update - Compliance by Collection
 * Software Update - Compliance by Device
 * Software Update - Scan Status by Collection
 * Software Update - Update Point Sync Status
-* Software - Installed Software by User Selection
 
 ## Navigation Tree
 
@@ -72,7 +77,10 @@ See [help](https://MEM.Zone/Dashboards-Help).
     |
     +-- (T) Last Successful Synchronization Time
         +-- (R) Software Update - Update Point Sync Status
-+-- (R) Bitlocker - Compliance by Collection
++-- (R) Bitlocker - Compliance by Collection * Bitlocker (MBAM)
++-- (R) Bitlocker - Compliance by Collection * Bitlocker
++-- (R) Operating System - Version Compliance by Collection
++-- (R) Operating System - Windows 11 Readiness by Collection
 
 ## Legend
 '()'  - 'to' or 'from' navigation element
@@ -169,7 +177,7 @@ The `ufn_CM_GetNextMaintenanceWindow` is needed in order to display the next mai
 [release-date]: https://github.com/MEM-Zone/MEM.Zone-Dashboards/releases
 [issues-badge]: https://img.shields.io/github/issues/MEM-Zone/MEM.Zone-Dashboards
 [issues]: https://github.com/MEM-Zone/MEM.Zone-Dashboards/issues?q=is%3Aopen+is%3Aissue
-[commits-since-badge]: https://img.shields.io/github/commits-since/MEM-Zone/MEM.Zone-Dashboards/v4.0.0
+[commits-since-badge]: https://img.shields.io/github/commits-since/MEM-Zone/MEM.Zone-Dashboards/v5.0.1
 [commits-since]: https://github.com/MEM-Zone/MEM.Zone-Dashboards/commits/master
 [discord-badge]: https://img.shields.io/discord/666618982844989460?logo=discord
 [discord]: https://discord.gg/ZCkVcmP
