@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition">
-  <Description>Lists the Bitlocker compliance for a 'Collection'. This report relies on 'HWI', if there are inconsistencies trigger a 'HMI' cycle. 'Compliant' in 'Yellow' means that the 'Compliance' info is old (Previous BLM Policy). Hover the cursor over the fields or gauges for more information.</Description>
+  <Description>Lists the Bitlocker compliance for a 'Collection'. This report relies on 'HWI', if there are inconsistencies trigger a 'HWI' cycle. 'Compliant' in 'Yellow' means that the 'Compliance' info is old (Previous BLM Policy). Hover the cursor over the fields or gauges for more information.</Description>
+  <Author>Ioan.Popovici@MEM.Zone</Author>
   <AutoRefresh>0</AutoRefresh>
   <DataSources>
     <DataSource Name="CMSQLDatabase">
@@ -255,7 +256,7 @@ SELECT
     , ComplianceStates        = (
         -- Policy not Evaluated
         IIF(
-            ComplianceStatusDetails = 50
+            ISNULL(ComplianceStatusDetails, 50) = 50
             , POWER(2048, 1),
             -- Unprotected
             IIF(
@@ -265,25 +266,25 @@ SELECT
             -- Partially Protected
             +
             IIF(
-                ProtectedVolumes != 0 AND ProtectedVolumes &lt; DiskVolumes
+                ISNULL(ProtectedVolumes, 0) != 0 AND ProtectedVolumes &lt; DiskVolumes
                 , POWER(2, 1), 0
             )
             -- Bitlocker Exemption
             +
             IIF(
-                Exemption != 0
+                ISNULL(Exemption, 0) != 0
                 , POWER(4, 1), 0
             )
             -- OS Drive Noncompliant
             +
             IIF(
-                VolumeType = 1 AND ComplianceStatus = 0 AND ProtectedVolumes != 0
+                VolumeType = 1 AND ComplianceStatus = 0 AND ISNULL(ProtectedVolumes, 0) != 0
                 , POWER(8, 1), 0
             )
             -- Data Drive Noncompliant
             +
             IIF(
-                VolumeType = 2 AND ComplianceStatus = 0 AND ProtectedVolumes != 0
+                VolumeType = 2 AND ComplianceStatus = 0 AND ISNULL(ProtectedVolumes, 0) != 0
                 , POWER(16, 1), 0
             )
             -- Encryption in Progress
@@ -312,12 +313,12 @@ SELECT
             )
             -- Pending Key Upload
             +
-            IIF(ProtectedVolumes != 0 AND UploadedKeys = 0
+            IIF(ISNULL(ProtectedVolumes, 0) != 0 AND UploadedKeys = 0
                 , POWER(512, 1), 0
             )
             -- Pending Key Rotation
             +
-            IIF(ProtectedVolumes != 0 AND UploadedKeys != 0  AND (UploadedKeys - DisclosedKeys) &lt;= 0
+            IIF(ISNULL(ProtectedVolumes, 0) != 0 AND UploadedKeys != 0  AND (UploadedKeys - DisclosedKeys) &lt;= 0
                 , POWER(1024, 1), 0
             )
         )
@@ -340,7 +341,7 @@ SELECT
     , EncryptionMethod
     , KeyUpload               = (
         IIF(
-            ProtectedVolumes != 0 AND UploadedKeys != 0
+            ISNULL(ProtectedVolumes, 0) != 0 AND ISNULL(UploadedKeys, 0) != 0
             , IIF(UploadedKeys - DisclosedKeys &gt; 0 , N'Complete', N'Rotation Pending')
             , IIF(ProtectedVolumes = 0, N'N/A', N'No')
         )
@@ -845,7 +846,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
                 <Left>18</Left>
                 <Height>18</Height>
                 <Width>64</Width>
-                <ToolTip>="Compliance Error: " &amp; CountDistinct(IIF(Fields!ComplianceStatusDetails.Value &gt; 0 And Not IsNothing(Fields!ComplianceStatusDetails.Value), Fields!EncodedDeviceName.Value, Nothing)) &amp; " | No Compliance Error: " &amp; CountDistinct(IIF(Fields!ComplianceStatusDetails.Value = 0 And Not IsNothing(Fields!ComplianceStatusDetails.Value), Fields!EncodedDeviceName.Value, Nothing)) &amp; ", Unknown: " &amp; CountDistinct(IIF(IsNothing(Fields!ComplianceStatusDetails.Value) Or Fields!ComplianceStatusDetails.Value &lt; 0, Fields!EncodedDeviceName.Value, Nothing))</ToolTip>
+                <ToolTip>="Compliance Error: " &amp; CountDistinct(IIF(Fields!ComplianceStatusDetails.Value &gt; 0 And Not IsNothing(Fields!ComplianceStatusDetails.Value), Fields!EncodedDeviceName.Value, Nothing)) &amp; " | No Compliance Error: " &amp; CountDistinct(IIF(Fields!ComplianceStatusDetails.Value = 0 And Not IsNothing(Fields!ComplianceStatusDetails.Value), Fields!EncodedDeviceName.Value, Nothing)) &amp; " | Unknown: " &amp; CountDistinct(IIF(IsNothing(Fields!ComplianceStatusDetails.Value) Or Fields!ComplianceStatusDetails.Value &lt; 0, Fields!EncodedDeviceName.Value, Nothing))</ToolTip>
                 <ParentItem>RadialGauges.RG_KeyNotUploaded</ParentItem>
               </GaugeLabel>
               <GaugeLabel Name="GL_KeyNotUploadedDescription">
@@ -904,7 +905,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
               <Value />
             </TopImage>
             <DataSetName>ComplianceDetails</DataSetName>
-            <Top>1.22cm</Top>
+            <Top>1.4268cm</Top>
             <Left>21.63984cm</Left>
             <Height>4cm</Height>
             <Width>4cm</Width>
@@ -970,7 +971,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>Lists the Bitlocker compliance for a 'Collection'. This report relies on 'HWI', if there are inconsistencies trigger a 'HMI' cycle. 'Compliant' in 'Yellow' means that the 'Compliance' info is old (Previous BLM Policy). Hover the cursor over the fields or gauges for more information.</Value>
+                                  <Value>Lists the Bitlocker compliance for a 'Collection'. This report relies on 'HWI', if there are inconsistencies trigger a 'HWI' cycle. 'Compliant' in 'Yellow' means that the 'Compliance' info is old (Previous BLM Policy). Hover the cursor over the fields or gauges for more information.</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
                                     <FontSize>9pt</FontSize>
@@ -1315,7 +1316,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
               <Value />
             </TopImage>
             <DataSetName>ComplianceDetails</DataSetName>
-            <Top>1.22cm</Top>
+            <Top>1.4268cm</Top>
             <Left>8.81736cm</Left>
             <Height>4cm</Height>
             <Width>4cm</Width>
@@ -1364,7 +1365,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
                           <ShadowOffset>0pt</ShadowOffset>
                         </Style>
                         <GaugeInputValue>
-                          <Value>=CountDistinct(IIF(Fields!Compliant.Value = 1 And Not IsNothing(Fields!Compliant.Value), Fields!EncodedDeviceName.Value, Nothing)) / CountDistinct(Fields!EncodedDeviceName.Value) * 100</Value>
+                          <Value>=CountDistinct(IIF(Fields!Compliant.Value = 1, Fields!EncodedDeviceName.Value, Nothing)) / CountDistinct(Fields!EncodedDeviceName.Value) * 100</Value>
                           <Multiplier>1</Multiplier>
                         </GaugeInputValue>
                         <PointerImage>
@@ -1497,7 +1498,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
                       <Hidden>true</Hidden>
                       <UseFontPercent>true</UseFontPercent>
                     </ScaleLabels>
-                    <ToolTip>="Non Compliant: " &amp; CountDistinct(IIF(Fields!Compliant.Value = 2 And Not IsNothing(Fields!Compliant.Value), Fields!EncodedDeviceName.Value, Nothing)) &amp; ", Unknown: " &amp; CountDistinct(IIF(Fields!Compliant.Value &lt;&gt; 1 And Fields!Compliant.Value &lt;&gt; 2 And Not IsNothing(Fields!Compliant.Value), Fields!EncodedDeviceName.Value, Nothing))</ToolTip>
+                    <ToolTip>="Non Compliant: " &amp; CountDistinct(IIF(Fields!Compliant.Value = 2, Fields!EncodedDeviceName.Value, Nothing)) &amp; ", Unknown: " &amp; CountDistinct(IIF(Fields!Compliant.Value = 3, Fields!EncodedDeviceName.Value, Nothing))</ToolTip>
                     <Width>30</Width>
                   </RadialScale>
                 </GaugeScales>
@@ -1538,7 +1539,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
             </RadialGauges>
             <GaugeLabels>
               <GaugeLabel Name="GL_CompliantPercentage">
-                <Text>=FormatPercent(CountDistinct(IIF(Fields!Compliant.Value = 1 And Not IsNothing(Fields!Compliant.Value), Fields!EncodedDeviceName.Value, Nothing)) / CountDistinct(Fields!EncodedDeviceName.Value), IIF(CountDistinct(IIF(Fields!Compliant.Value = 1 And Not IsNothing(Fields!Compliant.Value), Fields!EncodedDeviceName.Value, Nothing)) / CountDistinct(Fields!EncodedDeviceName.Value) * 100 = 100, 0, 1))</Text>
+                <Text>=FormatPercent(CountDistinct(IIF(Fields!Compliant.Value = 1, Fields!EncodedDeviceName.Value, Nothing)) / CountDistinct(Fields!EncodedDeviceName.Value), IIF(CountDistinct(IIF(Fields!Compliant.Value = 1, Fields!EncodedDeviceName.Value, Nothing)) / CountDistinct(Fields!EncodedDeviceName.Value) * 100 = 100, 0, 1))</Text>
                 <ResizeMode>None</ResizeMode>
                 <TextShadowOffset>0pt</TextShadowOffset>
                 <UseFontPercent>true</UseFontPercent>
@@ -1560,7 +1561,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
                 <Left>18</Left>
                 <Height>18</Height>
                 <Width>64</Width>
-                <ToolTip>="Compliant: " &amp; CountDistinct(IIF(Fields!Compliant.Value = 1 And Not IsNothing(Fields!Compliant.Value), Fields!EncodedDeviceName.Value, Nothing)) &amp; " | Non Compliant: " &amp; CountDistinct(IIF(Fields!Compliant.Value = 2 And Not IsNothing(Fields!Compliant.Value), Fields!EncodedDeviceName.Value, Nothing)) &amp; " | Unknown: " &amp; CountDistinct(IIF(Fields!Compliant.Value &lt;&gt; 1 And Fields!Compliant.Value &lt;&gt; 2 And Not IsNothing(Fields!Compliant.Value), Fields!EncodedDeviceName.Value, Nothing))</ToolTip>
+                <ToolTip>="Compliant: " &amp; CountDistinct(IIF(Fields!Compliant.Value = 1, Fields!EncodedDeviceName.Value, Nothing)) &amp; " | Non Compliant: " &amp; CountDistinct(IIF(Fields!Compliant.Value = 2, Fields!EncodedDeviceName.Value, Nothing)) &amp; " | Unknown: " &amp; CountDistinct(IIF(Fields!Compliant.Value = 3, Fields!EncodedDeviceName.Value, Nothing))</ToolTip>
                 <ParentItem>RadialGauges.RG_Compliance</ParentItem>
               </GaugeLabel>
               <GaugeLabel Name="GL_ComplianceDescription">
@@ -1619,7 +1620,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
               <Value />
             </TopImage>
             <DataSetName>ComplianceDetails</DataSetName>
-            <Top>1.22cm</Top>
+            <Top>1.44225cm</Top>
             <Left>0.2635cm</Left>
             <Height>4cm</Height>
             <Width>4cm</Width>
@@ -1923,7 +1924,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
               <Value />
             </TopImage>
             <DataSetName>ComplianceDetails</DataSetName>
-            <Top>1.22cm</Top>
+            <Top>1.4268cm</Top>
             <Left>13.09959cm</Left>
             <Height>4cm</Height>
             <Width>4cm</Width>
@@ -2227,7 +2228,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
               <Value />
             </TopImage>
             <DataSetName>ComplianceDetails</DataSetName>
-            <Top>1.22cm</Top>
+            <Top>1.4268cm</Top>
             <Left>17.36359cm</Left>
             <Height>4cm</Height>
             <Width>4cm</Width>
@@ -2240,7 +2241,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
             </Style>
           </GaugePanel>
           <Line Name="LN_GaugesSpacer_02">
-            <Top>1.44cm</Top>
+            <Top>1.6468cm</Top>
             <Left>8.67625cm</Left>
             <Height>3.39395cm</Height>
             <Width>0cm</Width>
@@ -2556,7 +2557,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
               <Value />
             </TopImage>
             <DataSetName>ComplianceDetails</DataSetName>
-            <Top>1.22cm</Top>
+            <Top>1.4268cm</Top>
             <Left>4.5175cm</Left>
             <Height>4cm</Height>
             <Width>4cm</Width>
@@ -2569,7 +2570,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
             </Style>
           </GaugePanel>
           <Line Name="LN_GaugesLeft">
-            <Top>1.44cm</Top>
+            <Top>1.6468cm</Top>
             <Left>0.127cm</Left>
             <Height>3.39395cm</Height>
             <Width>0cm</Width>
@@ -2594,7 +2595,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
             </Style>
           </Line>
           <Line Name="LN_GaugesSpacer_03">
-            <Top>1.44cm</Top>
+            <Top>1.6468cm</Top>
             <Left>12.95847cm</Left>
             <Height>3.39395cm</Height>
             <Width>0cm</Width>
@@ -2619,7 +2620,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
             </Style>
           </Line>
           <Line Name="LN_GaugesSpacer_01">
-            <Top>1.44cm</Top>
+            <Top>1.6468cm</Top>
             <Left>4.397cm</Left>
             <Height>3.39395cm</Height>
             <Width>0cm</Width>
@@ -2644,7 +2645,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
             </Style>
           </Line>
           <Line Name="LN_GaugesRight">
-            <Top>1.44cm</Top>
+            <Top>1.6468cm</Top>
             <Left>25.79867cm</Left>
             <Height>3.39395cm</Height>
             <Width>0cm</Width>
@@ -2814,7 +2815,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Format(System.TimeZone.CurrentTimeZone().ToLocalTime(Fields!LastPolicyEvaluation.Value), "yyyy-MM-dd HH:mm:ss")</Value>
+                                  <Value>=IIF(Format(System.TimeZone.CurrentTimeZone().ToLocalTime(Fields!LastPolicyEvaluation.Value), "yyyy-MM-dd HH:mm:ss") = "0001-01-01 01:00:00", "Never", Format(System.TimeZone.CurrentTimeZone().ToLocalTime(Fields!LastPolicyEvaluation.Value), "yyyy-MM-dd HH:mm:ss"))</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
                                     <FontSize>9pt</FontSize>
@@ -2849,7 +2850,7 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
                             <Paragraph>
                               <TextRuns>
                                 <TextRun>
-                                  <Value>=Fields!LastHWIScan.Value</Value>
+                                  <Value>=IIF(IsNothing(Fields!LastHWIScan.Value), "Never", Fields!LastHWIScan.Value)</Value>
                                   <Style>
                                     <FontFamily>Segoe UI</FontFamily>
                                     <FontSize>9pt</FontSize>
@@ -3000,10 +3001,11 @@ ORDER BY BLMPolicies.DisplayName</CommandText>
                       <Textbox Name="TH_ComplianceStates">
                         <CanGrow>true</CanGrow>
                         <UserSort>
-                          <SortExpression>=IIF(Parameters!Summarization.Value = True,
- IIF(Fields!Compliant.Value = 1, "Yes", IIF(Fields!Compliant.Value = 2, "No", "Unknown")),
-
-IIF(Fields!Compliant.Value = 1, "Compliant", Code.GetStates(Fields!ComplianceStates.Value, "BitlockerComplianceStates", False))
+                          <SortExpression>=Switch(
+    Fields!Compliant.Value = 1 And Fields!ComplianceStates.Value = 0, "Yes",
+    Fields!Compliant.Value = 1 And Fields!ComplianceStates.Value &lt;&gt; 0, "Pending",
+    Fields!Compliant.Value = 2, "No",
+    True, "Unknown"
 )</SortExpression>
                           <SortExpressionScope>Device</SortExpressionScope>
                         </UserSort>
@@ -3028,26 +3030,6 @@ IIF(Fields!Compliant.Value = 1, "Compliant", Code.GetStates(Fields!ComplianceSta
                             <Color>LightGrey</Color>
                             <Style>Solid</Style>
                           </Border>
-                          <TopBorder>
-                            <Color>LightGrey</Color>
-                            <Style>Solid</Style>
-                            <Width>1pt</Width>
-                          </TopBorder>
-                          <BottomBorder>
-                            <Color>LightGrey</Color>
-                            <Style>Solid</Style>
-                            <Width>1pt</Width>
-                          </BottomBorder>
-                          <LeftBorder>
-                            <Color>LightGrey</Color>
-                            <Style>Solid</Style>
-                            <Width>1pt</Width>
-                          </LeftBorder>
-                          <RightBorder>
-                            <Color>LightGrey</Color>
-                            <Style>Solid</Style>
-                            <Width>1pt</Width>
-                          </RightBorder>
                           <BackgroundColor>#ebebeb</BackgroundColor>
                           <VerticalAlign>Middle</VerticalAlign>
                           <PaddingLeft>2pt</PaddingLeft>
@@ -3943,11 +3925,12 @@ Fields!ProtectionStatus.Value = 2, SrsResources.Localization.GetString("Bitlocke
                   </Group>
                   <SortExpressions>
                     <SortExpression>
-                      <Value>=Fields!Compliant.Value</Value>
-                      <Direction>Descending</Direction>
-                    </SortExpression>
-                    <SortExpression>
-                      <Value>=Code.GetStates(Fields!ComplianceStates.Value, "BitlockerComplianceStates", False)</Value>
+                      <Value>=Switch(
+    Fields!Compliant.Value = 1 And Fields!ComplianceStates.Value = 0, "Yes",
+    Fields!Compliant.Value = 1 And Fields!ComplianceStates.Value &lt;&gt; 0, "Pending",
+    Fields!Compliant.Value = 2, "No",
+    True, "Unknown"
+)</Value>
                       <Direction>Descending</Direction>
                     </SortExpression>
                     <SortExpression>
@@ -3984,9 +3967,9 @@ Fields!ProtectionStatus.Value = 2, SrsResources.Localization.GetString("Bitlocke
     Switch(
         Fields!Compliant.Value = 1, "Compliant",
         Fields!Compliant.Value = 2,
-            IIF(Code.GetStates(Fields!ComplianceStates.Value, "BitlockerComplianceStates", False) = "N/A"
+            IIF(Code.GetStates(Fields!ComplianceStates.Value, Parameters!ComplianceStates.Value, "N/A") = "N/A"
                 , "Noncompliant"
-                , Code.GetStates(Fields!ComplianceStates.Value, "BitlockerComplianceStates", False)
+                , Code.GetStates(Fields!ComplianceStates.Value, Parameters!ComplianceStates.Value, "NotApplicable")
             ),
         True, "Unknown"
     )
@@ -4004,11 +3987,11 @@ Fields!ProtectionStatus.Value = 2, SrsResources.Localization.GetString("Bitlocke
                               </Paragraph>
                             </Paragraphs>
                             <ToolTip>=IIF(Parameters!Summarization.Value = True,
-    IIF(Code.GetStates(Fields!ComplianceStates.Value, "BitlockerComplianceStates", True) = "N/A",
+    IIF(Code.GetStates(Fields!ComplianceStates.Value, Parameters!ComplianceStates.Value, "N/A") = "N/A" And Fields!Compliant.Value &lt;&gt; 1,
         "Failed to apply policy. Check for corrupted local policy file.",
-        Code.GetStates(Fields!ComplianceStates.Value, "BitlockerComplianceStates", True)
+        Code.GetStates(Fields!ComplianceStates.Value, Parameters!ComplianceStates.Value, Nothing)
     ),
-    Join(LookupSet(Fields!EncodedDeviceName.Value, Fields!EncodedDeviceName.Value, Fields!VolumeName.Value &amp; " " &amp; Code.GetStates(Fields!ComplianceStates.Value, "BitlockerComplianceStates", False) &amp; " (Error: " &amp;
+    Join(LookupSet(Fields!EncodedDeviceName.Value, Fields!EncodedDeviceName.Value, Fields!VolumeName.Value &amp; " " &amp; Code.GetStates(Fields!ComplianceStates.Value, Parameters!ComplianceStates.Value, "Compliant") &amp; " (Error: " &amp;
     SWITCH(
         Fields!ComplianceStatusDetails.Value = 0,  SrsResources.Localization.GetString("Bitlocker_Enterprise_Compliance_Details_No_Error", User!Language),
         Fields!ComplianceStatusDetails.Value = 1,  SrsResources.Localization.GetString("Bitlocker_Enterprise_Compliance_Details_An_unknown_error_has_occurred", User!Language),
@@ -4021,7 +4004,7 @@ Fields!ProtectionStatus.Value = 2, SrsResources.Localization.GetString("Bitlocke
         Fields!ComplianceStatusDetails.Value = 11, SrsResources.Localization.GetString("Bitlocker_Enterprise_Compliance_Details_Volume_is_locked", User!Language),
         Fields!ComplianceStatusDetails.Value = 50, SrsResources.Localization.GetString("Bitlocker_Enterprise_Compliance_Details_Policy_Is_Not_Enforced", User!Language),
         True , "N/A"
-    ) &amp; ", NonComplianceReason: " &amp; Code.GetStates(Fields!ReasonsForNonCompliance.Value, "BitlockerNonComplianceReasons", False) &amp; ")", "ComplianceDetails"), " | ")
+    ) &amp; ", NonComplianceReason: " &amp; Code.GetStates(Fields!ReasonsForNonCompliance.Value, Parameters!ReasonsForNonCompliance.Value, "N/A") &amp; ")", "ComplianceDetails"), " | ")
 )</ToolTip>
                             <Style>
                               <Border>
@@ -4049,8 +4032,8 @@ Fields!ProtectionStatus.Value = 2, SrsResources.Localization.GetString("Bitlocke
                                 <Width>1pt</Width>
                               </RightBorder>
                               <BackgroundColor>=Switch(
-    Fields!Compliant.Value = 1 And Fields!ComplianceStatusDetails.Value = 0, "#55bfa4",
-    Fields!Compliant.Value = 1, "#F4BF65",
+    Fields!Compliant.Value = 1 And Fields!ComplianceStates.Value = 0, "#55BFA4",
+    Fields!Compliant.Value = 1 And Fields!ComplianceStates.Value &lt;&gt; 0, "#F4BF65",
     Fields!Compliant.Value = 2, "#D46456",
     True, "#FFE279"
 )</BackgroundColor>
@@ -4189,7 +4172,7 @@ Fields!ProtectionStatus.Value = 2, SrsResources.Localization.GetString("Bitlocke
                                               <Paragraph>
                                                 <TextRuns>
                                                   <TextRun>
-                                                    <Value>=Fields!Protected.Value</Value>
+                                                    <Value>=IIF(IsNothing(Fields!Protected.Value), "N/A", Fields!Protected.Value)</Value>
                                                     <Style>
                                                       <FontFamily>Segoe UI</FontFamily>
                                                       <FontSize>9pt</FontSize>
@@ -4237,7 +4220,7 @@ Fields!ProtectionStatus.Value = 2, SrsResources.Localization.GetString("Bitlocke
                                                   <Paragraph>
                                                     <TextRuns>
                                                       <TextRun>
-                                                        <Value>=Fields!VolumeName.Value</Value>
+                                                        <Value>=IIF(IsNothing(Fields!VolumeName.Value), "N/A", Fields!VolumeName.Value)</Value>
                                                         <Style>
                                                           <FontFamily>Segoe UI</FontFamily>
                                                           <FontSize>9pt</FontSize>
@@ -4491,7 +4474,7 @@ Fields!ProtectionStatus.Value = 2, SrsResources.Localization.GetString("Bitlocke
                                                                           <Paragraph>
                                                                             <TextRuns>
                                                                               <TextRun>
-                                                                                <Value>=Fields!KeyUpload.Value</Value>
+                                                                                <Value>=IIF(IsNothing(Fields!KeyUpload.Value), "N/A", Fields!KeyUpload.Value)</Value>
                                                                                 <Style>
                                                                                   <FontFamily>Segoe UI</FontFamily>
                                                                                   <FontSize>9pt</FontSize>
@@ -4579,7 +4562,10 @@ Fields!ProtectionStatus.Value = 2, SrsResources.Localization.GetString("Bitlocke
                                                                                   <Paragraph>
                                                                                     <TextRuns>
                                                                                       <TextRun>
-                                                                                        <Value>=IIF(Parameters!Summarization.Value = True, Code.GetStates(Fields!ReasonsForNonCompliance.Value, "BitlockerNonComplianceReasons", False), Code.GetStates(Fields!ReasonsForNonCompliance.Value, "BitlockerNonComplianceReasons", True))</Value>
+                                                                                        <Value>=IIF(Parameters!Summarization.Value = True,
+    Code.GetStates(Fields!ReasonsForNonCompliance.Value, Parameters!ReasonsForNonCompliance.Value, "N/A"),
+    Code.GetStates(Fields!ReasonsForNonCompliance.Value, Parameters!ReasonsForNonComplianceDetailed.Value, "NotApplicable")
+)</Value>
                                                                                         <Style>
                                                                                           <FontFamily>Segoe UI</FontFamily>
                                                                                           <FontSize>9pt</FontSize>
@@ -5331,7 +5317,7 @@ Fields!ProtectionStatus.Value = 2, SrsResources.Localization.GetString("Bitlocke
               </TablixMembers>
             </TablixRowHierarchy>
             <DataSetName>ComplianceDetails</DataSetName>
-            <Top>5.32131cm</Top>
+            <Top>5.67056cm</Top>
             <Left>0.12413cm</Left>
             <Height>1.8cm</Height>
             <Width>67.77041cm</Width>
@@ -5373,8 +5359,8 @@ Fields!ProtectionStatus.Value = 2, SrsResources.Localization.GetString("Bitlocke
             </Style>
           </Line>
           <Line Name="LN_GaugesFooter">
-            <Top>5.05991cm</Top>
-            <Left>0.127cm</Left>
+            <Top>5.53616cm</Top>
+            <Left>0.12413cm</Left>
             <Height>0cm</Height>
             <Width>67.76754cm</Width>
             <ZIndex>14</ZIndex>
@@ -5455,7 +5441,7 @@ Fields!ProtectionStatus.Value = 2, SrsResources.Localization.GetString("Bitlocke
                 </Style>
               </Paragraph>
             </Paragraphs>
-            <Top>1.2193in</Top>
+            <Top>1.30072in</Top>
             <Left>10.19924in</Left>
             <Height>0.3765in</Height>
             <Width>1.50536in</Width>
@@ -5472,7 +5458,7 @@ Fields!ProtectionStatus.Value = 2, SrsResources.Localization.GetString("Bitlocke
             </Style>
           </Textbox>
           <Line Name="LN_TotalDevicesRight">
-            <Top>1.44cm</Top>
+            <Top>1.6468cm</Top>
             <Left>29.8708cm</Left>
             <Height>3.39395cm</Height>
             <Width>0cm</Width>
@@ -5529,7 +5515,7 @@ Fields!ProtectionStatus.Value = 2, SrsResources.Localization.GetString("Bitlocke
             <Height>0.6cm</Height>
             <Width>4.07845cm</Width>
             <ZIndex>18</ZIndex>
-            <ToolTip>Get Help!</ToolTip>
+            <ToolTip>Get help or report Issues!</ToolTip>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -5542,7 +5528,7 @@ Fields!ProtectionStatus.Value = 2, SrsResources.Localization.GetString("Bitlocke
             </Style>
           </Textbox>
         </ReportItems>
-        <Height>7.12131cm</Height>
+        <Height>7.47056cm</Height>
         <Style>
           <Border>
             <Style>None</Style>
@@ -5739,6 +5725,43 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
                 </RightBorder>
               </Style>
             </Line>
+            <Textbox Name="TX_Version">
+              <CanGrow>true</CanGrow>
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>=Parameters!Version.Value</Value>
+                      <Style>
+                        <FontStyle>Normal</FontStyle>
+                        <FontFamily>Segoe UI</FontFamily>
+                        <FontSize>9pt</FontSize>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Right</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.42298cm</Top>
+              <Left>63.81609cm</Left>
+              <Height>0.6cm</Height>
+              <Width>4.07845cm</Width>
+              <ZIndex>2</ZIndex>
+              <ToolTip>Report Version</ToolTip>
+              <Style>
+                <Border>
+                  <Style>None</Style>
+                </Border>
+                <VerticalAlign>Top</VerticalAlign>
+                <PaddingLeft>2pt</PaddingLeft>
+                <PaddingRight>2pt</PaddingRight>
+                <PaddingTop>2pt</PaddingTop>
+                <PaddingBottom>2pt</PaddingBottom>
+              </Style>
+            </Textbox>
           </ReportItems>
           <Style>
             <Border>
@@ -5808,6 +5831,24 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
         </DataSetReference>
       </ValidValues>
     </ReportParameter>
+    <ReportParameter Name="ComplianceStates">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>N/A;Unprotected;Partially Protected;Exemption;OS Drive Noncompliant;Data Drive Noncompliant;Encryption in Progress;Decryption in Progress;Encryption Paused;Decryption Paused;Pending Key Upload;Pending Key Rotation;Pending Policy Evaluation</Value>
+        </Values>
+      </DefaultValue>
+      <Hidden>true</Hidden>
+    </ReportParameter>
+    <ReportParameter Name="Version">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>v5.0.0 - 2021-10-13</Value>
+        </Values>
+      </DefaultValue>
+      <Hidden>true</Hidden>
+    </ReportParameter>
     <ReportParameter Name="PolicyID">
       <DataType>String</DataType>
       <Prompt>Policy Name</Prompt>
@@ -5818,6 +5859,24 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
           <LabelField>Name</LabelField>
         </DataSetReference>
       </ValidValues>
+    </ReportParameter>
+    <ReportParameter Name="ReasonsForNonCompliance">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>N/A;Cypher strength not AES 256;Volume not encrypted;Volume encrypted;TPM protector required;No TPM+PIN protectors required;Non-TPM reports as compliant;TPM is not visible;Password protector required;Password protector not required;Auto-unlock protector required;Auto-unlock protector not required;Policy conflict detected;System volume is needed for encryption;Protection is suspended;AutoUnlock unsafe unless the OS volume is encrypted;Minimum cypher strength XTS-AES-128 bit required;Minimum cypher strength XTS-AES-256 bit required</Value>
+        </Values>
+      </DefaultValue>
+      <Hidden>true</Hidden>
+    </ReportParameter>
+    <ReportParameter Name="ReasonsForNonComplianceDetailed">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>Not Applicable;Cipher strength not AES 256;MBAM Policy requires this volume to be encrypted, but it is not;MBAM Policy requires this volume to NOT be encrypted, but it is;MBAM Policy requires this volume use a TPM protector, but it does not;Policy requires this volume use a TPM+PIN protector, but it does not;Policy does not allow non TPM machines to report as compliant;Volume has a TPM protector but the TPM is not visible (booted with recover key after disabling TPM in BIOS?);Policy requires this volume use a password protector, but it does not have one;Policy requires this volume NOT use a password protector, but it has one;Policy requires this volume use an auto-unlock protector, but it does not have one;Policy requires this volume NOT use an auto-unlock protector, but it has one;Policy conflict detected preventing MBAM from reporting this volume as compliant;A system volume is needed to encrypt the OS volume but it is not present;Protection is suspended for the volume;AutoUnlock unsafe unless the OS volume is encrypted;Policy requires minimum cypher strength is XTS-AES-128 bit, actual cypher strength is weaker than that;Policy requires minimum cypher strength is XTS-AES-256 bit, actual cypher strength is weaker than that</Value>
+        </Values>
+      </DefaultValue>
+      <Hidden>true</Hidden>
     </ReportParameter>
     <ReportParameter Name="VolumeTypes">
       <DataType>String</DataType>
@@ -5904,6 +5963,26 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
           <RowIndex>3</RowIndex>
           <ParameterName>Summarization</ParameterName>
         </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>2</ColumnIndex>
+          <RowIndex>1</RowIndex>
+          <ParameterName>Version</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>1</ColumnIndex>
+          <RowIndex>1</RowIndex>
+          <ParameterName>ComplianceStates</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>1</ColumnIndex>
+          <RowIndex>2</RowIndex>
+          <ParameterName>ReasonsForNonCompliance</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>2</ColumnIndex>
+          <RowIndex>2</RowIndex>
+          <ParameterName>ReasonsForNonComplianceDetailed</ParameterName>
+        </CellDefinition>
       </CellDefinitions>
     </GridLayoutDefinition>
   </ReportParametersLayout>
@@ -5912,14 +5991,14 @@ Public Function DecodeString(ByVal astrToDecode As String) As String
 '&lt;#
 '.SYNOPSIS
 '    Decodes an ecrypted string.
-'.DESCRIPTIONa
+'.DESCRIPTION
 '    Decodes an ecrypted string using buitin GetString() function.
 '.PARAMETER astrToDecode
 '    Specifies the string to decode.
 '.EXAMPLE
 '    Code.DecodeString(Fields!SomeField.Value) (SSRS)
 '.EXAMPLE
-'    GetStates("SQBQAFYASQBUAEMATQBGAFcNSwBTADEANQAwADcA") (VB.Net)
+'    DecodeString(Fields!SomeField.Value) (VB.Net)
 '.NOTES
 '    Created by MEMCM product team.
 '    Modified by Ioan Popovici.
@@ -5941,7 +6020,7 @@ End Function
 
 
 '#region Function GetStates
-Function GetStates (ByVal intBitMask As Integer, astrCategory As String, blnDetailed As Boolean) As String
+Function GetStates (ByVal intBitMask As Integer, ByVal astrStateList As String , ByVal astrDefaultState As String) As String
 '&lt;#
 '.SYNOPSIS
 '    Gets statically defined states.
@@ -5949,14 +6028,14 @@ Function GetStates (ByVal intBitMask As Integer, astrCategory As String, blnDeta
 '    Gets statically defined states for a specified bitmask.
 '.PARAMETER intBitMask
 '    Specifies the bitmask to apply.
-'.PARAMETER astrCategory
-'    Specifies the state category to resolve. Available values: (BitlockerNonComplianceReasons, BitlockerComplianceStates, UpdateHealthStates, UpdateScanStates)
-'.PARAMETER blnDetailed
-'    Specifies if to return detailed information.
+'.PARAMETER astrStateList
+'    Specifies the state list to resolve.
+'.PARAMETER astrDefaultState
+'    Specifies the default state to return.
 '.EXAMPLE
-'    Code.GetStates(Fields!SomeField.Value, "UpdateHealthStates", true) (SSRS)
+'    Code.GetStates(16, "State 1; State 2; State 3; Detailed State 1; Detailed State 2; Detailed State 3", "Compliant") (SSRS)
 '.EXAMPLE
-'    GetStates(16, "UpdateHealthStates", true) (VB.Net)
+'    GetStates(16, "State 1; State 2; State 3; Detailed State 1; Detailed State 2; Detailed State 3", "Compliant") (VB.Net)
 '.NOTES
 '    Created by Ioan Popovici.
 '.LINK
@@ -5966,103 +6045,13 @@ Function GetStates (ByVal intBitMask As Integer, astrCategory As String, blnDeta
 '.LINK
 '    https://MEM.Zone/Dashboards-ISSUES
 '#&gt;
-    Dim astrBitlockerNonComplianceReasons() As String = {
-        "N/A",
-        "Cypher strength not AES 256",
-        "Volume not encrypted",
-        "Volume encrypted",
-        "TPM protector required",
-        "No TPM+PIN protectors required",
-        "Non-TPM reports as compliant",
-        "TPM is not visible",
-        "Password protector required",
-        "Password protector not required",
-        "Auto-unlock protector required",
-        "Auto-unlock protector not required",
-        "Policy conflict detected",
-        "System volume is needed for encryption",
-        "Protection is suspended",
-        "AutoUnlock unsafe unless the OS volume is encrypted",
-        "Minimum cypher strength XTS-AES-128 bit required",
-        "Minimum cypher strength XTS-AES-256 bit required"
-    }
-    Dim astrBitlockerNonComplianceReasonsDetailed() As String = {
-        "N/A",
-        "Cipher strength not AES 256",
-        "MBAM Policy requires this volume to be encrypted but it is not",
-        "MBAM Policy requires this volume to NOT be encrypted, but it is",
-        "MBAM Policy requires this volume use a TPM protector, but it does not",
-        "Policy requires this volume use a TPM+PIN protector, but it does not",
-        "Policy does not allow non TPM machines to report as compliant",
-        "Volume has a TPM protector but the TPM is not visible (booted with recover key after disabling TPM in BIOS?)",
-        "Policy requires this volume use a password protector, but it does not have one",
-        "Policy requires this volume NOT use a password protector, but it has one",
-        "Policy requires this volume use an auto-unlock protector, but it does not have one",
-        "Policy requires this volume NOT use an auto-unlock protector, but it has one",
-        "Policy conflict detected preventing MBAM from reporting this volume as compliant",
-        "A system volume is needed to encrypt the OS volume but it is not present",
-        "Protection is suspended for the volume",
-        "AutoUnlock unsafe unless the OS volume is encrypted",
-        "Policy requires minimum cypher strength is XTS-AES-128 bit, actual cypher strength is weaker than that",
-        "Policy requires minimum cypher strength is XTS-AES-256 bit, actual cypher strength is weaker than that"
-    }
-
-    Dim astrBitlockerComplianceStates() As String = {
-        "N/A", "Unprotected", "Partially Protected", "Exemption", "OS Drive Noncompliant", "Data Drive Noncompliant",
-        "Encryption in Progress", "Decryption in Progress", "Encryption Paused", "Decryption Paused", "Pending Key Upload", "Pending Key Rotation", "Pending Policy Evaluation"
-    }
-    Dim astrBitlockerComplianceStatesDetailed() As String = {
-        "N/A", "Unprotected", "Not all Drives Protected", "Bitlocker Exemption", "OS Drive is Noncompliant", "Data Drive is Noncompliant",
-        "Encryption is in Progress", "Decryption is in Progress", "Encryption Paused", "Decryption Paused", "Pending Key Upload", "Pending Key Rotation", "Pending Policy Evaluation"
-    }
-
-    Dim astrUpdateHealthStates() As String = {
-        "Healthy", "Unmanaged", "Inactive", "Health Evaluation Failed", "Pending Restart", "Update Scan Failed",
-        "Update Scan Late", "No MW", "Distant MW", "Short MW", "Expired MW", "Disabled MW", "High Uptime", "Check Required Updates", "Free Space Low"
-    }
-    Dim astrUpdateHealthStatesDetailed() As String = {
-        "Healthy", "Unmanaged", "Client Inactive", "Client Health Evaluation Failed", "Pending Restart", "Update Scan Failed",
-        "Update Scan Late", "No Maintenance Window", "Distant Maintenance Window", "Short Maintenace Window", "Expired Maintenance Window",
-        "Disabled Maintenance Window", "Uptime Threshold Exeeded", "Required 0 While High Uptime", "Free Space Threshold Exeeded"
-    }
-
-    Dim astrUpdateScanStates() As String = {
-        "Healthy", "Unmanaged", "Inactive", "Health Evaluation Failed", "Scan Completed with Errors", "Scan Failed",
-        "Scan Unknown", "Scan Late", "Sync Catalog Outdated"
-    }
-    Dim astrUpdateScanStatesDetailed() As String = {
-        "Healthy", "Unmanaged", "Client Inactive", "Client Health Evaluation Failed", "Update Scan Completed with Errors",
-        "Update Scan Failed", "Update Scan Unknown", "Update Scan Late", "Update Sync Catalog is Outdated"
-    }
 
     Dim iaStates As Long
     Dim intStep As Long
     Dim strResolvedStates As String = ""
-    Dim astrStates As String()
+    Dim astrStates As String() = astrStateList.Split(";")
 
     Try
-        Select Case astrCategory
-            Case "BitlockerNonComplianceReasons"
-                astrStates = astrBitlockerNonComplianceReasons
-            Case "BitlockerComplianceStates"
-                astrStates = astrBitlockerComplianceStates
-            Case "UpdateHealthStates"
-                astrStates = astrUpdateHealthStates
-            Case "UpdateScanStates"
-                astrStates = astrUpdateScanStates
-        End Select
-        If blnDetailed Then
-            Select Case astrCategory
-                Case "BitlockerNonComplianceReasons"
-                    astrStates = astrBitlockerNonComplianceReasonsDetailed
-                Case "BitlockerComplianceStates"
-                    astrStates = astrBitlockerComplianceStatesDetailed
-                Case "UpdateHealthStates"
-                    astrStates = astrUpdateHealthStatesDetailed
-                Case "UpdateScanStates"
-                    astrStates = astrUpdateScanStatesDetailed
-            End Select
-        End If
         If intBitMask &lt;&gt; 0 Then
             For iaStates = 0 To UBound(astrStates)
                 If intBitMask And intStep Then
@@ -6074,11 +6063,7 @@ Function GetStates (ByVal intBitMask As Integer, astrCategory As String, blnDeta
                     intStep = 2 ^ iaStates
             Next
         Else
-            If InStr(astrCategory, "Bitlocker" ) &lt;&gt; 0
-                strResolvedStates = "N/A"
-            Else
-                strResolvedStates = "Compliant"
-            End If
+            strResolvedStates = astrDefaultState
         End If
     Catch
         strResolvedStates = "Could not resolve states."

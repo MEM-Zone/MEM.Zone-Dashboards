@@ -10,7 +10,7 @@ Public Function DecodeString(ByVal astrToDecode As String) As String
 '.EXAMPLE
 '    Code.DecodeString(Fields!SomeField.Value) (SSRS)
 '.EXAMPLE
-'    GetStates("SQBQAFYASQBUAEMATQBGAFcNSwBTADEANQAwADcA") (VB.Net)
+'    DecodeString(Fields!SomeField.Value) (VB.Net)
 '.NOTES
 '    Created by MEMCM product team.
 '    Modified by Ioan Popovici.

@@ -14,7 +14,7 @@ Public Function GetValueBeweenStrings(ByVal astrSource As String, ByVal astrSear
 '.EXAMPLE
 '    Code.GetValueBeweenStrings(Fields!SomeField.Value, "first", "last") (SSRS)
 '.EXAMPLE
-'    GetHealthStates(16) (VB.Net)
+'    GetValueBeweenStrings(Fields!SomeField.Value, "first", "last") (VB.Net)
 '.NOTES
 '    Created by MacLeod.broad.
 '    Modified by Ioan Popovici.

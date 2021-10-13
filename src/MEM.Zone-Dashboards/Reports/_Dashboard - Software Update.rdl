@@ -1,5 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition">
+  <Description>Displays the overall software update compliance as an actionable dashboard.</Description>
+  <Author>Ioan.Popovici@MEM.Zone</Author>
   <AutoRefresh>0</AutoRefresh>
   <DataSources>
     <DataSource Name="CMSQLDatabase">
@@ -710,6 +712,43 @@ ORDER BY CategoryInstanceName</CommandText>
         </Field>
       </Fields>
     </DataSet>
+    <DataSet Name="DefaultVendor">
+      <Query>
+        <DataSourceName>CMSQLDatabase</DataSourceName>
+        <QueryParameters>
+          <QueryParameter Name="@Locale">
+            <Value>=Parameters!Locale.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@UserSIDs">
+            <Value>=Parameters!UserSIDs.Value</Value>
+          </QueryParameter>
+        </QueryParameters>
+        <CommandText>/* Get Update Vendors */
+DECLARE @LCID AS INT = dbo.fn_LShortNameToLCID(@Locale);
+
+SELECT DISTINCT
+    CategoryInstanceID
+    , CategoryInstanceName
+FROM
+    fn_rbac_ListUpdateCategoryInstances(@LCID, @UserSIDs) AS UpdateCategoryInstance
+WHERE (
+    UpdateCategoryInstance.CategoryTypeName = N'Company'
+        AND UpdateCategoryInstance.AllowSubscription = 1
+        AND CategoryInstanceName = 'Microsoft'
+)
+ORDER BY CategoryInstanceName</CommandText>
+      </Query>
+      <Fields>
+        <Field Name="CategoryInstanceID">
+          <DataField>CategoryInstanceID</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="CategoryInstanceName">
+          <DataField>CategoryInstanceName</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
   </DataSets>
   <ReportSections>
     <ReportSection>
@@ -1295,7 +1334,6 @@ ORDER BY CategoryInstanceName</CommandText>
                         </Style>
                         <Label>=FormatPercent(IIF(First(Fields!NonCompliant.Value) = 0, Nothing, First(Fields!NonCompliant.Value) / First(Fields!TotalDevices.Value)), 2)</Label>
                         <Visible>true</Visible>
-                        <Position>=IIF(Fields!NonCompliant.Value &lt;= 4, "Outside", "Inside")</Position>
                         <ActionInfo>
                           <Actions>
                             <Action>
@@ -1409,7 +1447,6 @@ ORDER BY CategoryInstanceName</CommandText>
                         </Style>
                         <Label>=FormatPercent(IIF(First(Fields!Unmanaged.Value) = 0, Nothing, First(Fields!Unmanaged.Value) / First(Fields!TotalDevices.Value)), 2)</Label>
                         <Visible>true</Visible>
-                        <Position>=IIF(Fields!Unmanaged.Value &lt;= 4, "Outside", "Inside")</Position>
                         <ActionInfo>
                           <Actions>
                             <Action>
@@ -3964,7 +4001,7 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
           </Style>
         </PageHeader>
         <PageFooter>
-          <Height>0.32544cm</Height>
+          <Height>1.11919cm</Height>
           <PrintOnFirstPage>true</PrintOnFirstPage>
           <PrintOnLastPage>true</PrintOnLastPage>
           <ReportItems>
@@ -3997,6 +4034,43 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
                 </RightBorder>
               </Style>
             </Line>
+            <Textbox Name="TX_Version">
+              <CanGrow>true</CanGrow>
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>=Parameters!Version.Value</Value>
+                      <Style>
+                        <FontStyle>Normal</FontStyle>
+                        <FontFamily>Segoe UI</FontFamily>
+                        <FontSize>9pt</FontSize>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Right</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.33161cm</Top>
+              <Left>31.76255cm</Left>
+              <Height>0.6cm</Height>
+              <Width>4.07845cm</Width>
+              <ZIndex>1</ZIndex>
+              <ToolTip>Report Version</ToolTip>
+              <Style>
+                <Border>
+                  <Style>None</Style>
+                </Border>
+                <VerticalAlign>Top</VerticalAlign>
+                <PaddingLeft>2pt</PaddingLeft>
+                <PaddingRight>2pt</PaddingRight>
+                <PaddingTop>2pt</PaddingTop>
+                <PaddingBottom>2pt</PaddingBottom>
+              </Style>
+            </Textbox>
           </ReportItems>
           <Style>
             <Border>
@@ -4084,6 +4158,15 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       </ValidValues>
       <MultiValue>true</MultiValue>
     </ReportParameter>
+    <ReportParameter Name="Version">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>v5.0.0 - 2021-10-13</Value>
+        </Values>
+      </DefaultValue>
+      <Hidden>true</Hidden>
+    </ReportParameter>
     <ReportParameter Name="Categories">
       <DataType>String</DataType>
       <DefaultValue>
@@ -4105,9 +4188,10 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
     <ReportParameter Name="Vendors">
       <DataType>String</DataType>
       <DefaultValue>
-        <Values>
-          <Value>16777254</Value>
-        </Values>
+        <DataSetReference>
+          <DataSetName>DefaultVendor</DataSetName>
+          <ValueField>CategoryInstanceID</ValueField>
+        </DataSetReference>
       </DefaultValue>
       <Prompt>Vendors (Multiple Selection)</Prompt>
       <ValidValues>
@@ -4198,7 +4282,7 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
   </ReportParameters>
   <ReportParametersLayout>
     <GridLayoutDefinition>
-      <NumberOfColumns>4</NumberOfColumns>
+      <NumberOfColumns>3</NumberOfColumns>
       <NumberOfRows>6</NumberOfRows>
       <CellDefinitions>
         <CellDefinition>
@@ -4255,6 +4339,11 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
           <ColumnIndex>1</ColumnIndex>
           <RowIndex>3</RowIndex>
           <ParameterName>Enabled</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>2</ColumnIndex>
+          <RowIndex>1</RowIndex>
+          <ParameterName>Version</ParameterName>
         </CellDefinition>
       </CellDefinitions>
     </GridLayoutDefinition>

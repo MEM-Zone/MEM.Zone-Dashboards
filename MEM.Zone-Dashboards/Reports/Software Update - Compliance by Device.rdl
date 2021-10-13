@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition">
   <Description>Lists the software update compliance for a 'Device'. Queries 'All Updates' and can be filtered by 'Category', 'Superseded', 'Targeted' or 'ArticleID' csv list.  Hover to resolve  'Last Error Code' field. 'Aproved'/'Targeted' is refering to whether an update is targeting or not a specific device.</Description>
+  <Author>Ioan.Popovici@MEM.Zone</Author>
   <AutoRefresh>0</AutoRefresh>
   <DataSources>
     <DataSource Name="CMSQLDatabase">
@@ -367,6 +368,43 @@ ORDER BY CategoryInstanceName</CommandText>
         </Field>
       </Fields>
     </DataSet>
+    <DataSet Name="DefaultVendor">
+      <Query>
+        <DataSourceName>CMSQLDatabase</DataSourceName>
+        <QueryParameters>
+          <QueryParameter Name="@Locale">
+            <Value>=Parameters!Locale.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@UserSIDs">
+            <Value>=Parameters!UserSIDs.Value</Value>
+          </QueryParameter>
+        </QueryParameters>
+        <CommandText>/* Get Update Vendors */
+DECLARE @LCID AS INT = dbo.fn_LShortNameToLCID(@Locale);
+
+SELECT DISTINCT
+    CategoryInstanceID
+    , CategoryInstanceName
+FROM
+    fn_rbac_ListUpdateCategoryInstances(@LCID, @UserSIDs) AS UpdateCategoryInstance
+WHERE (
+    UpdateCategoryInstance.CategoryTypeName = N'Company'
+        AND UpdateCategoryInstance.AllowSubscription = 1
+        AND CategoryInstanceName = 'Microsoft'
+)
+ORDER BY CategoryInstanceName</CommandText>
+      </Query>
+      <Fields>
+        <Field Name="CategoryInstanceID">
+          <DataField>CategoryInstanceID</DataField>
+          <rd:TypeName>System.Int32</rd:TypeName>
+        </Field>
+        <Field Name="CategoryInstanceName">
+          <DataField>CategoryInstanceName</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
   </DataSets>
   <ReportSections>
     <ReportSection>
@@ -664,7 +702,7 @@ ORDER BY CategoryInstanceName</CommandText>
               <Value />
             </TopImage>
             <DataSetName>DeviceUpdateInfo</DataSetName>
-            <Top>1.22cm</Top>
+            <Top>1.44225cm</Top>
             <Left>17.36359cm</Left>
             <Height>4cm</Height>
             <Width>4cm</Width>
@@ -1075,7 +1113,7 @@ ORDER BY CategoryInstanceName</CommandText>
               <Value />
             </TopImage>
             <DataSetName>DeviceUpdateInfo</DataSetName>
-            <Top>1.22cm</Top>
+            <Top>1.44225cm</Top>
             <Left>0.2635cm</Left>
             <Height>4cm</Height>
             <Width>4cm</Width>
@@ -1379,7 +1417,7 @@ ORDER BY CategoryInstanceName</CommandText>
               <Value />
             </TopImage>
             <DataSetName>DeviceUpdateInfo</DataSetName>
-            <Top>1.22cm</Top>
+            <Top>1.44225cm</Top>
             <Left>8.81736cm</Left>
             <Height>4cm</Height>
             <Width>4cm</Width>
@@ -1683,7 +1721,7 @@ ORDER BY CategoryInstanceName</CommandText>
               <Value />
             </TopImage>
             <DataSetName>DeviceUpdateInfo</DataSetName>
-            <Top>1.22cm</Top>
+            <Top>1.44225cm</Top>
             <Left>13.09959cm</Left>
             <Height>4cm</Height>
             <Width>4cm</Width>
@@ -1987,7 +2025,7 @@ ORDER BY CategoryInstanceName</CommandText>
               <Value />
             </TopImage>
             <DataSetName>DeviceUpdateInfo</DataSetName>
-            <Top>1.22cm</Top>
+            <Top>1.44225cm</Top>
             <Left>21.63984cm</Left>
             <Height>4cm</Height>
             <Width>4cm</Width>
@@ -2000,7 +2038,7 @@ ORDER BY CategoryInstanceName</CommandText>
             </Style>
           </GaugePanel>
           <Line Name="LN_GaugesSpacer_02">
-            <Top>1.44cm</Top>
+            <Top>1.6468cm</Top>
             <Left>8.67625cm</Left>
             <Height>3.39395cm</Height>
             <Width>0cm</Width>
@@ -2316,7 +2354,7 @@ ORDER BY CategoryInstanceName</CommandText>
               <Value />
             </TopImage>
             <DataSetName>DeviceUpdateInfo</DataSetName>
-            <Top>1.22cm</Top>
+            <Top>1.44225cm</Top>
             <Left>4.5175cm</Left>
             <Height>4cm</Height>
             <Width>4cm</Width>
@@ -2329,7 +2367,7 @@ ORDER BY CategoryInstanceName</CommandText>
             </Style>
           </GaugePanel>
           <Line Name="LN_GaugesLeft">
-            <Top>1.44cm</Top>
+            <Top>1.6468cm</Top>
             <Left>0.127cm</Left>
             <Height>3.39395cm</Height>
             <Width>0cm</Width>
@@ -2354,7 +2392,7 @@ ORDER BY CategoryInstanceName</CommandText>
             </Style>
           </Line>
           <Line Name="LN_GaugesSpacer_03">
-            <Top>1.44cm</Top>
+            <Top>1.6468cm</Top>
             <Left>12.95847cm</Left>
             <Height>3.39395cm</Height>
             <Width>0cm</Width>
@@ -2379,7 +2417,7 @@ ORDER BY CategoryInstanceName</CommandText>
             </Style>
           </Line>
           <Line Name="LN_GaugesSpacer_01">
-            <Top>1.44cm</Top>
+            <Top>1.6468cm</Top>
             <Left>4.397cm</Left>
             <Height>3.39395cm</Height>
             <Width>0cm</Width>
@@ -2404,7 +2442,7 @@ ORDER BY CategoryInstanceName</CommandText>
             </Style>
           </Line>
           <Line Name="LN_GaugesRight">
-            <Top>1.44cm</Top>
+            <Top>1.6468cm</Top>
             <Left>25.79867cm</Left>
             <Height>3.39395cm</Height>
             <Width>0cm</Width>
@@ -5420,7 +5458,7 @@ ORDER BY CategoryInstanceName</CommandText>
               </TablixMembers>
             </TablixRowHierarchy>
             <DataSetName>DeviceUpdateInfo</DataSetName>
-            <Top>6.0512cm</Top>
+            <Top>6.4957cm</Top>
             <Left>0.12413cm</Left>
             <Height>1.8cm</Height>
             <Width>65.26088cm</Width>
@@ -5462,7 +5500,7 @@ ORDER BY CategoryInstanceName</CommandText>
             </Style>
           </Line>
           <Line Name="LN_GaugesFooter">
-            <Top>5.05991cm</Top>
+            <Top>5.53616cm</Top>
             <Left>0.127cm</Left>
             <Height>0cm</Height>
             <Width>65.25802cm</Width>
@@ -5509,7 +5547,7 @@ ORDER BY CategoryInstanceName</CommandText>
                 </Style>
               </Paragraph>
             </Paragraphs>
-            <Top>0.9803in</Top>
+            <Top>1.0178in</Top>
             <Left>10.20001in</Left>
             <Height>0.23622in</Height>
             <Width>1.50536in</Width>
@@ -5544,7 +5582,7 @@ ORDER BY CategoryInstanceName</CommandText>
                 </Style>
               </Paragraph>
             </Paragraphs>
-            <Top>1.2193in</Top>
+            <Top>1.2568in</Top>
             <Left>10.20001in</Left>
             <Height>0.3765in</Height>
             <Width>1.50536in</Width>
@@ -5561,7 +5599,7 @@ ORDER BY CategoryInstanceName</CommandText>
             </Style>
           </Textbox>
           <Line Name="LN_TotalDevicesRight">
-            <Top>1.44cm</Top>
+            <Top>1.6468cm</Top>
             <Left>29.87276cm</Left>
             <Height>3.39395cm</Height>
             <Width>0cm</Width>
@@ -5603,7 +5641,7 @@ ORDER BY CategoryInstanceName</CommandText>
                 <Style />
               </Paragraph>
             </Paragraphs>
-            <Top>5.32276cm</Top>
+            <Top>5.76726cm</Top>
             <Left>0.127cm</Left>
             <Height>0.6cm</Height>
             <Width>25.50997cm</Width>
@@ -5664,7 +5702,7 @@ ORDER BY CategoryInstanceName</CommandText>
             </Style>
           </Textbox>
         </ReportItems>
-        <Height>7.8512cm</Height>
+        <Height>8.30099cm</Height>
         <Style>
           <Border>
             <Style>None</Style>
@@ -5861,6 +5899,43 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
                 </RightBorder>
               </Style>
             </Line>
+            <Textbox Name="TX_Version">
+              <CanGrow>true</CanGrow>
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>=Parameters!Version.Value</Value>
+                      <Style>
+                        <FontStyle>Normal</FontStyle>
+                        <FontFamily>Segoe UI</FontFamily>
+                        <FontSize>9pt</FontSize>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Right</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.33161cm</Top>
+              <Left>61.30656cm</Left>
+              <Height>0.6cm</Height>
+              <Width>4.07845cm</Width>
+              <ZIndex>2</ZIndex>
+              <ToolTip>Report Version</ToolTip>
+              <Style>
+                <Border>
+                  <Style>None</Style>
+                </Border>
+                <VerticalAlign>Top</VerticalAlign>
+                <PaddingLeft>2pt</PaddingLeft>
+                <PaddingRight>2pt</PaddingRight>
+                <PaddingTop>2pt</PaddingTop>
+                <PaddingBottom>2pt</PaddingBottom>
+              </Style>
+            </Textbox>
           </ReportItems>
           <Style>
             <Border>
@@ -5923,6 +5998,15 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       <DataType>String</DataType>
       <Prompt>Device Name or ResourceID</Prompt>
     </ReportParameter>
+    <ReportParameter Name="Version">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>v5.0.0 - 2021-10-13</Value>
+        </Values>
+      </DefaultValue>
+      <Hidden>true</Hidden>
+    </ReportParameter>
     <ReportParameter Name="Categories">
       <DataType>String</DataType>
       <DefaultValue>
@@ -5944,9 +6028,10 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
     <ReportParameter Name="Vendors">
       <DataType>String</DataType>
       <DefaultValue>
-        <Values>
-          <Value>16777254</Value>
-        </Values>
+        <DataSetReference>
+          <DataSetName>DefaultVendor</DataSetName>
+          <ValueField>CategoryInstanceID</ValueField>
+        </DataSetReference>
       </DefaultValue>
       <Prompt>Vendors (Multiple Selection)</Prompt>
       <ValidValues>
@@ -6136,6 +6221,11 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
           <ColumnIndex>0</ColumnIndex>
           <RowIndex>4</RowIndex>
           <ParameterName>Enabled</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>2</ColumnIndex>
+          <RowIndex>1</RowIndex>
+          <ParameterName>Version</ParameterName>
         </CellDefinition>
       </CellDefinitions>
     </GridLayoutDefinition>

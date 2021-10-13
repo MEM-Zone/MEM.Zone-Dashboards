@@ -1,10 +1,12 @@
 /*
 .SYNOPSIS
-    Summarizes the software update compliance.
+    Lists the installed software.
 .DESCRIPTION
-    Summarizes the software update compliance for a Collection in MEMCM.
+    Lists the installed software by user selection (Device, Publisher or Name).
+    Supports filtering and exclusions by multiple software names using comma separated values and sql wildcards.
 .NOTES
-    Requires SQL 2016.
+    Created by Ioan Popovici.
+    Requires SQL 2016
     Part of a report should not be run separately.
 .LINK
     https://MEM.Zone/Dashboards
@@ -20,197 +22,121 @@
 /* #region QueryBody */
 
 /* Testing variables !! Need to be commented for Production !! */
---DECLARE @UserSIDs          AS NVARCHAR(10) = 'Disabled';
---DECLARE @CollectionID      AS NVARCHAR(10) = 'SMS00001';
---DECLARE @Locale            AS INT          = 2;
---DECLARE @Categories        AS INT          = 16777247; -- Security Updates
---DECLARE @Vendors           AS INT          = 16777254; -- Microsoft
---DECLARE @Targeted          AS INT          = 1;
---DECLARE @Superseded        AS INT          = 0;
---DECLARE @Enabled           AS INT          = 1;
---DECLARE @ExcludeArticleIDs AS NVARCHAR(50) = '';
+DECLARE @UserSIDs            AS NVARCHAR(10)  = 'Disabled';
+DECLARE @CollectionID        AS NVARCHAR(250) = 'SMS00001';
+DECLARE @SoftwareNameLike    AS NVARCHAR(250) = 'Adobe Illustrator 2021%';
+DECLARE @SoftwareNameNotLike AS NVARCHAR(250) = '';
+DECLARE @SoftwareVersionLike AS NVARCHAR(20)  = '25%';
 
 /* Perform cleanup */
-IF OBJECT_ID(N'tempdb..#SummarizationInfo', N'U') IS NOT NULL
-    DROP TABLE #SummarizationInfo;
+IF OBJECT_ID(N'tempdb..#InstalledSoftware', N'U') IS NOT NULL
+    DROP TABLE #InstalledSoftware;
 
-/* Variable declaration */
-DECLARE @LCID                  AS INT = dbo.fn_LShortNameToLCID(@Locale);
-DECLARE @Clients               AS INT = (
-    SELECT COUNT(ResourceID)
-    FROM fn_rbac_ClientCollectionMembers(@UserSIDs) AS ClientCollectionMembers
-    WHERE ClientCollectionMembers.CollectionID = @CollectionID
-);
-DECLARE @TotalDevices          AS INT = (
-    SELECT COUNT(ResourceID)
-    FROM fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembership
-    WHERE CollectionMembership.CollectionID = @CollectionID
-        AND CollectionMembership.ResourceType = 5 -- Select devices only
-);
-DECLARE @Unmanaged             AS INT = @TotalDevices - @Clients;
-
-/* Get compliance data data */
-;
-WITH SummarizationInfo_CTE AS (
-    SELECT
-        ResourceID          = Systems.ResourceID
-        , CI_ID             = UpdateCIs.CI_ID
-        , ArticleID         = UpdateCIs.ArticleID
-        , CategoryID        = CICategoryClassification.CategoryInstanceID
-        , Category          = CICategoryClassification.CategoryInstanceName
-        , VendorID          = CICategoryCompany.CategoryInstanceID
-        , UpdatesByCategory = (
-            DENSE_RANK() OVER(PARTITION BY CICategoryClassification.CategoryInstanceID ORDER BY UpdateCIs.CI_ID)
-            +
-            DENSE_RANK() OVER(PARTITION BY CICategoryClassification.CategoryInstanceID ORDER BY UpdateCIs.CI_ID DESC)
-            - 1
-        )
-        , TotalUpdates      = (
-            DENSE_RANK() OVER(PARTITION BY CollectionMembers.CollectionID ORDER BY ComplianceStatus.Status, UpdateCIs.CI_ID)
-            +
-            DENSE_RANK() OVER(PARTITION BY CollectionMembers.CollectionID ORDER BY ComplianceStatus.Status, UpdateCIs.CI_ID DESC)
-            - 1
-        )
-        , NonCompliant      = (
-            DENSE_RANK() OVER(PARTITION BY CollectionMembers.CollectionID ORDER BY ComplianceStatus.Status, ComplianceStatus.ResourceID)
-            +
-            DENSE_RANK() OVER(PARTITION BY CollectionMembers.CollectionID ORDER BY ComplianceStatus.Status, ComplianceStatus.ResourceID DESC)
-            - 1
-        )
-FROM fn_rbac_R_System(@UserSIDs) AS Systems
-    JOIN fn_rbac_UpdateComplianceStatus(@UserSIDs) AS ComplianceStatus ON ComplianceStatus.ResourceID = Systems.ResourceID
-        AND ComplianceStatus.Status = 2                                  -- Filter on 'Required' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
-    JOIN fn_rbac_ClientCollectionMembers(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = ComplianceStatus.ResourceID
-    JOIN fn_rbac_UpdateInfo(@LCID, @UserSIDs) AS UpdateCIs ON UpdateCIs.CI_ID = ComplianceStatus.CI_ID
-        AND UpdateCIs.IsExpired = 0                                      -- Filter on Expired
-        AND UpdateCIs.IsSuperseded IN (@Superseded)                      -- Filter on Superseeded
-        AND UpdateCIs.IsEnabled IN (@Enabled)                            -- Filter on Deployment Enabled
-        AND UpdateCIs.CIType_ID IN (1, 8)                                -- Filter on 1 Software Updates, 8 Software Update Bundle (v_CITypes)
-        AND UpdateCIs.ArticleID NOT IN (                                 -- Filter on ArticleID csv list
-                SELECT VALUE FROM STRING_SPLIT(@ExcludeArticleIDs, N',')
-            )
-    JOIN fn_rbac_CICategoryInfo_All(@LCID, @UserSIDs) AS CICategoryCompany ON CICategoryCompany.CI_ID = UpdateCIs.CI_ID
-        AND CICategoryCompany.CategoryTypeName = N'Company'
-        AND CICategoryCompany.CategoryInstanceID IN (@Vendors)           -- Filter on Selected Update Vendors
-    JOIN fn_rbac_CICategoryInfo_All(@LCID, @UserSIDs) AS CICategoryClassification ON CICategoryClassification.CI_ID = UpdateCIs.CI_ID
-        AND CICategoryClassification.CategoryTypeName = N'UpdateClassification'
-        AND CICategoryClassification.CategoryInstanceID IN (@Categories) -- Filter on Selected Update Classification Categories
-    LEFT JOIN fn_rbac_CITargetedMachines(@UserSIDs) AS Targeted ON Targeted.CI_ID = ComplianceStatus.CI_ID
-        AND Targeted.ResourceID = ComplianceStatus.ResourceID
-WHERE CollectionMembers.CollectionID = @CollectionID
-    AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted)            -- Filter on 'Targeted' or 'NotTargeted'
+/* Initialize SoftwareLike table */
+DECLARE @SoftwareLike TABLE (
+    SoftwareName NVARCHAR(250)
 )
 
-/* Insert into SummarizationInfo */
-SELECT
-    CI_ID
-    , ArticleID
-    , CategoryID
-    , Category
-    , CategorySummarization  =	 (
-        CASE CategoryID
-            WHEN 16777247 THEN 1 -- Security Updates
-            WHEN 16777243 THEN 2 -- Critical Updates
-            WHEN 16777252 THEN 3 -- Upgrades
-            ELSE 4
+/* Initialize SoftwareNotLike table */
+DECLARE @SoftwareNotLike TABLE (
+    SoftwareName NVARCHAR(250)
+)
+
+/* Populate SoftwareLike table */
+INSERT INTO @SoftwareLike (SoftwareName)
+SELECT SubString FROM fn_SplitString(@SoftwareNameLike, ',');
+
+/* Populate SoftwareNotLike table */
+INSERT INTO @SoftwareNotLike (SoftwareName)
+SELECT SubString FROM fn_SplitString(@SoftwareNameNotLike, ',');
+
+/* Populate InstalledSoftware table */
+SELECT DISTINCT
+    Device              = Systems.Netbios_Name0
+    , Manufacturer      = Enclosure.Manufacturer0
+    , DeviceType        = (
+        CASE
+            WHEN Enclosure.ChassisTypes0 IN (8 , 9, 10, 11, 12, 14, 18, 21, 31, 32) THEN N'Laptop'
+            WHEN Enclosure.ChassisTypes0 IN (3, 4, 5, 6, 7, 15, 16)                 THEN N'Desktop'
+            WHEN Enclosure.ChassisTypes0 IN (17, 23, 28, 29)                        THEN N'Servers'
+            WHEN Enclosure.ChassisTypes0 = N'30'                                    THEN N'Tablet'
+            ELSE 'Unknown'
         END
     )
-    , VendorID
-    , UpdatesByCategory
-    , TotalUpdates
-    , NonCompliant
-    , NonCompliantByCategory = COUNT(*)
-INTO #SummarizationInfo
-FROM SummarizationInfo_CTE
-GROUP BY
-    CI_ID
-    , ArticleID
-    , CategoryID
-    , Category
-    , VendorID
-    , UpdatesByCategory
-    , TotalUpdates
-    , NonCompliant
+    , SerialNumber      = Enclosure.SerialNumber0
+    , Publisher         = (
+        CASE
+            WHEN Software.Publisher0 IS NULL                THEN N'<No Publisher>'
+            WHEN Software.Publisher0 = N''                  THEN N'<No Publisher>'
+            WHEN Software.Publisher0 = N'<no manufacturer>' THEN N'<No Publisher>'
+            ELSE Software.Publisher0
+        END
+    )
+    , SoftwareName      = COALESCE(NULLIF(Software.DisplayName0, N''), N'Unknown')
+    , Version           = COALESCE(NULLIF(Software.Version0, N''), N'Unknown')
+    , DomainOrWorkgroup = Systems.Resource_Domain_OR_Workgr0
+    , UserName          = Systems.User_Name0
+	, UserEmail         = Users.Mail0
+    , OperatingSystem   = OS.Caption0
+INTO #InstalledSoftware
+FROM fn_rbac_Add_Remove_Programs(@UserSIDs) AS Software
+    JOIN fn_rbac_R_System(@UserSIDs) AS Systems ON Systems.ResourceID = Software.ResourceID
+    JOIN fn_rbac_ClientCollectionMembers(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = Systems.ResourceID
+    JOIN fn_rbac_GS_OPERATING_SYSTEM(@UserSIDs) AS OS ON OS.ResourceID = Systems.ResourceID
+    LEFT JOIN fn_rbac_GS_SYSTEM_ENCLOSURE(@UserSIDs) AS Enclosure ON Enclosure.ResourceID = Systems.ResourceID
+	LEFT JOIN fn_rbac_R_User(@UserSIDs) AS Users ON Users.User_Name0 = Systems.User_Name0
+WHERE CollectionMembers.CollectionID = @CollectionID
+    AND EXISTS (
+        SELECT SoftwareName
+        FROM @SoftwareLike AS SoftwareLike
+        WHERE Software.DisplayName0 LIKE SoftwareLike.SoftwareName
+			AND Software.Version0 LIKE @SoftwareVersionLike
+    );
 
-/* Display summarized result */
-IF NOT EXISTS(SELECT 1 FROM #SummarizationInfo) -- If compliant (null result)
-    BEGIN
-        SELECT
-            CI_ID                       = NULL
-            , ArticleID                 = NULL
-            , Title                     = NULL
-            , CategoryIndex             = NULL
-            , CategoryID                = NULL
-            , Category                  = N'Selected Categories'
-            , CategorySumIndex          = NULL
-            , CategorySummarization     = N'Selected Categories'
-            , VendorID                  = NULL
-            , InformationURL            = NULL
-            , UpdatesByCategory         = NULL
-            , TotalUpdates              = NULL
-            , Compliant                 = @Clients
-            , NonCompliant              = NULL
-            , CompliantByCategory       = @Clients
-            , NonCompliantByCategory    = NULL
-            , NonCompliantByCategorySum = NULL
-            , Clients                   = @Clients
-            , Unmanaged                 = @Unmanaged
-            , TotalDevices              = @TotalDevices
-    END
+/* Use NOT LIKE if needed */
+IF EXISTS (SELECT SoftwareName FROM @SoftwareNotLike)
+BEGIN
+    SELECT
+        Device
+        , Manufacturer
+        , DeviceType
+        , SerialNumber
+        , Publisher
+        , SoftwareName
+        , Version
+        , DomainOrWorkgroup
+        , UserName
+		, UserEmail
+        , OperatingSystem
+    FROM #InstalledSoftware AS InstalledSoftware
+        WHERE NOT EXISTS (
+            SELECT SoftwareName
+            FROM @SoftwareNotLike AS SoftwareNotLike
+            WHERE InstalledSoftware.SoftwareName LIKE SoftwareNotLike.SoftwareName
+        )
+END;
+
+/* Otherwise perform a normal select */
 ELSE
-    BEGIN
-        SELECT
-            CI_ID                       = UpdateInfo.CI_ID
-            , ArticleID                 = UpdateInfo.ArticleID
-            , Title                     = UpdateInfo.Title
-            , CategoryIndex             = (     -- Used for Missing Updates by Classification Chart
-                DENSE_RANK() OVER(PARTITION BY SummarizationInfo.CategoryID ORDER BY UpdateInfo.CI_ID)
-            )
-            , CategoryID                = SummarizationInfo.CategoryID
-            , Category                  = Category
-            , CategorySumIndex          = (     -- Used for Top 5 Devices with Missing Updates by Classification Chart
-                DENSE_RANK() OVER(PARTITION BY SummarizationInfo.CategorySummarization ORDER BY SummarizationInfo.NonCompliantByCategory DESC, UpdateInfo.CI_ID)
-            )
-            , CategorySummarization     = SummarizationInfo.CategorySummarization
-            , VendorID                  = SummarizationInfo.VendorID
-            , InformationURL            = UpdateInfo.InfoURL
-            , UpdatesByCategory         = SummarizationInfo.UpdatesByCategory
-            , TotalUpdates              = SummarizationInfo.TotalUpdates
-            , Compliant                 = @Clients - SummarizationInfo.NonCompliant
-            , NonCompliant              = SummarizationInfo.NonCompliant
-            , CompliantByCategory       = @Clients - SummarizationInfo.NonCompliantByCategory
-            , NonCompliantByCategory    = SummarizationInfo.NonCompliantByCategory
-            , NonCompliantByCategorySum = (
-                SUM(NonCompliantByCategory) OVER(PARTITION BY SummarizationInfo.CategoryID, SummarizationInfo.ArticleID)
-            )
-            , Clients                   = @Clients
-            , Unmanaged                 = @Unmanaged
-            , TotalDevices              = @TotalDevices
-        FROM #SummarizationInfo AS SummarizationInfo
-            JOIN fn_rbac_UpdateInfo(@LCID, @UserSIDs) AS UpdateInfo ON UpdateInfo.CI_ID = SummarizationInfo.CI_ID
-                AND UpdateInfo.ArticleID = SummarizationInfo.ArticleID
-        GROUP BY
-            UpdateInfo.CI_ID
-            , UpdateInfo.ArticleID
-            , SummarizationInfo.ArticleID
-            , UpdateInfo.Title
-            , SummarizationInfo.CategorySummarization
-            , SummarizationInfo.CategoryID
-            , SummarizationInfo.Category
-            , SummarizationInfo.VendorID
-            , UpdateInfo.InfoURL
-            , SummarizationInfo.UpdatesByCategory
-            , SummarizationInfo.TotalUpdates
-            , SummarizationInfo.NonCompliant
-            , SummarizationInfo.NonCompliantByCategory
-        ORDER BY
-            CategorySummarization
-            , NonCompliantByCategorySum DESC
-    END
+BEGIN
+    SELECT
+        Device
+        , Manufacturer
+        , DeviceType
+        , SerialNumber
+        , Publisher
+        , SoftwareName
+        , Version
+        , DomainOrWorkgroup
+        , UserName
+		, UserEmail
+        , OperatingSystem
+    FROM #InstalledSoftware
+END;
 
 /* Perform cleanup */
-IF OBJECT_ID(N'tempdb..#SummarizationInfo', N'U') IS NOT NULL
-    DROP TABLE #SummarizationInfo;
+IF OBJECT_ID(N'tempdb..#InstalledSoftware', N'U') IS NOT NULL
+    DROP TABLE #InstalledSoftware;
 
 /* #endregion */
 /*##=============================================*/

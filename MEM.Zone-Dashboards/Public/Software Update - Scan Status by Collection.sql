@@ -98,15 +98,14 @@ SELECT
     )
     , ScanState               = (
         CASE
-            WHEN StateNames.StateID = 0
-                OR StateNames.StateID IS NULL THEN 'Unkown'
-            WHEN StateNames.StateID = 1       THEN 'Waiting'
-            WHEN StateNames.StateID = 2       THEN 'Running'
-            WHEN StateNames.StateID = 3       THEN 'Completed'
-            WHEN StateNames.StateID = 4       THEN 'Retry'
-            WHEN StateNames.StateID = 5       THEN 'Failed'
-            WHEN StateNames.StateID = 6       THEN 'Error'
-
+            WHEN StateNames.StateID = 0 THEN 'Unkown'
+            WHEN StateNames.StateID = 1 THEN 'Waiting'
+            WHEN StateNames.StateID = 2 THEN 'Running'
+            WHEN StateNames.StateID = 3 THEN 'Completed'
+            WHEN StateNames.StateID = 4 THEN 'Retry'
+            WHEN StateNames.StateID = 5 THEN 'Failed'
+            WHEN StateNames.StateID = 6 THEN 'Error'
+            ELSE 'Unknown'
         END
     )
     , ScanStateDescription    = ISNULL(StateNames.StateName, 'Scan state unknown')

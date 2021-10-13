@@ -43,6 +43,7 @@ See [help](https://MEM.Zone/Dashboards-Help).
 * Software Update - Compliance by Device
 * Software Update - Scan Status by Collection
 * Software Update - Update Point Sync Status
+* Software - Installed Software by User Selection
 
 ## Navigation Tree
 
