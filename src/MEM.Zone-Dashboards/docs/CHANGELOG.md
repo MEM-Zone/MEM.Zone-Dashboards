@@ -1,5 +1,9 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 5.0.2 - 2021-10-15
+
+* Fix duplicate entries in the `Operating System - Windows 11 Readines` report.
+
 ## 5.0.1 - 2021-10-14
 
 * Included `ReportingServicesTools` dependency in the package for the `Install-SRSReport` script.

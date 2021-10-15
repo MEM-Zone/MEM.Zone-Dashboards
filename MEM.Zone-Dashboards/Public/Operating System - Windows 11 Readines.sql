@@ -65,12 +65,12 @@ DECLARE @HT_FreeSpace      AS INT = (SELECT Threshold FROM @ThresholdVariables W
 ;
 WITH Processor_CTE
 AS (
-    SELECT
+    SELECT DISTINCT
         ResourceID                = Processor.ResourceID
         , Compatible              = IIF(Processors.ProcessorName IS NULL, 0, 1)
     FROM fn_rbac_GS_PROCESSOR(@UserSIDs) AS Processor
-        LEFT JOIN @CompatibleProcessors AS Processors ON Processor.Name0 LIKE '%' + Processors.ProcessorName + '%'
         INNER JOIN fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = Processor.ResourceID
+        LEFT JOIN @CompatibleProcessors AS Processors ON Processor.Name0 LIKE '%' + Processors.ProcessorName + '%'
     WHERE CollectionMembers.CollectionID = @CollectionID
 )
 SELECT
