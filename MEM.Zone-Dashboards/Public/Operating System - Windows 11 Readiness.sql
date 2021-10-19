@@ -1,8 +1,8 @@
 /*
 .SYNOPSIS
-    Gets the windows 11 readines.
+    Gets the windows 11 readiness.
 .DESCRIPTION
-    Gets the windows 11 readines by checking multiple components.
+    Gets the windows 11 readiness by checking multiple components.
 .NOTES
     Requires SQL 2016.
     Part of a report should not be run separately.
