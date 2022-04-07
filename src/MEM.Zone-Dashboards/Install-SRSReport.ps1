@@ -346,7 +346,7 @@ Function Invoke-SQLCommand {
     Begin {
 
         ## Assemble connection string
-        [string]$ConnectionString = "Server=$Server; Database=$Database; "
+        [string]$ConnectionString = "Server=$ServerInstance; Database=$Database; "
         #  Set connection string for integrated or non-integrated authentication
         If ($UseSQLAuthentication) {
             # Get credentials if SQL Server Authentication is used

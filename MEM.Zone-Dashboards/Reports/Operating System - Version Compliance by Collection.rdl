@@ -5879,7 +5879,7 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       </ValidValues>
     </ReportParameter>
     <ReportParameter Name="Compliant">
-      <DataType>Integer</DataType>
+      <DataType>String</DataType>
       <DefaultValue>
         <Values>
           <Value>1</Value>
@@ -5907,7 +5907,7 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       <MultiValue>true</MultiValue>
     </ReportParameter>
     <ReportParameter Name="OSComplianceType">
-      <DataType>Integer</DataType>
+      <DataType>String</DataType>
       <DefaultValue>
         <Values>
           <Value>0</Value>
