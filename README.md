@@ -98,6 +98,14 @@ This preview is not up-to-date, it represents version 2.0.0. A new preview will 
 
 ## Prerequisites
 
+### Discovery
+
+* `l` additional user and device discovery attribute
+* `co` additional user and device discovery attribute
+
+>**Notes**
+>Run the user and device discovery after adding the `l` and `co` attributes.
+
 ### Software
 
 * Microsoft Endpoint Management Configuration Manager (MEMCM) with Windows Update Services (WSUS) integration.
