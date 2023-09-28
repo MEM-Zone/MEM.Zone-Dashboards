@@ -574,7 +574,7 @@ UNION
         ID = ROW_NUMBER() OVER(Partition BY OSLocalizedNames.LocaleID ORDER BY OSLocalizedNames.Value)
         , OSLocalizedNames.Value
     FROM fn_GetWindowsServicingLocalizedNames() AS OSLocalizedNames
-ORDER BY ID</CommandText>
+GROUP BY Value, LocaleID</CommandText>
         <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
       <Fields>
@@ -5957,7 +5957,7 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       <DataType>String</DataType>
       <DefaultValue>
         <Values>
-          <Value>20H2</Value>
+          <Value>22H2</Value>
         </Values>
       </DefaultValue>
       <Prompt>Compliance Rule: OS Version (Multiple Selection)</Prompt>
