@@ -55,7 +55,7 @@
 .LINK
     https://github.com/microsoft/ReportingServicesTools
 .LINK
-    https://MEM.Zone/
+    https://MEM.Zone
 .LINK
     https://MEM.Zone/Install-SRSReport-RELEASES
 .LINK
@@ -213,7 +213,7 @@ Function Show-Progress {
 .LINK
     https://adamtheautomator.com/building-progress-bar-powershell-scripts/
 .LINK
-    https://MEM.Zone/
+    https://MEM.Zone
 .LINK
     https://MEM.Zone/Install-SRSReport-GIT
 .LINK
@@ -310,7 +310,7 @@ Function Invoke-SQLCommand {
 .LINK
     https://stackoverflow.com/questions/8423541/how-do-you-run-a-sql-server-query-from-powershell
 .LINK
-    https://MEM.Zone/
+    https://MEM.Zone
 .LINK
     https://MEM.Zone/Install-SRSReport-GIT
 .LINK
@@ -413,7 +413,7 @@ Function New-NamespaceManager {
 .NOTES
     This is an private function should tipically not be called directly.
 .LINK
-    https://MEM.Zone/
+    https://MEM.Zone
 .LINK
     https://MEM.Zone/Install-SRSReport-GIT
 .LINK
@@ -487,7 +487,7 @@ Function Get-RINode {
 .NOTES
     This is an public function and can be called directly.
 .LINK
-    https://MEM.Zone/
+    https://MEM.Zone
 .LINK
     https://MEM.Zone/Install-SRSReport-GIT
 .LINK
@@ -560,7 +560,7 @@ Function Set-RINodeValue {
 .NOTES
     This is an public function and can be called directly.
 .LINK
-    https://MEM.Zone/
+    https://MEM.Zone
 .LINK
     https://MEM.Zone/Install-SRSReport-GIT
 .LINK
@@ -671,7 +671,7 @@ Function Install-RIReport {
 .NOTES
     This is an public function and can be called directly.
 .LINK
-    https://MEM.Zone/
+    https://MEM.Zone
 .LINK
     https://MEM.Zone/Install-SRSReport-GIT
 .LINK
@@ -797,7 +797,7 @@ Function Set-RIDataSourceReference {
 .NOTES
     This is an public function and can be called directly.
 .LINK
-    https://MEM.Zone/
+    https://MEM.Zone
 .LINK
     https://MEM.Zone/Install-SRSReport-GIT
 .LINK
@@ -957,7 +957,7 @@ Function Add-RISQLExtension {
 .NOTES
     This is an public function and can be called directly.
 .LINK
-    https://MEM.Zone/
+    https://MEM.Zone
 .LINK
     https://MEM.Zone/Install-SRSReport-GIT
 .LINK

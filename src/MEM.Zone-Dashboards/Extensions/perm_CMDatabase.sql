@@ -9,7 +9,7 @@
     Created by Ioan Popovici
     Replace the <SITE_CODE> with your CM Site Code and uncomment SSMS region if running directly from SSMS.
 .LINK
-    https://MEM.Zone/
+    https://MEM.Zone
 .LINK
     https://MEM.Zone/Dashboards-GIT
 .LINK
