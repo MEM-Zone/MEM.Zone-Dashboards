@@ -18,11 +18,11 @@
 .LINK
     https://social.technet.microsoft.com/wiki/contents/articles/7870.sccm-2007-create-report-of-upcoming-maintenance-windows-by-client.aspx (Adam Weigert)
 .LINK
-    https://MEM.Zone/Dashboards
+    https://MEMZ.one/Dashboards
 .LINK
-    https://MEM.Zone/Dashboards-HELP
+    https://MEMZ.one/Dashboards-HELP
 .LINK
-    https://MEM.Zone/Dashboards-ISSUES
+    https://MEMZ.one/Dashboards-ISSUES
 */
 
 /*##=============================================*/

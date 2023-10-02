@@ -99,11 +99,11 @@ ORDER BY Name</CommandText>
     Requires SQL 2016.
     Part of a report should not be run separately.
 .LINK
-    https://MEM.Zone/Dashboards
+    https://MEMZ.one/Dashboards
 .LINK
-    https://MEM.Zone/Dashboards-HELP
+    https://MEMZ.one/Dashboards-HELP
 .LINK
-    https://MEM.Zone/Dashboards-ISSUES
+    https://MEMZ.one/Dashboards-ISSUES
 */
 
 /*##=============================================*/
@@ -513,11 +513,11 @@ WHERE CategoryTypeName = N'UpdateClassification'
     Requires SQL 2016.
     Part of a report should not be run separately.
 .LINK
-    https://MEM.Zone/Dashboards
+    https://MEMZ.one/Dashboards
 .LINK
-    https://MEM.Zone/Dashboards-HELP
+    https://MEMZ.one/Dashboards-HELP
 .LINK
-    https://MEM.Zone/Dashboards-ISSUES
+    https://MEMZ.one/Dashboards-ISSUES
 */
 
 /*##=============================================*/
@@ -609,11 +609,11 @@ GROUP BY
     Requires SQL 2016.
     Part of a report should not be run separately.
 .LINK
-    https://MEM.Zone/Dashboards
+    https://MEMZ.one/Dashboards
 .LINK
-    https://MEM.Zone/Dashboards-HELP
+    https://MEMZ.one/Dashboards-HELP
 .LINK
-    https://MEM.Zone/Dashboards-ISSUES
+    https://MEMZ.one/Dashboards-ISSUES
 */
 
 /*##=============================================*/
@@ -3847,7 +3847,7 @@ Fields!CategorySummarization.Value = 2, "#F4BF65",
             <ActionInfo>
               <Actions>
                 <Action>
-                  <Hyperlink>https://MEM.Zone/Dashboards-HELP</Hyperlink>
+                  <Hyperlink>https://MEMZ.one/Dashboards-HELP</Hyperlink>
                 </Action>
               </Actions>
             </ActionInfo>
@@ -3894,7 +3894,7 @@ Fields!CategorySummarization.Value = 2, "#F4BF65",
                       <ActionInfo>
                         <Actions>
                           <Action>
-                            <Hyperlink>https://MEM.Zone/Dashboards</Hyperlink>
+                            <Hyperlink>https://MEMZ.one/Dashboards</Hyperlink>
                           </Action>
                         </Actions>
                       </ActionInfo>

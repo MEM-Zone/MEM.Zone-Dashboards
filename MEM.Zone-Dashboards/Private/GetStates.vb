@@ -18,11 +18,11 @@ Function GetStates (ByVal intBitMask As Integer, ByVal astrStateList As String ,
 '.NOTES
 '    Created by Ioan Popovici.
 '.LINK
-'    https://MEM.Zone/Dashboards
+'    https://MEMZ.one/Dashboards
 '.LINK
-'    https://MEM.Zone/Dashboards-HELP
+'    https://MEMZ.one/Dashboards-HELP
 '.LINK
-'    https://MEM.Zone/Dashboards-ISSUES
+'    https://MEMZ.one/Dashboards-ISSUES
 '#>
 
     Dim iaStates As Long

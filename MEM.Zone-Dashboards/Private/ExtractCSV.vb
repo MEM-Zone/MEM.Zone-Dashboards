@@ -17,11 +17,11 @@ Public Function ExtractCSV(ByVal astrSource As String, ByVal astrPosition As Int
 '    Created by MEMCM product team.
 '    Modified by Ioan Popovici.
 '.LINK
-'    https://MEM.Zone/Dashboards
+'    https://MEMZ.one/Dashboards
 '.LINK
-'    https://MEM.Zone/Dashboards-HELP
+'    https://MEMZ.one/Dashboards-HELP
 '.LINK
-'    https://MEM.Zone/Dashboards-ISSUES
+'    https://MEMZ.one/Dashboards-ISSUES
 '#>
 
     Dim strResutl As String = ""

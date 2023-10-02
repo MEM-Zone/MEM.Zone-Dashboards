@@ -20,9 +20,9 @@
 .LINK
     https://MEM.Zone
 .LINK
-    https://MEM.Zone/Dashboards-GIT
+    https://MEMZ.one/Dashboards-GIT
 .LINK
-    https://MEM.Zone/Dashboards-ISSUES
+    https://MEMZ.one/Dashboards-ISSUES
 */
 
 /*##=============================================*/

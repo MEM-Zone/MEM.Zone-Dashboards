@@ -19,19 +19,19 @@ The installation can be done manually or via the included PowerShell installer.
 
 ## Main page
 
-See [main](https://MEM.Zone/Dashboards).
+See [main](https://MEMZ.one/Dashboards).
 
 ## Latest release
 
-See [releases](https://MEM.Zone/Dashboards-RELEASES).
+See [releases](https://MEMZ.one/Dashboards-RELEASES).
 
 ## Changelog
 
-See [changelog](https://MEM.Zone/Dashboards-CHANGELOG).
+See [changelog](https://MEMZ.one/Dashboards-CHANGELOG).
 
 ## Help
 
-See [help](https://MEM.Zone/Dashboards-Help).
+See [help](https://MEMZ.one/Dashboards-Help).
 
 ## Credit
 
@@ -128,7 +128,7 @@ This preview is not up-to-date, it represents version 2.0.0. A new preview will 
 
 ## Installation - Automatic
 
-Use the provided PowerShell installer. You can find the standalone repository for the installer [here](https://MEM.Zone/Install-SRSReport-RELEASES).
+Use the provided PowerShell installer. You can find the standalone repository for the installer [here](https://MEMZ.one/Install-SRSReport-RELEASES).
 
 ```PowerShell
 ## Get syntax help

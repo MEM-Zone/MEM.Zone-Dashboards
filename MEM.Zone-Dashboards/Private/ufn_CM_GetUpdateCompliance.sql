@@ -27,11 +27,11 @@ PARAMETER HealthThresholds
     Replace the <SITE_CODE> with your CM Site Code and uncomment SSMS region if running directly from SSMS.
     Run the code in SQL Server Management Studio.
 .LINK
-    https://MEM.Zone/Dashboards
+    https://MEMZ.one/Dashboards
 .LINK
-    https://MEM.Zone/Dashboards-HELP
+    https://MEMZ.one/Dashboards-HELP
 .LINK
-    https://MEM.Zone/Dashboards-ISSUES
+    https://MEMZ.one/Dashboards-ISSUES
 */
 
 /*##=============================================*/

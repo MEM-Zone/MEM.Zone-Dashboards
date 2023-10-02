@@ -21,11 +21,11 @@ Public Function GetValueBeweenStrings(ByVal astrSource As String, ByVal astrSear
 '.LINK
 '    https://www.freevbcode.com/ShowCode.asp?ID=9116
 '.LINK
-'    https://MEM.Zone/Dashboards
+'    https://MEMZ.one/Dashboards
 '.LINK
-'    https://MEM.Zone/Dashboards-HELP
+'    https://MEMZ.one/Dashboards-HELP
 '.LINK
-'    https://MEM.Zone/Dashboards-ISSUES
+'    https://MEMZ.one/Dashboards-ISSUES
 '#>
     If astrSearchLast.Length < 1 Then
         GetValueBeweenStrings = astrSource.Substring(astrSource.IndexOf(astrSearchFirst))

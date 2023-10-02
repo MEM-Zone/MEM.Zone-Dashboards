@@ -110,11 +110,11 @@ ORDER BY Name</CommandText>
     Requires SELECT access on vSMS_AutoDeployments for smsschm_users (MEMCM Reporting).
     Part of a report should not be run separately.
 .LINK
-    https://MEM.Zone/Dashboards
+    https://MEMZ.one/Dashboards
 .LINK
-    https://MEM.Zone/Dashboards-HELP
+    https://MEMZ.one/Dashboards-HELP
 .LINK
-    https://MEM.Zone/Dashboards-ISSUES
+    https://MEMZ.one/Dashboards-ISSUES
 */
 
 /*##=============================================*/
@@ -4981,7 +4981,7 @@ Restart</Text>
                     <ActionInfo>
                       <Actions>
                         <Action>
-                          <Hyperlink>https://SCCM.Zone/Dashboards-HELP#create-the-sql-helper-function</Hyperlink>
+                          <Hyperlink>https://MEMZ.one/Dashboards-HELP#create-the-sql-helper-function</Hyperlink>
                         </Action>
                       </Actions>
                     </ActionInfo>
@@ -5307,7 +5307,7 @@ Restart</Text>
             <ActionInfo>
               <Actions>
                 <Action>
-                  <Hyperlink>https://MEM.Zone/Dashboards-HELP</Hyperlink>
+                  <Hyperlink>https://MEMZ.one/Dashboards-HELP</Hyperlink>
                 </Action>
               </Actions>
             </ActionInfo>
@@ -5354,7 +5354,7 @@ Restart</Text>
                       <ActionInfo>
                         <Actions>
                           <Action>
-                            <Hyperlink>https://MEM.Zone/Dashboards</Hyperlink>
+                            <Hyperlink>https://MEMZ.one/Dashboards</Hyperlink>
                           </Action>
                         </Actions>
                       </ActionInfo>
@@ -5970,11 +5970,11 @@ Public Function GetValueBeweenStrings(ByVal astrSource As String, ByVal astrSear
 '.LINK
 '    https://www.freevbcode.com/ShowCode.asp?ID=9116
 '.LINK
-'    https://MEM.Zone/Dashboards
+'    https://MEMZ.one/Dashboards
 '.LINK
-'    https://MEM.Zone/Dashboards-HELP
+'    https://MEMZ.one/Dashboards-HELP
 '.LINK
-'    https://MEM.Zone/Dashboards-ISSUES
+'    https://MEMZ.one/Dashboards-ISSUES
 '#&gt;
     If astrSearchLast.Length &lt; 1 Then
         GetValueBeweenStrings = astrSource.Substring(astrSource.IndexOf(astrSearchFirst))
@@ -6010,11 +6010,11 @@ Function GetStates (ByVal intBitMask As Integer, ByVal astrStateList As String ,
 '.NOTES
 '    Created by Ioan Popovici.
 '.LINK
-'    https://MEM.Zone/Dashboards
+'    https://MEMZ.one/Dashboards
 '.LINK
-'    https://MEM.Zone/Dashboards-HELP
+'    https://MEMZ.one/Dashboards-HELP
 '.LINK
-'    https://MEM.Zone/Dashboards-ISSUES
+'    https://MEMZ.one/Dashboards-ISSUES
 '#&gt;
 
     Dim iaStates As Long

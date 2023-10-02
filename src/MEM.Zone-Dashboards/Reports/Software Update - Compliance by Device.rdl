@@ -77,11 +77,11 @@ SELECT dbo.fn_rbac_GetAdminIDsfromUserSIDs (@UserTokenSIDs) AS UserSIDs</Command
     Requires SQL 2016.
     Part of a report should not be run separately.
 .LINK
-    https://MEM.Zone/Dashboards
+    https://MEMZ.one/Dashboards
 .LINK
-    https://MEM.Zone/Dashboards-HELP
+    https://MEMZ.one/Dashboards-HELP
 .LINK
-    https://MEM.Zone/Dashboards-ISSUES
+    https://MEMZ.one/Dashboards-ISSUES
 */
 
 /*##=============================================*/
@@ -5680,7 +5680,7 @@ ORDER BY CategoryInstanceName</CommandText>
             <ActionInfo>
               <Actions>
                 <Action>
-                  <Hyperlink>https://MEM.Zone/Dashboards-HELP</Hyperlink>
+                  <Hyperlink>https://MEMZ.one/Dashboards-HELP</Hyperlink>
                 </Action>
               </Actions>
             </ActionInfo>
@@ -5727,7 +5727,7 @@ ORDER BY CategoryInstanceName</CommandText>
                       <ActionInfo>
                         <Actions>
                           <Action>
-                            <Hyperlink>https://MEM.Zone/Dashboards</Hyperlink>
+                            <Hyperlink>https://MEMZ.one/Dashboards</Hyperlink>
                           </Action>
                         </Actions>
                       </ActionInfo>
