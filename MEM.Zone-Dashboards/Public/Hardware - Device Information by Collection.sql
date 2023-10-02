@@ -5,8 +5,7 @@
     Gets the Device Hardware info of a device collection.
 .NOTES
     Requires SQL 2016.
-    Part of a report should not be run separately.LINK
-    https://MEM.Zone
+    Part of a report should not be run separately
 .LINK
     https://MEMZ.one/Dashboards
 .LINK

@@ -5,8 +5,7 @@
     Gets the windows 11 readiness by checking multiple components.
 .NOTES
     Requires SQL 2016.
-    Part of a report should not be run separately.LINK
-    https://MEM.Zone
+    Part of a report should not be run separately
 .LINK
     https://MEMZ.one/Dashboards
 .LINK

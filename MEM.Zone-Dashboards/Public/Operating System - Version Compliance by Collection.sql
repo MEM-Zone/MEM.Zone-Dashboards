@@ -5,8 +5,7 @@
     Gets the operating system compliance in MEMCM by Collection, operating system version and operating system type.
 .NOTES
     Requires SQL 2016.
-    Part of a report should not be run separately.LINK
-    https://MEM.Zone
+    Part of a report should not be run separately
 .LINK
     https://MEMZ.one/Dashboards
 .LINK

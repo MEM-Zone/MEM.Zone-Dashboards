@@ -5,10 +5,9 @@
     Gets the operating system user rights assigment in Configuration Manager by Collection
 .NOTES
     Requires SQL 2016.
-    Part of a report should not be run separately.LINK
-    https://MEM.Zone
+    Part of a report should not be run separately
 .LINK
-    https://MEMZ.one/Dashboardsac
+    https://MEMZ.one/Dashboards
 .LINK
     https://MEMZ.one/Dashboards-HELP
 .LINK
