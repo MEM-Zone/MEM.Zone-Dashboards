@@ -1,5 +1,9 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 5.0.3 - 2023-10-02
+
+* Updated shorlink domain from `MEM.Zone` to `MEMZ.one`
+
 ## 5.0.2 - 2021-10-15
 
 * Fix duplicate entries in the `Operating System - Windows 11 Readiness` report.
