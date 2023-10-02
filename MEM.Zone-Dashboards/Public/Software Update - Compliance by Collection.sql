@@ -7,13 +7,14 @@
     Requires SQL 2016.
     Requires ufn_CM_GetNextMaintenanceWindow sql helper function in order to display the next maintenance window.
     Requires SELECT access on vSMS_AutoDeployments for smsschm_users (MEMCM Reporting).
-    Part of a report should not be run separately.
+    Part of a report should not be run separately.LINK
+    https://MEM.Zone
 .LINK
-    https://MEM.Zone/Dashboards
+    https://MEMZ.one/Dashboards
 .LINK
-    https://MEM.Zone/Dashboards-HELP
+    https://MEMZ.one/Dashboards-HELP
 .LINK
-    https://MEM.Zone/Dashboards-ISSUES
+    https://MEMZ.one/Dashboards-ISSUES
 */
 
 /*##=============================================*/
@@ -288,35 +289,15 @@ SELECT Systems.ResourceID
                 , IIF(Systems.Full_Domain_Name0 IS NOT NULL, Systems.Name0 + N'.' + Systems.Full_Domain_Name0, Systems.Name0)
             )
     )
-    , OperatingSystem       = (
-        CASE
-            WHEN OperatingSystem.Caption0 != N'' THEN
-                CONCAT(
-                    REPLACE(OperatingSystem.Caption0, N'Microsoft ', N''),         -- Remove 'Microsoft ' from OperatingSystem
-                    REPLACE(OperatingSystem.CSDVersion0, N'Service Pack ', N' SP') -- Replace 'Service Pack ' with ' SP' in OperatingSystem
-                )
-            ELSE (
-
-            /* Workaround for systems not in GS_OPERATING_SYSTEM table */
-                CASE
-                    WHEN CombinedResources.DeviceOS LIKE N'%Workstation 6.1%'   THEN N'Windows 7'
-                    WHEN CombinedResources.DeviceOS LIKE N'%Workstation 6.2%'   THEN N'Windows 8'
-                    WHEN CombinedResources.DeviceOS LIKE N'%Workstation 6.3%'   THEN N'Windows 8.1'
-                    WHEN CombinedResources.DeviceOS LIKE N'%Workstation 10.0%'  THEN N'Windows 10'
-                    WHEN CombinedResources.DeviceOS LIKE N'%Server 6.0'         THEN N'Windows Server 2008'
-                    WHEN CombinedResources.DeviceOS LIKE N'%Server 6.1'         THEN N'Windows Server 2008R2'
-                    WHEN CombinedResources.DeviceOS LIKE N'%Server 6.2'         THEN N'Windows Server 2012'
-                    WHEN CombinedResources.DeviceOS LIKE N'%Server 6.3'         THEN N'Windows Server 2012 R2'
-                    WHEN Systems.Operating_System_Name_And0 LIKE N'%Server 10%' THEN (
-                        CASE
-                            WHEN CAST(REPLACE(Build01, N'.', N'') AS INTEGER) > 10017763 THEN N'Windows Server 2019'
-                            ELSE N'Windows Server 2016'
-                        END
-                    )
-                    ELSE Systems.Operating_System_Name_And0
-                END
+    , OperatingSystem = (
+        IIF(
+            OperatingSystem.Caption0 != N''
+            , CONCAT(
+                REPLACE(OperatingSystem.Caption0, N'Microsoft ', N''),         --Remove 'Microsoft ' from OperatingSystem
+                REPLACE(OperatingSystem.CSDVersion0, N'Service Pack ', N' SP') --Replace 'Service Pack ' with ' SP' in OperatingSystem
             )
-        END
+            , Systems.Operating_System_Name_And0
+        )
     )
     , IPAddresses           = REPLACE(IPAddresses.Value, N' ', N',')
     , Uptime                = DATEDIFF(dd, OperatingSystem.LastBootUpTime0, CURRENT_TIMESTAMP)
