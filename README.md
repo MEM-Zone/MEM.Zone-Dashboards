@@ -185,7 +185,7 @@ The `ufn_CM_GetNextMaintenanceWindow` is needed in order to display the next mai
 [release-date]: https://github.com/MEM-Zone/MEM.Zone-Dashboards/releases
 [issues-badge]: https://img.shields.io/github/issues/MEM-Zone/MEM.Zone-Dashboards
 [issues]: https://github.com/MEM-Zone/MEM.Zone-Dashboards/issues?q=is%3Aopen+is%3Aissue
-[commits-since-badge]: https://img.shields.io/github/commits-since/MEM-Zone/MEM.Zone-Dashboards/v5.0.2
+[commits-since-badge]: https://img.shields.io/github/commits-since/MEM-Zone/MEM.Zone-Dashboards/v5.0.3
 [commits-since]: https://github.com/MEM-Zone/MEM.Zone-Dashboards/commits/master
 [discord-badge]: https://img.shields.io/discord/666618982844989460?logo=discord
 [discord]: https://discord.gg/ZCkVcmP
