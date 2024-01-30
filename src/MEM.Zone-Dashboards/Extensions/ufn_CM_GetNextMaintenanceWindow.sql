@@ -18,9 +18,9 @@
 .LINK
     https://social.technet.microsoft.com/wiki/contents/articles/7870.sccm-2007-create-report-of-upcoming-maintenance-windows-by-client.aspx (Adam Weigert)
 .LINK
-    https://MEM.Zone
+    https://MEMZ.one/Dashboards
 .LINK
-    https://MEMZ.one/Dashboards-GIT
+    https://MEMZ.one/Dashboards-HELP
 .LINK
     https://MEMZ.one/Dashboards-ISSUES
 */
@@ -57,39 +57,42 @@ RETURNS @NextServiceWindow TABLE (
 AS
     BEGIN
 
-        --1 Occurs on 1/1/2012 12:00 AM 00011A8500080000
-        --2 Occurs every 3 day(s) effective 1/1/2012 8:00 PM    02811A8040100018
-        --3 Occurs every 3 week(s) on Saturday effective 1/1/2012 8:00 PM   02811A80401F6000
-        --3 Occurs every 1 week(s) on Saturday effective 1/1/2012 8:00 PM   02811A80401F2000
-        --5 Occurs day 2 of every 2 month(s) effective 1/1/2012 8:00 PM 02811A8040288800
-        --5 Occurs day 31 of every 1 month(s) effective 1/1/2012 8:00 PM    02811A80402FC400
-        --5 Occurs the last day of every 3 months effective 1/1/2012 8:00 PM    02811A8040280C00
-        --5 Occurs the last day of every 1 months effective 1/1/2012 8:00 PM    02811A8040280400
-        --4 Occurs the Third Monday of every 1 month(s) effective 1/1/2012 4:00 AM  00811A9E08221600
-        --4 Occurs the Last Wednesday of every 1 month(s) effective 1/1/2012 8:00 PM    02811A8040241000
-        --4 Occurs the Fourth Wednesday of every 1 month(s) effective 1/1/2012 8:00 PM  02811A8040241800
-        --4 Occurs the Last Monday of every 1 month(s) effective 1/1/2012 8:00 PM   02811A8040221000
-        --3 Occurs every 1 week(s) on Monday effective 1/1/2012 4:00 AM 00811A9E081A2000
+        --1 Occurs on 1/1/2012 12:00 AM                                                             00011A8500080000
+        --2 Occurs every 1 day(s) effective 1/1/2012 8:00 PM                                        01CA8C80C0100008
+        --2 Occurs every 3 day(s) effective 1/1/2012 8:00 PM                                        02811A8040100018
+        --3 Occurs every 3 week(s) on Saturday effective 1/1/2012 8:00 PM                           02811A80401F6000
+        --3 Occurs every 1 week(s) on Saturday effective 1/1/2012 8:00 PM                           02811A80401F2000
+        --5 Occurs day 2 of every 2 month(s) effective 1/1/2012 8:00 PM                             02811A8040288800
+        --5 Occurs day 31 of every 1 month(s) effective 1/1/2012 8:00 PM                            02811A80402FC400
+        --5 Occurs the last day of every 3 months effective 1/1/2012 8:00 PM                        02811A8040280C00
+        --5 Occurs the last day of every 1 months effective 1/1/2012 8:00 PM                        02811A8040280400
+        --4 Occurs the Third Monday of every 1 month(s) effective 1/1/2012 4:00 AM                  00811A9E08221600
+        --4 Occurs the Last Wednesday of every 1 month(s) effective 1/1/2012 8:00 PM                02811A8040241000
+        --4 Occurs the Fourth Wednesday of every 1 month(s) effective 1/1/2012 8:00 PM              02811A8040241800
+        --4 Occurs the Last Monday of every 1 month(s) effective 1/1/2012 8:00 PM                   02811A8040221000
+        --6 Occurs 7 day(s) after the First Monday of every 1 months effective 01-Jan-2024 01:00:00 00211D80083213C0
 
         -- http://msdn.microsoft.com/en-us/library/cc143300.aspx Jump
-        DECLARE @RecurrenceType_NONE           INT
-            , @RecurrenceType_DAILY            INT
-            , @RecurrenceType_WEEKLY           INT
-            , @RecurrenceType_MONTHLYBYWEEKDAY INT
-            , @RecurrenceType_MONTHLYBYDATE    INT
+        DECLARE @RecurrenceType_NONE               INT
+            , @RecurrenceType_DAILY                INT
+            , @RecurrenceType_WEEKLY               INT
+            , @RecurrenceType_MONTHLYBYWEEKDAY     INT
+            , @RecurrenceType_MONTHLYBYDATE        INT
+            , @RecurrenceType_MONTHLYBYWEEKDAYBASE INT
 
-        SELECT @RecurrenceType_NONE            = 1
-            , @RecurrenceType_DAILY            = 2
-            , @RecurrenceType_WEEKLY           = 3
-            , @RecurrenceType_MONTHLYBYWEEKDAY = 4
-            , @RecurrenceType_MONTHLYBYDATE    = 5
+        SELECT @RecurrenceType_NONE                = 1
+            , @RecurrenceType_DAILY                = 2
+            , @RecurrenceType_WEEKLY               = 3
+            , @RecurrenceType_MONTHLYBYWEEKDAY     = 4
+            , @RecurrenceType_MONTHLYBYDATE        = 5
+            , @RecurrenceType_MONTHLYBYWEEKDAYBASE = 6
 
         -- http://msdn.microsoft.com/en-us/library/cc143505.aspx Jump
 
-        --DECLARE @RecurrenceType   INT;      SET @RecurrenceType   = @RecurrenceType_WEEKLY
-        --DECLARE @ScheduleToken     CHAR(16); SET @ScheduleToken     = '00811A9E081A2000'
+        --DECLARE @RecurrenceType   INT;       SET @RecurrenceType    = @RecurrenceType_DAILY
+        --DECLARE @ScheduleToken    CHAR(16);  SET @ScheduleToken     = '01CA8C80C0100008'
         DECLARE @ScheduleStartTime INT;      SET @ScheduleStartTime = CAST(CONVERT(BINARY(4), LEFT(@ScheduleToken, 8), 2) AS INT)
-        DECLARE @ScheduleDuration  BIGINT;   SET @ScheduleDuration  = CAST(CONVERT(BINARY(4), RIGHT(@ScheduleToken, 8), 2) AS INT)
+        DECLARE @ScheduleDuration  BIGINT;   SET @ScheduleDuration  = CAST(CONVERT(BINARY(4), RIGHT(@ScheduleToken, 8), 2) AS BIGINT)
 
         -- Duration is in minutes
         DECLARE @Duration INT; SET @Duration = @ScheduleStartTime % POWER(2, 6)
@@ -102,9 +105,10 @@ AS
         SET @StartTime = DATEADD(HOUR, (@ScheduleStartTime / POWER(2,21)) % POWER(2, 5), @StartTime)
         SET @StartTime = DATEADD(MINUTE, (@ScheduleStartTime / POWER(2,26)) % POWER(2, 5), @StartTime)
 
-        -- Determinte UTC and Flags
+        -- Determine UTC and Flags and Offset Days
         DECLARE @IsGMTTime     BIT; SET @IsGMTTime     = CAST(@ScheduleDuration % POWER(2, 1) AS BIT)
         DECLARE @Flags         INT; SET @Flags         = (@ScheduleDuration / POWER(2,19)) % POWER(2, 3)
+        DECLARE @OffsetDays    INT; SET @OffsetDays    = (@ScheduleDuration / POWER(2,6)) % POWER(2, 3)
 
         -- Calculate the total duration in minutes
         SET @Duration = @Duration + ((@ScheduleDuration / POWER(2,22)) % POWER(2, 5)) * 24 * 60 -- DAYS
@@ -141,7 +145,7 @@ AS
                 -- Calculate the next interval
                 DECLARE @DailyNextInterval DATETIME; SET @DailyNextInterval = DATEADD(MINUTE, @DailyNumberOfCompletedIntervals * @DailyInterval, @StartTime)
 
-                -- Recalc the next interval if the next interval plus the expected duration is in the past
+                -- Recalculate the next interval if the next interval plus the expected duration is in the past
                 IF DATEADD(MINUTE, @Duration, @DailyNextInterval) < @Now BEGIN
                     SET @DailyNextInterval = DATEADD(MINUTE, (@DailyNumberOfCompletedIntervals + 1) * @DailyInterval, @StartTime)
                 END
@@ -171,7 +175,7 @@ AS
 
                 SET @NextMaintenanceWindow = @WeeklyNextInterval
             END
-        END ELSE IF @RecurrenceType = @RecurrenceType_MONTHLYBYWEEKDAY BEGIN
+        END ELSE IF @RecurrenceType = @RecurrenceType_MONTHLYBYWEEKDAY OR @RecurrenceType = RecurrenceType_MONTHLYBYWEEKDAYBASE BEGIN
             DECLARE @MonthlyBWWeek     INT; SET @MonthlyBWWeek     = (@ScheduleDuration / POWER(2,9)) % POWER(2, 3)
             DECLARE @MontlhyBWInterval INT; SET @MontlhyBWInterval = (@ScheduleDuration / POWER(2,12)) % POWER(2, 4)
             DECLARE @MonthlyBWDoW      INT; SET @MonthlyBWDoW      = (@ScheduleDuration / POWER(2,16)) % POWER(2, 3)
@@ -200,7 +204,7 @@ AS
                     SET @MonthlyBWLDOMNextInterval = DATEADD(DAY, -(7 - DATEPART(WEEKDAY, @MonthlyBWLDOMNextInterval) + @MonthlyBWDoW % 7), @MonthlyBWLDOMNextInterval)
                 END
 
-                SET @NextMaintenanceWindow = @MonthlyBWLDOMNextInterval
+                SET @NextMaintenanceWindow = DATEADD(DAY, @OffsetDays, @MonthlyBWLDOMNextInterval)
             END ELSE BEGIN
                 -- Calculate the next interval
                 DECLARE @MonthlyBWNextInterval DATETIME; SET @MonthlyBWNextInterval = DATEADD(MONTH, @MonthlyBWNumberOfCompletedIntervals * @MontlhyBWInterval, @StartTime)
@@ -228,7 +232,7 @@ AS
                     SET @MonthlyBWNextInterval = DATEADD(WEEK, @MonthlyBWWeek-1, @MonthlyBWNextInterval)
                 END
 
-                SET @NextMaintenanceWindow = @MonthlyBWNextInterval
+                SET @NextMaintenanceWindow = DATEADD(DAY, @OffsetDays, @MonthlyBWNextInterval)
             END
         END ELSE IF @RecurrenceType = @RecurrenceType_MONTHLYBYDATE BEGIN
             DECLARE @MontlhyBDInterval INT; SET @MontlhyBDInterval = (@ScheduleDuration / POWER(2,10)) % POWER(2, 4)
@@ -246,7 +250,7 @@ AS
                 -- Calculate last day of month
                 SET @MonthlyBDLDOMNextInterval = DATEADD(DAY, DATEDIFF(DAY, @MonthlyBDLDOMNextInterval, DATEADD(DAY, -1, DATEADD(M, DATEDIFF(MONTH, 0, @MonthlyBDLDOMNextInterval) + 1, 0))), @MonthlyBDLDOMNextInterval)
 
-                -- Recalc the next interval if the next interval plus the expected duration is in the past
+                -- Recalculate the next interval if the next interval plus the expected duration is in the past
                 IF DATEADD(MINUTE, @Duration, @MonthlyBDLDOMNextInterval) < @Now BEGIN
                     SET @MonthlyBDLDOMNextInterval = DATEADD(DAY, DATEDIFF(DAY, @MonthlyBDLDOMNextInterval, DATEADD(DAY, -1, DATEADD(M, DATEDIFF(MONTH, 0, DATEADD(MONTH, (@MonthlyBDLDOMNumberOfCompletedIntervals + 1) * @MontlhyBDInterval, @StartTime)) + 1, 0))), @MonthlyBDLDOMNextInterval)
                 END
@@ -277,7 +281,7 @@ AS
                         SET @MonthlyBDNextInterval = DATEADD(DAY, (31 - DATEPART(DAY, @MonthlyBDNextInterval) + @MonthlyBDDoM % 31), @MonthlyBDNextInterval)
                     END
 
-                    -- Recalc the next interval if the next interval plus the expected duration is in the past
+                    -- Recalculate the next interval if the next interval plus the expected duration is in the past
                     IF DATEADD(MINUTE, @Duration, @MonthlyBDNextInterval) < @Now BEGIN
                         SET @MonthlyBDNextInterval = DATEADD(MONTH, (@MonthlyBDNumberOfCompletedIntervals + 1) * @MontlhyBDInterval, @MonthlyBDNextInterval)
 

@@ -1,5 +1,9 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 5.0.4 - 2024-01-30
+
+* Fixed `Next Maintenance Window` if using `Offset Days` maintenance windows #31.
+
 ## 5.0.3 - 2023-10-02
 
 * Updated shorlink domain from `MEM.Zone` to `MEMZ.one`

@@ -3,7 +3,7 @@
 [![Issues count][issues-badge]][issues]
 [![Commits since release][commits-since-badge]][commits-since]
 [![Chat on discord][discord-badge]][discord]
-[![Follow on twitter][twitter-badge]][twitter]
+[![Follow on X][x-badge]][x]
 
 # MEM.Zone Dashboards
 
@@ -189,5 +189,5 @@ The `ufn_CM_GetNextMaintenanceWindow` is needed in order to display the next mai
 [commits-since]: https://github.com/MEM-Zone/MEM.Zone-Dashboards/commits/master
 [discord-badge]: https://img.shields.io/discord/666618982844989460?logo=discord
 [discord]: https://discord.gg/ZCkVcmP
-[twitter-badge]: https://img.shields.io/twitter/follow/ioanpopovici?style=social&logo=twitter
-[twitter]: https://twitter.com/intent/follow?screen_name=ioanpopovici
+[x-badge]: https://img.shields.io/twitter/follow/ioanpopovici?style=social&logo=x
+[x]: https://x.com/intent/follow?screen_name=ioanpopovici
