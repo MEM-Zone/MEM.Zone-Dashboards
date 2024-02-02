@@ -101,13 +101,13 @@ ORDER BY Name</CommandText>
         </QueryParameters>
         <CommandText>/*
 .SYNOPSIS
-    Gets the software update compliance for a Collection in MEMCM.
+    Gets the software update compliance for a Collection in ConfigMgr.
 .DESCRIPTION
-    Gets the software update compliance in MEMCM by Collection and All Updates.
+    Gets the software update compliance in ConfigMgr by Collection and All Updates.
 .NOTES
     Requires SQL 2016.
     Requires ufn_CM_GetNextMaintenanceWindow sql helper function in order to display the next maintenance window.
-    Requires SELECT access on vSMS_AutoDeployments for smsschm_users (MEMCM Reporting).
+    Requires SELECT access on vSMS_AutoDeployments for smsschm_users (ConfigMgr Reporting).
     Part of a report should not be run separately.
 .LINK
     https://MEMZ.one/Dashboards

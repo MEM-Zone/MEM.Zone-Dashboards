@@ -1,11 +1,11 @@
 /*
 .SYNOPSIS
-    Gets MEMCM SUP Sync Status.
+    Gets ConfigMgr SUP Sync Status.
 .DESCRIPTION
-    Gets MEMCM SUP Sync Status with state message details.
+    Gets ConfigMgr SUP Sync Status with state message details.
 .NOTES
     Requires SQL 2016.
-    Requires SELECT access on dbo.vSMS_SUPSyncStatus for smsschm_users (MEMCM Reporting).
+    Requires SELECT access on dbo.vSMS_SUPSyncStatus for smsschm_users (ConfigMgr Reporting).
     Part of a report should not be run separately.
 .LINK
     https://MEMZ.one/Dashboards

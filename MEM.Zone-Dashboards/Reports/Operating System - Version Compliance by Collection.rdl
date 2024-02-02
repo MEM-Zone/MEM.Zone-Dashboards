@@ -89,9 +89,9 @@ ORDER BY Name</CommandText>
         </QueryParameters>
         <CommandText>/*
 .SYNOPSIS
-    Gets the operating system version compliance for a Collection in MEMCM.
+    Gets the operating system version compliance for a Collection in ConfigMgr.
 .DESCRIPTION
-    Gets the operating system compliance in MEMCM by Collection, operating system version and operating system type.
+    Gets the operating system compliance in ConfigMgr by Collection, operating system version and operating system type.
 .NOTES
     Requires SQL 2016.
     Part of a report should not be run separately.
@@ -6175,7 +6175,7 @@ Public Function ExtractCSV(ByVal astrSource As String, ByVal astrPosition As Int
 '.EXAMPLE
 '    ExtractCSV(Fields!SomeField.Value, 2) (VB.Net)
 '.NOTES
-'    Created by MEMCM product team.
+'    Created by ConfigMgr product team.
 '    Modified by Ioan Popovici.
 '.LINK
 '    https://MEMZ.one/Dashboards

@@ -1,8 +1,8 @@
 /*
 .SYNOPSIS
-    Gets the update scan status for a MEMCM Collection.
+    Gets the update scan status for a ConfigMgr Collection.
 .DESCRIPTION
-    Gets the windows update agent scan status for a MEMCM Collection by Scan State.
+    Gets the windows update agent scan status for a ConfigMgr Collection by Scan State.
 .NOTES
     Requires SQL 2016.
     Part of a report should not be run separately

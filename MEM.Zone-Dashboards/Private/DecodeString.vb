@@ -12,7 +12,7 @@ Public Function DecodeString(ByVal astrToDecode As String) As String
 '.EXAMPLE
 '    DecodeString(Fields!SomeField.Value) (VB.Net)
 '.NOTES
-'    Created by MEMCM product team.
+'    Created by ConfigMgr product team.
 '    Modified by Ioan Popovici.
 '.LINK
 '    https://MEMZ.one/Dashboards

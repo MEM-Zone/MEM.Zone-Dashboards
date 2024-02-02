@@ -2,7 +2,7 @@
 .SYNOPSIS
     Gets the Bitlocker compliance.
 .DESCRIPTION
-    Gets the Bitlocker compliance for a Collection in MEMCM.
+    Gets the Bitlocker compliance for a Collection in ConfigMgr.
 .NOTES
     Requires SQL 2016.
     Part of a report should not be run separately.
