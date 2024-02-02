@@ -168,14 +168,14 @@ AS
                 -- Calculate the next interval
                 DECLARE @WeeklyNextInterval DATETIME; SET @WeeklyNextInterval = DATEADD(WEEK, @WeeklyNumberOfCompletedIntervals * @WeeklyInterval, @WeeklyStartTime)
 
-                -- Recalc the next interval if the next interval plus the expected duration is in the past
+                -- Recalculate the next interval if the next interval plus the expected duration is in the past
                 IF DATEADD(MINUTE, @Duration, @WeeklyNextInterval) < @Now BEGIN
                     SET @WeeklyNextInterval = DATEADD(WEEK, (@WeeklyNumberOfCompletedIntervals + 1) * @WeeklyInterval, @WeeklyStartTime)
                 END
 
                 SET @NextMaintenanceWindow = @WeeklyNextInterval
             END
-        END ELSE IF @RecurrenceType = @RecurrenceType_MONTHLYBYWEEKDAY OR @RecurrenceType = RecurrenceType_MONTHLYBYWEEKDAYBASE BEGIN
+        END ELSE IF @RecurrenceType = @RecurrenceType_MONTHLYBYWEEKDAY OR @RecurrenceType = @RecurrenceType_MONTHLYBYWEEKDAYBASE BEGIN
             DECLARE @MonthlyBWWeek     INT; SET @MonthlyBWWeek     = (@ScheduleDuration / POWER(2,9)) % POWER(2, 3)
             DECLARE @MontlhyBWInterval INT; SET @MontlhyBWInterval = (@ScheduleDuration / POWER(2,12)) % POWER(2, 4)
             DECLARE @MonthlyBWDoW      INT; SET @MonthlyBWDoW      = (@ScheduleDuration / POWER(2,16)) % POWER(2, 3)
@@ -194,7 +194,7 @@ AS
                 SET @MonthlyBWLDOMNextInterval = DATEADD(DAY, -(7 - DATEPART(WEEKDAY, @MonthlyBWLDOMNextInterval) + @MonthlyBWDoW % 7), @MonthlyBWLDOMNextInterval)
 
                 IF DATEADD(MINUTE, @Duration, @MonthlyBWLDOMNextInterval) < @Now BEGIN
-                    -- Recalc for the next month interval
+                    -- Recalculate for the next month interval
                     SET @MonthlyBWLDOMNextInterval = DATEADD(MONTH, (@MonthlyBWNumberOfCompletedIntervals + 1) * @MontlhyBWInterval, @StartTime)
 
                     -- Calculate last day of month
@@ -219,7 +219,7 @@ AS
                 SET @MonthlyBWNextInterval = DATEADD(WEEK, @MonthlyBWWeek-1, @MonthlyBWNextInterval)
 
                 IF DATEADD(MINUTE, @Duration, @MonthlyBWNextInterval) < @Now BEGIN
-                    -- Recalc for the next month interval
+                    -- Recalculate for the next month interval
                     SET @MonthlyBWNextInterval = DATEADD(MONTH, (@MonthlyBWNumberOfCompletedIntervals + 1) * @MontlhyBWInterval, @StartTime)
 
                     -- Set the date to the first day of the month

@@ -1,5 +1,9 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 5.0.5 - 2024-02-02
+
+* Fixed variable bug `Next Maintenance Window` if using `Offset Days` maintenance windows (issue #31).
+
 ## 5.0.4 - 2024-01-30
 
 * Fixed `Next Maintenance Window` if using `Offset Days` maintenance windows #31.
