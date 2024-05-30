@@ -7,8 +7,15 @@
     Specifies the schedule token.
 .PARAMETER RecurrenceType
     Specifies the maintenance window recurrence type.
+    Accepted values are:
+        '1' - None
+        '2' - Daily
+        '3' - Weekly
+        '4' - Monthly by Weekday
+        '5' - Monthly by Date
+        '6' - Monthly by Weekday Base (Offset Days)
 .EXAMPLE
-    SELECT dbo.ufn_CM_GetNextMaintenanceWindow('00811A9E081A2000', 3)
+    SELECT * FROM dbo.ufn_CM_GetNextMaintenanceWindow('00811A9E081A2000', 3)
 .NOTES
     Created by Ioan Popovici
     All credit goes to Adam Weigert and Ed Price for the original code. I only reformated it a bit.
