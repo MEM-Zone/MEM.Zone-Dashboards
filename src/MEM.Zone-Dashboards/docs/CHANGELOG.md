@@ -1,5 +1,12 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 5.1.0 - 2024-05-30
+
+* Added `IsServiceWindowOpen` to `ufn_CM_GetNextMaintenanceWindow`.
+* Renamed `IsGMTTime` to `IsUTC` in `ufn_CM_GetNextMaintenanceWindow`.
+* Added `ufn_CM_GetNextMaintenanceWindowForCollection` function.
+* Added `ufn_CM_GetNextMaintenanceWindowForDevice` function.
+
 ## 5.0.5 - 2024-02-02
 
 * Fixed variable bug `Next Maintenance Window` if using `Offset Days` maintenance windows (issue #31).
