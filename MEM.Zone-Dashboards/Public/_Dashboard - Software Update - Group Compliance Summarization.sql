@@ -1,8 +1,8 @@
 /*
 .SYNOPSIS
-    Summarizes the software update group compliance in MEMCM.
+    Summarizes the software update group compliance in ConfigMgr.
 .DESCRIPTION
-    Summarizes the software update group compliance for a Collection in MEMCM.
+    Summarizes the software update group compliance for a Collection in ConfigMgr.
 .NOTES
     Requires SQL 2016.
     Part of a report should not be run separately.

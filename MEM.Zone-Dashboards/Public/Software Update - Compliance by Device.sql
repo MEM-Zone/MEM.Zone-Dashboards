@@ -1,8 +1,8 @@
 /*
 .SYNOPSIS
-    Gets the software update compliance for a device in MEMCM.
+    Gets the software update compliance for a device in ConfigMgr.
 .DESCRIPTION
-    Gets the software update compliance in MEMCM by Device and All Updates.
+    Gets the software update compliance in ConfigMgr by Device and All Updates.
 .NOTES
     Requires SQL 2016.
     Part of a report should not be run separately.

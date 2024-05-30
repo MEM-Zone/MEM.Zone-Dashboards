@@ -94,7 +94,7 @@ ORDER BY Name</CommandText>
 .SYNOPSIS
     Summarizes the software update compliance.
 .DESCRIPTION
-    Summarizes the software update compliance for a Collection in MEMCM.
+    Summarizes the software update compliance for a Collection in ConfigMgr.
 .NOTES
     Requires SQL 2016.
     Part of a report should not be run separately.
@@ -506,9 +506,9 @@ WHERE CategoryTypeName = N'UpdateClassification'
         </QueryParameters>
         <CommandText>/*
 .SYNOPSIS
-    Summarizes the update scan states for a Collection in MEMCM.
+    Summarizes the update scan states for a Collection in ConfigMgr.
 .DESCRIPTION
-    Summarizes the window update scan states in MEMCM by Collection and Status Name.
+    Summarizes the window update scan states in ConfigMgr by Collection and Status Name.
 .NOTES
     Requires SQL 2016.
     Part of a report should not be run separately.
@@ -602,9 +602,9 @@ GROUP BY
         </QueryParameters>
         <CommandText>/*
 .SYNOPSIS
-    Summarizes the software update group compliance in MEMCM.
+    Summarizes the software update group compliance in ConfigMgr.
 .DESCRIPTION
-    Summarizes the software update group compliance for a Collection in MEMCM.
+    Summarizes the software update group compliance for a Collection in ConfigMgr.
 .NOTES
     Requires SQL 2016.
     Part of a report should not be run separately.

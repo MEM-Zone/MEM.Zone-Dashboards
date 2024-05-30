@@ -1,12 +1,12 @@
 /*
 .SYNOPSIS
-    Gets the software update compliance for a Collection in MEMCM.
+    Gets the software update compliance for a Collection in ConfigMgr.
 .DESCRIPTION
-    Gets the software update compliance in MEMCM by Collection and All Updates.
+    Gets the software update compliance in ConfigMgr by Collection and All Updates.
 .NOTES
     Requires SQL 2016.
     Requires ufn_CM_GetNextMaintenanceWindow sql helper function in order to display the next maintenance window.
-    Requires SELECT access on vSMS_AutoDeployments for smsschm_users (MEMCM Reporting).
+    Requires SELECT access on vSMS_AutoDeployments for smsschm_users (ConfigMgr Reporting).
     Part of a report should not be run separately.LINK
     https://MEM.Zone
 .LINK
@@ -79,9 +79,9 @@ VALUES
     , (256,  N'Short Maintenance Window')
     , (512,  N'Expired Maintenance Window')
     , (1024, N'Disabled Maintenance Window')
-    , (2048, N'Uptime Threshold Exeeded')
+    , (2048, N'Uptime Threshold Exceeded')
     , (4096, N'Required VS Uptime')
-    , (8192, N'Free Space Threshold Exeeded')
+    , (8192, N'Free Space Threshold Exceeded')
 
 /* Populate ClientState table */
 INSERT INTO @ClientState (BitMask, StateName)
@@ -152,7 +152,7 @@ AS (
         JOIN fn_rbac_ClientCollectionMembers(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = ComplianceStatus.ResourceID
         JOIN fn_rbac_UpdateInfo(@LCID, @UserSIDs) AS UpdateCIs ON UpdateCIs.CI_ID = ComplianceStatus.CI_ID
             AND UpdateCIs.IsExpired = 0                                      -- Filter on Expired
-            AND UpdateCIs.IsSuperseded IN (@Superseded)                      -- Filter on Superseeded
+            AND UpdateCIs.IsSuperseded IN (@Superseded)                      -- Filter on Superseded
             AND UpdateCIs.IsEnabled IN (@Enabled)                            -- Filter on Deployment Enabled
             AND UpdateCIs.CIType_ID IN (1, 8)                                -- Filter on 1 Software Updates, 8 Software Update Bundle (v_CITypes)
             AND UpdateCIs.ArticleID NOT IN (                                 -- Filter on ArticleID csv list
@@ -187,7 +187,7 @@ AS (
 /* Get device info */
 SELECT Systems.ResourceID
 
-    /* Set Health states. You can find the coresponding values in the HealthState table above */
+    /* Set Health states. You can find the corresponding values in the HealthState table above */
     , HealthStates          = (
         -- Client Unmanaged
         IIF(
@@ -236,13 +236,13 @@ SELECT Systems.ResourceID
                 AND CombinedResources.IsClient = 1
             , POWER(64, 1), 0
         )
-        -- Distant Maintenace Window
+        -- Distant Maintenance Window
         +
         IIF(
             DATEADD(mi, ServiceWindowDuration, NextServiceWindow) > (SELECT DATEADD(dd, @HT_DistantMW, CURRENT_TIMESTAMP))
             , POWER(128, 1), 0
         )
-        -- Short Maintenace Window
+        -- Short Maintenance Window
         +
         IIF(
             ServiceWindowDuration BETWEEN 0 AND @HT_ShortMW
@@ -275,7 +275,7 @@ SELECT Systems.ResourceID
                 AND ISNULL(Missing, (IIF(CombinedResources.IsClient = 1, 0, NULL))) = 0
             , POWER(4096, 1), 0
         )
-        -- Free Space Threshold Exeeded
+        -- Free Space Threshold Exceeded
         +
         IIF(
             CONVERT(DECIMAL(10, 2), LogicalDisk.FreeSpace0 / 1024.0) < @HT_FreeSpace

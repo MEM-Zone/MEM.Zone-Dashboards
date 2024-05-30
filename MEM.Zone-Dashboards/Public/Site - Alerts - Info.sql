@@ -1,11 +1,11 @@
 /*
 .SYNOPSIS
-    Gets MEMCM Alerts.
+    Gets ConfigMgr Alerts.
 .DESCRIPTION
-    Gets MEMCM Alerts by Feature Area and Alert State.
+    Gets ConfigMgr Alerts by Feature Area and Alert State.
 .NOTES
     Requires SQL 2016.
-    Requires SELECT access on dbo.fnListAlerts() function for smsschm_users (MEMCM Reporting).
+    Requires SELECT access on dbo.fnListAlerts() function for smsschm_users (ConfigMgr Reporting).
     RBAC Disabled in order to get all alerts.
     Part of a report should not be run separately.
 .LINK

@@ -22,8 +22,8 @@
 /* #region QueryBody */
 
 /* #region SSMS */
--- USE [CM_<SITE_CODE>]
--- GO
+--USE [CM_<SITE_CODE>]
+--GO
 /* #endregion */
 
 /* #region Grant Permissions */

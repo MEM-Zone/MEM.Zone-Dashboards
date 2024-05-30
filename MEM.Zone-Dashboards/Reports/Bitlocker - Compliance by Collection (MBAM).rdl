@@ -76,7 +76,7 @@ ORDER BY Name</CommandText>
 .SYNOPSIS
     Gets the Bitlocker (MBAM) compliance.
 .DESCRIPTION
-    Gets the Bitlocker (MBAM) compliance for a Collection in MEMCM.
+    Gets the Bitlocker (MBAM) compliance for a Collection in ConfigMgr.
 .NOTES
     Requires SQL 2016.
     Part of a report should not be run separately.
@@ -5744,7 +5744,7 @@ Public Function DecodeString(ByVal astrToDecode As String) As String
 '.EXAMPLE
 '    DecodeString(Fields!SomeField.Value) (VB.Net)
 '.NOTES
-'    Created by MEMCM product team.
+'    Created by ConfigMgr product team.
 '    Modified by Ioan Popovici.
 '.LINK
 '    https://MEMZ.one/Dashboards

@@ -31,14 +31,14 @@
 /* #region QueryBody */
 
 /* #region SSMS */
--- USE [CM_<SITE_CODE>]
+--USE [CM_<SITE_CODE>]
 
 /* Drop function if it exists */
--- IF OBJECT_ID('[dbo].[ufn_CM_GetNextMaintenanceWindow]') IS NOT NULL
---    BEGIN
---        DROP FUNCTION [dbo].[ufn_CM_GetNextMaintenanceWindow]
---    END
--- GO
+--IF OBJECT_ID('[dbo].[ufn_CM_GetNextMaintenanceWindow]') IS NOT NULL
+--  BEGIN
+--      DROP FUNCTION [dbo].[ufn_CM_GetNextMaintenanceWindow]
+--  END
+--GO
 /* #endregion */
 
 /* #region create ufn_CM_GetNextMaintenanceWindow */
@@ -47,12 +47,13 @@ CREATE FUNCTION [dbo].[ufn_CM_GetNextMaintenanceWindow] (
     , @RecurrenceType   AS INT
 )
 RETURNS @NextServiceWindow TABLE (
-    ScheduleToken       CHAR(16)
-    , RecurrenceType    INT
-    , StartTime         DATETIME
-    , NextServiceWindow DATETIME
-    , Duration          INT
-    , IsGMTTime         BIT
+    ScheduleToken         CHAR(16)
+    , RecurrenceType      INT
+    , StartTime           DATETIME
+    , NextServiceWindow   DATETIME
+    , Duration            INT
+    , IsServiceWindowOpen BIT
+    , IsUTCTime           BIT
 )
 AS
     BEGIN
@@ -89,10 +90,11 @@ AS
 
         -- http://msdn.microsoft.com/en-us/library/cc143505.aspx Jump
 
-        --DECLARE @RecurrenceType   INT;       SET @RecurrenceType    = @RecurrenceType_DAILY
-        --DECLARE @ScheduleToken    CHAR(16);  SET @ScheduleToken     = '01CA8C80C0100008'
-        DECLARE @ScheduleStartTime INT;      SET @ScheduleStartTime = CAST(CONVERT(BINARY(4), LEFT(@ScheduleToken, 8), 2) AS INT)
-        DECLARE @ScheduleDuration  BIGINT;   SET @ScheduleDuration  = CAST(CONVERT(BINARY(4), RIGHT(@ScheduleToken, 8), 2) AS BIGINT)
+        --DECLARE @RecurrenceType    INT;       SET @RecurrenceType      = @RecurrenceType_DAILY
+        --DECLARE @ScheduleToken     CHAR(16);  SET @ScheduleToken       = '01CA8C80C0100008'
+        DECLARE @ScheduleStartTime   INT;       SET @ScheduleStartTime   = CAST(CONVERT(BINARY(4), LEFT(@ScheduleToken, 8), 2) AS INT)
+        DECLARE @ScheduleDuration    BIGINT;    SET @ScheduleDuration    = CAST(CONVERT(BINARY(4), RIGHT(@ScheduleToken, 8), 2) AS BIGINT)
+        DECLARE @IsServiceWindowOpen BIT;       SET @IsServiceWindowOpen = 0
 
         -- Duration is in minutes
         DECLARE @Duration INT; SET @Duration = @ScheduleStartTime % POWER(2, 6)
@@ -106,7 +108,7 @@ AS
         SET @StartTime = DATEADD(MINUTE, (@ScheduleStartTime / POWER(2,26)) % POWER(2, 5), @StartTime)
 
         -- Determine UTC and Flags and Offset Days
-        DECLARE @IsGMTTime     BIT; SET @IsGMTTime     = CAST(@ScheduleDuration % POWER(2, 1) AS BIT)
+        DECLARE @IsUTCTime     BIT; SET @IsUTCTime     = CAST(@ScheduleDuration % POWER(2, 1) AS BIT)
         DECLARE @Flags         INT; SET @Flags         = (@ScheduleDuration / POWER(2,19)) % POWER(2, 3)
         DECLARE @OffsetDays    INT; SET @OffsetDays    = (@ScheduleDuration / POWER(2,6)) % POWER(2, 3)
 
@@ -116,7 +118,7 @@ AS
 
         DECLARE @Now DATETIME
 
-        IF @IsGMTTime = 1 BEGIN
+        IF @IsUTCTime = 1 BEGIN
             SET @Now = GETUTCDATE()
         END ELSE BEGIN
             SET @Now = GETDATE()
@@ -295,8 +297,12 @@ AS
             END
         END
 
+        /* Check if the maintenance window is open */
+        IF DATEADD(mi, @Duration, @NextMaintenanceWindow) > CURRENT_TIMESTAMP AND @NextMaintenanceWindow < CURRENT_TIMESTAMP
+            SET @IsServiceWindowOpen = 1 -- 1 = Open, 0 = Closed
+
         /* Create result table */
-        INSERT INTO @NextServiceWindow VALUES (@ScheduleToken, @RecurrenceType, @StartTime, @NextMaintenanceWindow, @Duration, @IsGMTTime)
+        INSERT INTO @NextServiceWindow VALUES (@ScheduleToken, @RecurrenceType, @StartTime, @NextMaintenanceWindow, @Duration, @IsServiceWindowOpen, @IsUTCTime)
 
         /* Return result */
         RETURN

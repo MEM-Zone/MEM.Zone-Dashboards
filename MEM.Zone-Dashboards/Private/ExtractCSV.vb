@@ -14,7 +14,7 @@ Public Function ExtractCSV(ByVal astrSource As String, ByVal astrPosition As Int
 '.EXAMPLE
 '    ExtractCSV(Fields!SomeField.Value, 2) (VB.Net)
 '.NOTES
-'    Created by MEMCM product team.
+'    Created by ConfigMgr product team.
 '    Modified by Ioan Popovici.
 '.LINK
 '    https://MEMZ.one/Dashboards

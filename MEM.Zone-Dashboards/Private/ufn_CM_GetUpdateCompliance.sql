@@ -1,8 +1,8 @@
 /*
 .SYNOPSIS
-    Gets the software update compliance for a Collection in MEMCM.
+    Gets the software update compliance for a Collection in ConfigMgr.
 .DESCRIPTION
-    Gets the software update compliance in MEMCM by Collection and All Updates.
+    Gets the software update compliance in ConfigMgr by Collection and All Updates.
 .PARAMETER UserSIDs
     Specifies the Users SID.
 .PARAMETER CollectionID

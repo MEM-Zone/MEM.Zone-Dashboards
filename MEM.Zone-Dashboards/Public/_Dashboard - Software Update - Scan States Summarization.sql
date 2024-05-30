@@ -1,8 +1,8 @@
 /*
 .SYNOPSIS
-    Summarizes the update scan states for a Collection in MEMCM.
+    Summarizes the update scan states for a Collection in ConfigMgr.
 .DESCRIPTION
-    Summarizes the window update scan states in MEMCM by Collection and Status Name.
+    Summarizes the window update scan states in ConfigMgr by Collection and Status Name.
 .NOTES
     Requires SQL 2016.
     Part of a report should not be run separately.

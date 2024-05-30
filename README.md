@@ -108,7 +108,7 @@ This preview is not up-to-date, it represents version 2.0.0. A new preview will 
 
 ### Software
 
-* Microsoft Endpoint Management Configuration Manager (MEMCM) with Windows Update Services (WSUS) integration.
+* Microsoft Endpoint Management Configuration Manager (ConfigMgr) with Windows Update Services (WSUS) integration.
 * Microsoft SQL Server Reporting Services (SSRS) 2017 or above.
 * Microsoft SQL [Compatibility Level](https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-database-transact-sql-compatibility-level?view=sql-server-ver15) 130 or above.
 
@@ -175,7 +175,7 @@ The `ufn_CM_GetNextMaintenanceWindow` is needed in order to display the next mai
 * Click `Execute` to add the necessary permissions to your database.
 
 > **Notes**
-> You need to have access to add the function and grant SELECT on `ufn_CM_GetNextMaintenanceWindow`, `fnListAlerts`, `vSMS_ServiceWindow` and `vSMS_SUPSyncStatus` for the `smsschm_users` (MEMCM reporting).
+> You need to have access to add the function and grant SELECT on `ufn_CM_GetNextMaintenanceWindow`, `fnListAlerts`, `vSMS_ServiceWindow` and `vSMS_SUPSyncStatus` for the `smsschm_users` (ConfigMgr reporting).
 > If the `ufn_CM_GetNextMaintenanceWindow` is not present you will get a 'Missing helper function!' instead of the next maintenance window.
 > To resolve the error codes, or get more info, just hover over the table cell.
 
