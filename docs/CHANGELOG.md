@@ -1,5 +1,9 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 5.1.1 - 2024-05-30
+
+* Updated buitin help.
+
 ## 5.1.0 - 2024-05-30
 
 * Added `IsServiceWindowOpen` to `ufn_CM_GetNextMaintenanceWindow`.
