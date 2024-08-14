@@ -1,5 +1,9 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 5.1.2 - 2024-07-14
+
+* Fixed `IsGMTTime` error in `Software Update - Compliance by Collection` @Steve Mckee.
+
 ## 5.1.1 - 2024-05-30
 
 * Updated buitin help.

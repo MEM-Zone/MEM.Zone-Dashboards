@@ -200,7 +200,7 @@ ORDER BY Name</CommandText>
               , ServiceWindowStart    DATETIME
               , ServiceWindowDuration INT
               , ServiceWindowEnabled  INT
-              , IsGMTTime             INT
+              , IsUTCTime             INT
           )
 
           /* Get maintenance data */
@@ -213,7 +213,7 @@ ORDER BY Name</CommandText>
                           , ServiceWindowStart    = NextServiceWindow.StartTime
                           , ServiceWindowDuration = NextServiceWindow.Duration
                           , ServiceWindowEnabled  = ServiceWindow.Enabled
-                          , IsGMTTime             = NextServiceWindow.IsGMTTime
+                          , IsUTCTime             = NextServiceWindow.IsUTCTime
                           , RowNumber             = DENSE_RANK() OVER (PARTITION BY CollectionMembers.ResourceID ORDER BY IIF(
                               NextServiceWindow.NextServiceWindow IS NULL, 1, 0), NextServiceWindow.NextServiceWindow, ServiceWindow.ServiceWindowID
                           )                                                  -- Order by NextServiceWindow with NULL Values last
@@ -228,14 +228,14 @@ ORDER BY Name</CommandText>
                   )
 
                   /* Populate MaintenanceInfo table and remove duplicates */
-                  INSERT INTO #MaintenanceInfo(ResourceID, NextServiceWindow, ServiceWindowStart, ServiceWindowDuration, ServiceWindowEnabled, IsGMTTime)
+                  INSERT INTO #MaintenanceInfo(ResourceID, NextServiceWindow, ServiceWindowStart, ServiceWindowDuration, ServiceWindowEnabled, IsUTCTime)
                       SELECT
                           ResourceID
                           , NextServiceWindow
                           , ServiceWindowStart
                           , ServiceWindowDuration
                           , ServiceWindowEnabled
-                          , IsGMTTime
+                          , IsUTCTime
                       FROM Maintenance_CTE
                       WHERE RowNumber = 1 -- Remove duplicates
               END
@@ -438,7 +438,7 @@ ORDER BY Name</CommandText>
                           AND NextServiceWindow < CURRENT_TIMESTAMP
                           , 1, 0 -- 1 = Open, 2 = Closed
               )
-              , IsUTCTime             = IsGMTTime
+              , IsUTCTime             = IsUTCTime
           FROM fn_rbac_R_System(@UserSIDs) AS Systems
               JOIN fn_rbac_CombinedDeviceResources(@UserSIDs) AS CombinedResources ON CombinedResources.MachineID = Systems.ResourceID
               JOIN fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = Systems.ResourceID
