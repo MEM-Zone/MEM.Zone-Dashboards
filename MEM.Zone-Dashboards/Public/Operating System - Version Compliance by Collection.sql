@@ -1,8 +1,9 @@
+
 /*
 .SYNOPSIS
-    Gets the operating system version compliance for a Collection in MEMCM.
+    Gets the operating system version compliance for a Collection in ConfigMgr.
 .DESCRIPTION
-    Gets the operating system compliance in MEMCM by Collection, operating system version and operating system type.
+    Gets the operating system compliance in ConfigMgr by Collection, operating system version and operating system type.
 .NOTES
     Requires SQL 2016.
     Part of a report should not be run separately
@@ -20,24 +21,24 @@
 /* #region QueryBody */
 
 /* Testing variables !! Need to be commented for Production !! */
---DECLARE @UserSIDs            AS NVARCHAR(10) = 'Disabled';
---DECLARE @CollectionID        AS NVARCHAR(10) = 'VIT00984';
---DECLARE @Locale              AS INT          = 2;
---DECLARE @OSComplianceType    AS NVARCHAR(20) = 5; --'Professional'
---DECLARE @OSComplianceVersion AS NVARCHAR(50) = '20H2';
---DECLARE @HealthThresholds    AS NVARCHAR(20) = '14,40,8';
---DECLARE @Compliant           AS INT          = 1; --'Compliant'
---DECLARE @ServicingState      AS INT          = 2; --'Current'
+-- DECLARE @UserSIDs            AS NVARCHAR(10) = 'Disabled';
+-- DECLARE @CollectionID        AS NVARCHAR(10) = 'JNJ08AF9';
+-- DECLARE @Locale              AS INT          = 2;
+-- DECLARE @OSComplianceType    AS NVARCHAR(20) = 4; --'Enterprise'
+-- DECLARE @OSComplianceVersion AS NVARCHAR(50) = '21H2';
+-- DECLARE @HealthThresholds    AS NVARCHAR(20) = '14,40,8';
+-- DECLARE @Compliant           AS INT          = 1; --'Compliant'
+-- DECLARE @ServicingState      AS INT          = 2; --'Current'
 
 /* Variable declaration */
 DECLARE @LCID                       AS INT = dbo.fn_LShortNameToLCID(@Locale);
-DECLARE @LastSupportedLegacyOSBuild AS INT = 9600;
 
 /* Initialize memory tables */
 DECLARE @HealthThresholdVariables TABLE (ID INT IDENTITY(1,1), Threshold INT);
 DECLARE @HealthState              TABLE (BitMask INT, StateName NVARCHAR(250));
 DECLARE @ClientState              TABLE (BitMask INT, StateName NVARCHAR(100));
 DECLARE @OSNamesNormalized        TABLE (OSName  NVARCHAR(100), OSType INT);
+DECLARE @OSServicing              TABLE (StateNumber INT, StateName NVARCHAR(20));
 
 /* Populate @HealthThresholdVariables table */
 INSERT INTO @HealthThresholdVariables (Threshold)
@@ -58,8 +59,8 @@ VALUES
     , (8,   N'Pending Restart')
     , (16,  N'Update Scan Failed')
     , (32,  N'Update Scan Late')
-    , (64,  N'Uptime Threshold Exeeded')
-    , (128, N'Free Space Threshold Exeeded')
+    , (64,  N'Uptime Threshold Exceeded')
+    , (128, N'Free Space Threshold Exceeded')
     , (256, N'Servicing Expired')
 
 /* Populate ClientState table */
@@ -85,6 +86,16 @@ SELECT DISTINCT
         ELSE 0                                                     --0 Unknown/NA
     END
 FROM fn_rbac_GS_OPERATING_SYSTEM(@UserSIDs) AS OperatingSystem
+
+/* Populate OSServicing table */
+INSERT INTO @OSServicing (StateNumber, StateName)
+VALUES
+    (0, N'Internal')
+    , (1, N'Insider')
+    , (2, N'Current')
+    , (3, N'Expiring Soon')
+    , (4, N'Expired')
+    , (5, N'Unknown')
 
 /* Get device info */
 ;
@@ -148,19 +159,9 @@ AS (
             --Servicing Expired
             +
             IIF(
-                OSInfo.ServicingState = 4 OR (Systems.Build01 = '6.3.9600' AND CURRENT_TIMESTAMP > CONVERT(DATETIME, '2023-01-10'))
+                OSInfo.ServicingState = 4
                 , POWER(256, 1)
-                , IIF(
-                    CONVERT(
-                        INT
-                        , (SELECT SUBSTRING(
-                                (SELECT CAST('<t>' + REPLACE(Systems.Build01, '.','</t><t>') + '</t>' AS XML).value('/t[3]','NVARCHAR(500)'))
-                                , 0, 6
-                            )
-                        )
-                    ) < @LastSupportedLegacyOSBuild
-                    , POWER(256, 1), 0
-                )
+                , 0
             )
         )
         , Compliant             = (
@@ -205,34 +206,10 @@ AS (
         )
         , OSVersion             = ISNULL(OSInfo.Version, IIF(RIGHT(OperatingSystem.Caption0, 7) = 'Preview', 'Insider Preview', NULL))
         , OSBuildNumber         = Systems.Build01
-        , OSServicingState      = (
-            ISNULL(OSInfo.ServicingState,
-                CASE
-                    WHEN Systems.Build01       = '6.3.9600'
-                        AND CURRENT_TIMESTAMP <= CONVERT(DATETIME, '2023-01-10') THEN 3 --'Expiring Soon'
-                    WHEN Systems.Build01       = '6.3.9600'
-                        AND CURRENT_TIMESTAMP >  CONVERT(DATETIME, '2023-01-10') THEN 4 --'Expired'
-                    ELSE
-                        IIF(
-                            CONVERT(
-                                INT
-                                , (SELECT SUBSTRING(
-                                        (SELECT CAST('<t>' + REPLACE(Systems.Build01, '.','</t><t>') + '</t>' AS XML).value('/t[3]','NVARCHAR(500)'))
-                                        , 0, 6 --Last 6 characters
-                                    )
-                                )
-                            ) < @LastSupportedLegacyOSBuild
-                            , 4, 5             --'Expired', 'Unknown'
-                        )
-                END
-            )
-        ) --0 = 'Internal', 1 = 'Insider', 2 = 'Current', 3 = 'Expiring Soon', 4 = 'Expired', 5 = 'Unknown'
-        , UserDeviceAffinity    = UserDeviceAffinityInfo.AssignedUser
+        , OSServicingState      = ISNULL(OSInfo.ServicingState, 5) --0 = 'Internal', 1 = 'Insider', 2 = 'Current', 3 = 'Expiring Soon', 4 = 'Expired', 5 = 'Unknown'
         , Domain                = Systems.Resource_Domain_OR_Workgr0
-        , Country               = Users.co
-        , Location              = Users.l
         , Uptime                = DATEDIFF(dd, OperatingSystem.LastBootUpTime0, CURRENT_TIMESTAMP)
-        , LastBootTime          = CONVERT(NVARCHAR(16), OperatingSystem.LastBootUpTime0, 120)
+--        , LastBootTime          = CONVERT(NVARCHAR(16), OperatingSystem.LastBootUpTime0, 120)
         , PendingRestart        = (
             CASE
                 WHEN CombinedResources.IsClient      = 0
@@ -258,7 +235,7 @@ AS (
         , ClientState           = IIF(CombinedResources.IsClient = 1, ClientSummary.ClientStateDescription, 'Unmanaged')
         , ClientVersion         = CombinedResources.ClientVersion
         , LastUpdateScan        = DATEDIFF(dd, UpdateScan.LastScanTime, CURRENT_TIMESTAMP)
-        , LastUpdateScanTime    = CONVERT(NVARCHAR(16), UpdateScan.LastScanTime, 120)
+--        , LastUpdateScanTime    = CONVERT(NVARCHAR(16), UpdateScan.LastScanTime, 120)
         , LastScanError         = NULLIF(UpdateScan.LastErrorCode, 0)
     FROM fn_rbac_R_System(@UserSIDs) AS Systems
         JOIN fn_rbac_CombinedDeviceResources(@UserSIDs) AS CombinedResources ON CombinedResources.MachineID = Systems.ResourceID
@@ -277,21 +254,11 @@ AS (
             SELECT
                 Version = OSLocalizedNames.Value
                 , ServicingState = OSServicingStates.State
-            FROM fn_GetWindowsServicingLocalizedNames() AS OSLocalizedNames
-                JOIN fn_GetWindowsServicingStates() AS OSServicingStates ON OSServicingStates.Build = Systems.Build01
+            FROM vSMS_Win10Dashboard AS Win10Dashboard
+                LEFT JOIN fn_GetWindowsServicingStates() AS OSServicingStates ON OSServicingStates.Build = Systems.Build01
             WHERE OSLocalizedNames.Name = OSServicingStates.Name
-                AND Systems.OSBranch01 = OSServicingStates.Branch --Select only the branch of the installed OS
+                AND Systems.OSBranch01 = Win10Dashboard.Branch --Select only the branch of the installed OS
         ) AS OSInfo
-        OUTER APPLY (
-            SELECT
-                AssignedUser = UserMachineRelationship.UniqueUserName
-            FROM fn_rbac_UserMachineRelationship(@UserSIDs) AS UserMachineRelationship
-            WHERE UserMachineRelationship.MachineResourceID = CollectionMembers.ResourceID
-                AND UserMachineRelationship.CreationTime = (
-                    SELECT MAX(UserMachineRelationshipInner.CreationTime) FROM fn_rbac_UserMachineRelationship(@UserSIDs) AS UserMachineRelationshipInner
-                    WHERE UserMachineRelationshipInner.MachineResourceID = CollectionMembers.ResourceID
-                ) --Select only the newest User Device Affinity
-        ) AS UserDeviceAffinityInfo
     WHERE CollectionMembers.CollectionID = @CollectionID
 )
 
@@ -303,23 +270,24 @@ SELECT
     , DeviceInfo.OperatingSystem
     , DeviceInfo.OSVersion
     , DeviceInfo.OSBuildNumber
-    , DeviceInfo.OSServicingState
-    , DeviceInfo.UserDeviceAffinity
+    , OSServicingState = (
+        SELECT StateName FROM @OSServicing
+        WHERE StateNumber = DeviceInfo.OSServicingState
+    )
     , DeviceInfo.Domain
-    , DeviceInfo.Country
-    , DeviceInfo.Location
     , DeviceInfo.Uptime
-    , DeviceInfo.LastBootTime
+--    , DeviceInfo.LastBootTime
     , DeviceInfo.PendingRestart
     , DeviceInfo.FreeSpace
     , DeviceInfo.ClientState
     , DeviceInfo.ClientVersion
     , DeviceInfo.LastUpdateScan
-    , DeviceInfo.LastUpdateScanTime
+--    , DeviceInfo.LastUpdateScanTime
     , DeviceInfo.LastScanError
 FROM DeviceInfo_CTE AS DeviceInfo
     WHERE Compliant IN (@Compliant)
         AND OSServicingState IN (@ServicingState)
+ORDER BY OperatingSystem, OSVersion
 
 /* #endregion */
 /*##=============================================*/

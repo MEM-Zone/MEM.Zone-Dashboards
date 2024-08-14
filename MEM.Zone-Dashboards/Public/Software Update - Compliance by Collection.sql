@@ -7,7 +7,8 @@
     Requires SQL 2016.
     Requires ufn_CM_GetNextMaintenanceWindow sql helper function in order to display the next maintenance window.
     Requires SELECT access on vSMS_AutoDeployments for smsschm_users (ConfigMgr Reporting).
-    Part of a report should not be run separately.LINK
+    Part of a report should not be run separately.
+.LINK
     https://MEM.Zone
 .LINK
     https://MEMZ.one/Dashboards
@@ -24,10 +25,11 @@
 
 /* Testing variables !! Need to be commented for Production !! */
 --DECLARE @UserSIDs          AS NVARCHAR(10) = 'Disabled';
---DECLARE @CollectionID      AS NVARCHAR(10) = 'SMS00001';
+--DECLARE @CollectionID      AS NVARCHAR(10) = 'JNJ02AEC';
 --DECLARE @Locale            AS INT          = 2;
---DECLARE @Categories        AS INT          = 16777247; -- Security Updates
---DECLARE @Vendors           AS INT          = 16777254; -- Microsoft
+--DECLARE @Groups            AS INT          = 97508;
+--DECLARE @Categories        AS INT          = 31; -- Security Updates
+--DECLARE @Vendors           AS INT          = 37; -- Microsoft
 --DECLARE @Compliant         AS INT          = 0;
 --DECLARE @Targeted          AS INT          = 1;
 --DECLARE @Enabled           AS INT          = 1;
@@ -52,10 +54,21 @@ DECLARE @LCID                     AS INT = dbo.fn_LShortNameToLCID(@Locale);
 DECLARE @HealthThresholdVariables TABLE (ID INT IDENTITY(1,1), Threshold INT);
 DECLARE @HealthState              TABLE (BitMask INT, StateName NVARCHAR(250));
 DECLARE @ClientState              TABLE (BitMask INT, StateName NVARCHAR(100));
+DECLARE @GroupCIs                 TABLE (CI_ID INT);
 
 /* Populate @HealthThresholdVariables table */
 INSERT INTO @HealthThresholdVariables (Threshold)
 SELECT VALUE FROM STRING_SPLIT(@HealthThresholds, N',')
+
+/* Populate @GroupCIs table */
+INSERT INTO @GroupCIs (CI_ID)
+    SELECT
+        CI_ID = CIRelation.ReferencedCI_ID
+    FROM fn_rbac_CIRelation_All(@UserSIDs) AS CIRelation
+        JOIN fn_rbac_AuthListInfo(@LCID, @UserSIDs) AS AuthList ON AuthList.CI_ID = CIRelation.CI_ID
+    WHERE CIRelation.RelationType = 1
+        AND AuthList.CI_ID IN (@Groups)
+    ORDER BY CIRelation.ReferencedCI_ID
 
 /* Set Health Threshold variables */
 DECLARE @HT_DistantMW             AS INT = (SELECT Threshold FROM @HealthThresholdVariables WHERE ID = 1); -- Days
@@ -99,7 +112,7 @@ CREATE TABLE #MaintenanceInfo (
     , ServiceWindowStart    DATETIME
     , ServiceWindowDuration INT
     , ServiceWindowEnabled  INT
-    , IsGMTTime             INT
+    , IsUTCTime             INT
 )
 
 /* Get maintenance data */
@@ -112,7 +125,7 @@ IF @HelperFunctionExists = 1
                 , ServiceWindowStart    = NextServiceWindow.StartTime
                 , ServiceWindowDuration = NextServiceWindow.Duration
                 , ServiceWindowEnabled  = ServiceWindow.Enabled
-                , IsGMTTime             = NextServiceWindow.IsGMTTime
+                , IsUTCTime             = NextServiceWindow.IsUTCTime
                 , RowNumber             = DENSE_RANK() OVER (PARTITION BY CollectionMembers.ResourceID ORDER BY IIF(
                     NextServiceWindow.NextServiceWindow IS NULL, 1, 0), NextServiceWindow.NextServiceWindow, ServiceWindow.ServiceWindowID
                 )                                                  -- Order by NextServiceWindow with NULL Values last
@@ -127,14 +140,14 @@ IF @HelperFunctionExists = 1
         )
 
         /* Populate MaintenanceInfo table and remove duplicates */
-        INSERT INTO #MaintenanceInfo(ResourceID, NextServiceWindow, ServiceWindowStart, ServiceWindowDuration, ServiceWindowEnabled, IsGMTTime)
+        INSERT INTO #MaintenanceInfo(ResourceID, NextServiceWindow, ServiceWindowStart, ServiceWindowDuration, ServiceWindowEnabled, IsUTCTime)
             SELECT
                 ResourceID
                 , NextServiceWindow
                 , ServiceWindowStart
                 , ServiceWindowDuration
                 , ServiceWindowEnabled
-                , IsGMTTime
+                , IsUTCTime
             FROM Maintenance_CTE
             WHERE RowNumber = 1 -- Remove duplicates
     END
@@ -149,7 +162,8 @@ AS (
     FROM fn_rbac_R_System(@UserSIDs) AS Systems
         JOIN fn_rbac_UpdateComplianceStatus(@UserSIDs) AS ComplianceStatus ON ComplianceStatus.ResourceID = Systems.ResourceID
             AND ComplianceStatus.Status = 2                                  -- Filter on 'Required' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
-        JOIN fn_rbac_ClientCollectionMembers(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = ComplianceStatus.ResourceID
+            AND ComplianceStatus.CI_ID IN (SELECT CI_ID FROM @GroupCIs)      -- Filter on Selected Update Groups
+        JOIN fn_rbac_ClientCollectionMembers(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = Systems.ResourceID
         JOIN fn_rbac_UpdateInfo(@LCID, @UserSIDs) AS UpdateCIs ON UpdateCIs.CI_ID = ComplianceStatus.CI_ID
             AND UpdateCIs.IsExpired = 0                                      -- Filter on Expired
             AND UpdateCIs.IsSuperseded IN (@Superseded)                      -- Filter on Superseded
@@ -167,6 +181,7 @@ AS (
         LEFT JOIN fn_rbac_CITargetedMachines(@UserSIDs) AS Targeted ON Targeted.CI_ID = ComplianceStatus.CI_ID
             AND Targeted.ResourceID = ComplianceStatus.ResourceID
     WHERE CollectionMembers.CollectionID = @CollectionID
+        AND Systems.Client0 = 1                                              -- Filter on Managed Clients
         AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted)            -- Filter on 'Targeted' or 'NotTargeted'
         AND IIF(
             NULLIF(@ArticleID, N'') IS NULL
@@ -337,7 +352,7 @@ SELECT Systems.ResourceID
                 AND NextServiceWindow < CURRENT_TIMESTAMP
                 , 1, 0 -- 1 = Open, 2 = Closed
     )
-    , IsUTCTime             = IsGMTTime
+    , IsUTCTime             = IsUTCTime
 FROM fn_rbac_R_System(@UserSIDs) AS Systems
     JOIN fn_rbac_CombinedDeviceResources(@UserSIDs) AS CombinedResources ON CombinedResources.MachineID = Systems.ResourceID
     JOIN fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = Systems.ResourceID

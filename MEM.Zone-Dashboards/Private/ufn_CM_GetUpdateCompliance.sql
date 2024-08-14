@@ -103,7 +103,7 @@ AS
             , ServiceWindowStart    DATETIME
             , ServiceWindowDuration INT
             , ServiceWindowEnabled  BIT
-            , IsGMTTime             BIT
+            , IsUTCTime             BIT
         )
 
         /* Populate @HealthThresholdVariables table */
@@ -159,7 +159,7 @@ AS
                         , ServiceWindowStart    = NextServiceWindow.StartTime
                         , ServiceWindowDuration = NextServiceWindow.Duration
                         , ServiceWindowEnabled  = ServiceWindow.Enabled
-                        , IsGMTTime             = NextServiceWindow.IsGMTTime
+                        , IsUTCTime             = NextServiceWindow.IsUTCTime
                         , RowNumber             = DENSE_RANK() OVER (PARTITION BY CollectionMembers.ResourceID ORDER BY IIF(
                             NextServiceWindow.NextServiceWindow IS NULL, 1, 0), NextServiceWindow.NextServiceWindow, ServiceWindow.ServiceWindowID
                         )                                                  -- Order by NextServiceWindow with NULL Values last
@@ -174,14 +174,14 @@ AS
                 )
 
                 /* Populate MaintenanceInfo table and remove duplicates */
-                INSERT INTO @MaintenanceInfo(ResourceID, NextServiceWindow, ServiceWindowStart, ServiceWindowDuration, ServiceWindowEnabled, IsGMTTime)
+                INSERT INTO @MaintenanceInfo(ResourceID, NextServiceWindow, ServiceWindowStart, ServiceWindowDuration, ServiceWindowEnabled, IsUTCTime)
                     SELECT
                         ResourceID
                         , NextServiceWindow
                         , ServiceWindowStart
                         , ServiceWindowDuration
                         , ServiceWindowEnabled
-                        , IsGMTTime
+                        , IsUTCTime
                     FROM Maintenance_CTE
                     WHERE RowNumber = 1 -- Remove duplicates
             END
