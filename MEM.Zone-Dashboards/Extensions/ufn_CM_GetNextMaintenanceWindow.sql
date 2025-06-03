@@ -186,15 +186,15 @@ AS
             END
         END ELSE IF @RecurrenceType = @RecurrenceType_MONTHLYBYWEEKDAY OR @RecurrenceType = @RecurrenceType_MONTHLYBYWEEKDAYBASE BEGIN
             DECLARE @MonthlyBWWeek     INT; SET @MonthlyBWWeek     = (@ScheduleDuration / POWER(2,9)) % POWER(2, 3)
-            DECLARE @MontlhyBWInterval INT; SET @MontlhyBWInterval = (@ScheduleDuration / POWER(2,12)) % POWER(2, 4)
+            DECLARE @MonthlyBWInterval INT; SET @MonthlyBWInterval = (@ScheduleDuration / POWER(2,12)) % POWER(2, 4)
             DECLARE @MonthlyBWDoW      INT; SET @MonthlyBWDoW      = (@ScheduleDuration / POWER(2,16)) % POWER(2, 3)
 
             -- Calculate the total number of completed intervals
-            DECLARE @MonthlyBWNumberOfCompletedIntervals INT; SET @MonthlyBWNumberOfCompletedIntervals = ROUND(CAST(DATEDIFF(MONTH, @StartTime, @Now) AS DECIMAL) / @MontlhyBWInterval, 0, 0)
+            DECLARE @MonthlyBWNumberOfCompletedIntervals INT; SET @MonthlyBWNumberOfCompletedIntervals = ROUND(CAST(DATEDIFF(MONTH, @StartTime, @Now) AS DECIMAL) / @MonthlyBWInterval, 0, 0)
 
             IF @MonthlyBWWeek = 0 BEGIN
                 -- Calculate the next interval
-                DECLARE @MonthlyBWLDOMNextInterval DATETIME; SET @MonthlyBWLDOMNextInterval = DATEADD(MONTH, @MonthlyBWNumberOfCompletedIntervals * @MontlhyBWInterval, @StartTime)
+                DECLARE @MonthlyBWLDOMNextInterval DATETIME; SET @MonthlyBWLDOMNextInterval = DATEADD(MONTH, @MonthlyBWNumberOfCompletedIntervals * @MonthlyBWInterval, @StartTime)
 
                 -- Calculate last day of month
                 SET @MonthlyBWLDOMNextInterval = DATEADD(DAY, DATEDIFF(DAY, @MonthlyBWLDOMNextInterval, DATEADD(DAY, -1, DATEADD(M, DATEDIFF(MONTH, 0, @MonthlyBWLDOMNextInterval) + 1, 0))), @MonthlyBWLDOMNextInterval)
@@ -204,7 +204,7 @@ AS
 
                 IF DATEADD(MINUTE, @Duration, @MonthlyBWLDOMNextInterval) < @Now BEGIN
                     -- Recalculate for the next month interval
-                    SET @MonthlyBWLDOMNextInterval = DATEADD(MONTH, (@MonthlyBWNumberOfCompletedIntervals + 1) * @MontlhyBWInterval, @StartTime)
+                    SET @MonthlyBWLDOMNextInterval = DATEADD(MONTH, (@MonthlyBWNumberOfCompletedIntervals + 1) * @MonthlyBWInterval, @StartTime)
 
                     -- Calculate last day of month
                     SET @MonthlyBWLDOMNextInterval = DATEADD(DAY, DATEDIFF(DAY, @MonthlyBWLDOMNextInterval, DATEADD(DAY, -1, DATEADD(M, DATEDIFF(MONTH, 0, @MonthlyBWLDOMNextInterval) + 1, 0))), @MonthlyBWLDOMNextInterval)
@@ -216,7 +216,7 @@ AS
                 SET @NextMaintenanceWindow = DATEADD(DAY, @OffsetDays, @MonthlyBWLDOMNextInterval)
             END ELSE BEGIN
                 -- Calculate the next interval
-                DECLARE @MonthlyBWNextInterval DATETIME; SET @MonthlyBWNextInterval = DATEADD(MONTH, @MonthlyBWNumberOfCompletedIntervals * @MontlhyBWInterval, @StartTime)
+                DECLARE @MonthlyBWNextInterval DATETIME; SET @MonthlyBWNextInterval = DATEADD(MONTH, @MonthlyBWNumberOfCompletedIntervals * @MonthlyBWInterval, @StartTime)
 
                 -- Set the date to the first day of the month
                 SET @MonthlyBWNextInterval = DATEADD(DAY, -(DAY(@MonthlyBWNextInterval) - 1), @MonthlyBWNextInterval)
@@ -229,7 +229,7 @@ AS
 
                 IF DATEADD(MINUTE, @Duration, @MonthlyBWNextInterval) < @Now BEGIN
                     -- Recalculate for the next month interval
-                    SET @MonthlyBWNextInterval = DATEADD(MONTH, (@MonthlyBWNumberOfCompletedIntervals + 1) * @MontlhyBWInterval, @StartTime)
+                    SET @MonthlyBWNextInterval = DATEADD(MONTH, (@MonthlyBWNumberOfCompletedIntervals + 1) * @MonthlyBWInterval, @StartTime)
 
                     -- Set the date to the first day of the month
                     SET @MonthlyBWNextInterval = DATEADD(DAY, -(DAY(@MonthlyBWNextInterval) - 1), @MonthlyBWNextInterval)
@@ -244,24 +244,24 @@ AS
                 SET @NextMaintenanceWindow = DATEADD(DAY, @OffsetDays, @MonthlyBWNextInterval)
             END
         END ELSE IF @RecurrenceType = @RecurrenceType_MONTHLYBYDATE BEGIN
-            DECLARE @MontlhyBDInterval INT; SET @MontlhyBDInterval = (@ScheduleDuration / POWER(2,10)) % POWER(2, 4)
+            DECLARE @MonthlyBDInterval INT; SET @MonthlyBDInterval = (@ScheduleDuration / POWER(2,10)) % POWER(2, 4)
             DECLARE @MonthlyBDDoM      INT; SET @MonthlyBDDoM      = (@ScheduleDuration / POWER(2,14)) % POWER(2, 5)
 
             IF @MonthlyBDDoM = 0 BEGIN
                 /* This is the last day of month logic */
 
                 -- Calculate the total number of completed intervals
-                DECLARE @MonthlyBDLDOMNumberOfCompletedIntervals INT; SET @MonthlyBDLDOMNumberOfCompletedIntervals = ROUND(CAST(DATEDIFF(MONTH, @StartTime, @Now) AS DECIMAL) / @MontlhyBDInterval, 0, 0)
+                DECLARE @MonthlyBDLDOMNumberOfCompletedIntervals INT; SET @MonthlyBDLDOMNumberOfCompletedIntervals = ROUND(CAST(DATEDIFF(MONTH, @StartTime, @Now) AS DECIMAL) / @MonthlyBDInterval, 0, 0)
 
                 -- Calculate the next interval
-                DECLARE @MonthlyBDLDOMNextInterval DATETIME; SET @MonthlyBDLDOMNextInterval = DATEADD(MONTH, @MonthlyBDLDOMNumberOfCompletedIntervals * @MontlhyBDInterval, @StartTime)
+                DECLARE @MonthlyBDLDOMNextInterval DATETIME; SET @MonthlyBDLDOMNextInterval = DATEADD(MONTH, @MonthlyBDLDOMNumberOfCompletedIntervals * @MonthlyBDInterval, @StartTime)
 
                 -- Calculate last day of month
                 SET @MonthlyBDLDOMNextInterval = DATEADD(DAY, DATEDIFF(DAY, @MonthlyBDLDOMNextInterval, DATEADD(DAY, -1, DATEADD(M, DATEDIFF(MONTH, 0, @MonthlyBDLDOMNextInterval) + 1, 0))), @MonthlyBDLDOMNextInterval)
 
                 -- Recalculate the next interval if the next interval plus the expected duration is in the past
                 IF DATEADD(MINUTE, @Duration, @MonthlyBDLDOMNextInterval) < @Now BEGIN
-                    SET @MonthlyBDLDOMNextInterval = DATEADD(DAY, DATEDIFF(DAY, @MonthlyBDLDOMNextInterval, DATEADD(DAY, -1, DATEADD(M, DATEDIFF(MONTH, 0, DATEADD(MONTH, (@MonthlyBDLDOMNumberOfCompletedIntervals + 1) * @MontlhyBDInterval, @StartTime)) + 1, 0))), @MonthlyBDLDOMNextInterval)
+                    SET @MonthlyBDLDOMNextInterval = DATEADD(DAY, DATEDIFF(DAY, @MonthlyBDLDOMNextInterval, DATEADD(DAY, -1, DATEADD(M, DATEDIFF(MONTH, 0, DATEADD(MONTH, (@MonthlyBDLDOMNumberOfCompletedIntervals + 1) * @MonthlyBDInterval, @StartTime)) + 1, 0))), @MonthlyBDLDOMNextInterval)
                 END
 
                 SET @NextMaintenanceWindow = @MonthlyBDLDOMNextInterval
@@ -281,10 +281,10 @@ AS
                     SET @NextMaintenanceWindow = @MonthlyBDStartTime
                 END ELSE BEGIN
                     -- Calculate the total number of completed intervals
-                    DECLARE @MonthlyBDNumberOfCompletedIntervals INT; SET @MonthlyBDNumberOfCompletedIntervals = ROUND(CAST(DATEDIFF(MONTH, @MonthlyBDStartTime, @Now) AS DECIMAL) / @MontlhyBDInterval, 0, 0)
+                    DECLARE @MonthlyBDNumberOfCompletedIntervals INT; SET @MonthlyBDNumberOfCompletedIntervals = ROUND(CAST(DATEDIFF(MONTH, @MonthlyBDStartTime, @Now) AS DECIMAL) / @MonthlyBDInterval, 0, 0)
 
                     -- Calculate the next interval
-                    DECLARE @MonthlyBDNextInterval DATETIME; SET @MonthlyBDNextInterval = DATEADD(MONTH, @MonthlyBDNumberOfCompletedIntervals * @MontlhyBDInterval, @MonthlyBDStartTime)
+                    DECLARE @MonthlyBDNextInterval DATETIME; SET @MonthlyBDNextInterval = DATEADD(MONTH, @MonthlyBDNumberOfCompletedIntervals * @MonthlyBDInterval, @MonthlyBDStartTime)
 
                     WHILE(DATEPART(DAY, @MonthlyBDNextInterval) <> @MonthlyBDDoM) BEGIN
                         SET @MonthlyBDNextInterval = DATEADD(DAY, (31 - DATEPART(DAY, @MonthlyBDNextInterval) + @MonthlyBDDoM % 31), @MonthlyBDNextInterval)
@@ -292,7 +292,7 @@ AS
 
                     -- Recalculate the next interval if the next interval plus the expected duration is in the past
                     IF DATEADD(MINUTE, @Duration, @MonthlyBDNextInterval) < @Now BEGIN
-                        SET @MonthlyBDNextInterval = DATEADD(MONTH, (@MonthlyBDNumberOfCompletedIntervals + 1) * @MontlhyBDInterval, @MonthlyBDNextInterval)
+                        SET @MonthlyBDNextInterval = DATEADD(MONTH, (@MonthlyBDNumberOfCompletedIntervals + 1) * @MonthlyBDInterval, @MonthlyBDNextInterval)
 
                         WHILE(DATEPART(DAY, @MonthlyBDNextInterval) <> @MonthlyBDDoM) BEGIN
                             SET @MonthlyBDNextInterval = DATEADD(DAY, (31 - DATEPART(DAY, @MonthlyBDNextInterval) + @MonthlyBDDoM % 31), @MonthlyBDNextInterval)
