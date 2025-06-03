@@ -104,11 +104,12 @@ ORDER BY Name</CommandText>
               Gets the software update compliance for a Collection in ConfigMgr.
           .DESCRIPTION
               Gets the software update compliance in ConfigMgr by Collection and All Updates.
-          .NOTES§
+          .NOTES
               Requires SQL 2016.
               Requires ufn_CM_GetNextMaintenanceWindow sql helper function in order to display the next maintenance window.
               Requires SELECT access on vSMS_AutoDeployments for smsschm_users (ConfigMgr Reporting).
-              Part of a report should not be run separately.LINK
+              Part of a report should not be run separately.
+          .LINK
               https://MEM.Zone
           .LINK
               https://MEMZ.one/Dashboards
@@ -125,10 +126,11 @@ ORDER BY Name</CommandText>
 
           /* Testing variables !! Need to be commented for Production !! */
           --DECLARE @UserSIDs          AS NVARCHAR(10) = 'Disabled';
-          --DECLARE @CollectionID      AS NVARCHAR(10) = 'SMS00001';
+          --DECLARE @CollectionID      AS NVARCHAR(10) = 'JNJ02AEC';
           --DECLARE @Locale            AS INT          = 2;
-          --DECLARE @Categories        AS INT          = 16777247; -- Security Updates
-          --DECLARE @Vendors           AS INT          = 16777254; -- Microsoft
+          --DECLARE @Groups            AS INT          = 97508;
+          --DECLARE @Categories        AS INT          = 31; -- Security Updates
+          --DECLARE @Vendors           AS INT          = 37; -- Microsoft
           --DECLARE @Compliant         AS INT          = 0;
           --DECLARE @Targeted          AS INT          = 1;
           --DECLARE @Enabled           AS INT          = 1;
@@ -153,10 +155,21 @@ ORDER BY Name</CommandText>
           DECLARE @HealthThresholdVariables TABLE (ID INT IDENTITY(1,1), Threshold INT);
           DECLARE @HealthState              TABLE (BitMask INT, StateName NVARCHAR(250));
           DECLARE @ClientState              TABLE (BitMask INT, StateName NVARCHAR(100));
+          DECLARE @GroupCIs                 TABLE (CI_ID INT);
 
           /* Populate @HealthThresholdVariables table */
           INSERT INTO @HealthThresholdVariables (Threshold)
           SELECT VALUE FROM STRING_SPLIT(@HealthThresholds, N',')
+
+          /* Populate @GroupCIs table */
+          INSERT INTO @GroupCIs (CI_ID)
+              SELECT
+                  CI_ID = CIRelation.ReferencedCI_ID
+              FROM fn_rbac_CIRelation_All(@UserSIDs) AS CIRelation
+                  JOIN fn_rbac_AuthListInfo(@LCID, @UserSIDs) AS AuthList ON AuthList.CI_ID = CIRelation.CI_ID
+              WHERE CIRelation.RelationType = 1
+                  AND AuthList.CI_ID IN (@Groups)
+              ORDER BY CIRelation.ReferencedCI_ID
 
           /* Set Health Threshold variables */
           DECLARE @HT_DistantMW             AS INT = (SELECT Threshold FROM @HealthThresholdVariables WHERE ID = 1); -- Days
@@ -250,7 +263,8 @@ ORDER BY Name</CommandText>
               FROM fn_rbac_R_System(@UserSIDs) AS Systems
                   JOIN fn_rbac_UpdateComplianceStatus(@UserSIDs) AS ComplianceStatus ON ComplianceStatus.ResourceID = Systems.ResourceID
                       AND ComplianceStatus.Status = 2                                  -- Filter on 'Required' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
-                  JOIN fn_rbac_ClientCollectionMembers(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = ComplianceStatus.ResourceID
+                      AND ComplianceStatus.CI_ID IN (SELECT CI_ID FROM @GroupCIs)      -- Filter on Selected Update Groups
+                  JOIN fn_rbac_ClientCollectionMembers(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = Systems.ResourceID
                   JOIN fn_rbac_UpdateInfo(@LCID, @UserSIDs) AS UpdateCIs ON UpdateCIs.CI_ID = ComplianceStatus.CI_ID
                       AND UpdateCIs.IsExpired = 0                                      -- Filter on Expired
                       AND UpdateCIs.IsSuperseded IN (@Superseded)                      -- Filter on Superseded
@@ -268,6 +282,7 @@ ORDER BY Name</CommandText>
                   LEFT JOIN fn_rbac_CITargetedMachines(@UserSIDs) AS Targeted ON Targeted.CI_ID = ComplianceStatus.CI_ID
                       AND Targeted.ResourceID = ComplianceStatus.ResourceID
               WHERE CollectionMembers.CollectionID = @CollectionID
+                  AND Systems.Client0 = 1                                              -- Filter on Managed Clients
                   AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted)            -- Filter on 'Targeted' or 'NotTargeted'
                   AND IIF(
                       NULLIF(@ArticleID, N'') IS NULL
@@ -325,7 +340,7 @@ ORDER BY Name</CommandText>
                   -- Update Scan Late
                   +
                   IIF(
-                      UpdateScan.LastScanTime < (SELECT DATEADD(dd, -@HT_LastScanTime, CURRENT_TIMESTAMP))
+                      UpdateScan.LastScanTime &lt; (SELECT DATEADD(dd, -@HT_LastScanTime, CURRENT_TIMESTAMP))
                       , POWER(32, 1), 0
                   )
                   -- No Maintenance Window
@@ -340,7 +355,7 @@ ORDER BY Name</CommandText>
                   -- Distant Maintenance Window
                   +
                   IIF(
-                      DATEADD(mi, ServiceWindowDuration, NextServiceWindow) > (SELECT DATEADD(dd, @HT_DistantMW, CURRENT_TIMESTAMP))
+                      DATEADD(mi, ServiceWindowDuration, NextServiceWindow) &gt; (SELECT DATEADD(dd, @HT_DistantMW, CURRENT_TIMESTAMP))
                       , POWER(128, 1), 0
                   )
                   -- Short Maintenance Window
@@ -352,7 +367,7 @@ ORDER BY Name</CommandText>
                   -- Expired Maintenance Window
                   +
                   IIF(
-                      DATEADD(mi, ServiceWindowDuration, ISNULL(NextServiceWindow, ServiceWindowStart)) <= CURRENT_TIMESTAMP
+                      DATEADD(mi, ServiceWindowDuration, ISNULL(NextServiceWindow, ServiceWindowStart)) &lt;= CURRENT_TIMESTAMP
                           AND ServiceWindowStart IS NOT NULL
                           AND CombinedResources.IsClient = 1
                       , POWER(512, 1), 0
@@ -366,20 +381,20 @@ ORDER BY Name</CommandText>
                   -- High Uptime
                   +
                   IIF(
-                      DATEDIFF(dd, OperatingSystem.LastBootUpTime0, CURRENT_TIMESTAMP) > @HT_Uptime
+                      DATEDIFF(dd, OperatingSystem.LastBootUpTime0, CURRENT_TIMESTAMP) &gt; @HT_Uptime
                       , POWER(2048, 1), 0
                   )
                   -- Required VS Uptime
                   +
                   IIF(
-                      DATEDIFF(dd, OperatingSystem.LastBootUpTime0, CURRENT_TIMESTAMP) > @HT_Uptime
+                      DATEDIFF(dd, OperatingSystem.LastBootUpTime0, CURRENT_TIMESTAMP) &gt; @HT_Uptime
                           AND ISNULL(Missing, (IIF(CombinedResources.IsClient = 1, 0, NULL))) = 0
                       , POWER(4096, 1), 0
                   )
                   -- Free Space Threshold Exceeded
                   +
                   IIF(
-                      CONVERT(DECIMAL(10, 2), LogicalDisk.FreeSpace0 / 1024.0) < @HT_FreeSpace
+                      CONVERT(DECIMAL(10, 2), LogicalDisk.FreeSpace0 / 1024.0) &lt; @HT_FreeSpace
                       , POWER(8192, 1), 0
                   )
               )
@@ -414,7 +429,7 @@ ORDER BY Name</CommandText>
                                   (
                                       SELECT N'#!' + LTRIM(RTRIM(StateName)) AS [data()]
                                       FROM @ClientState
-                                      WHERE BitMask & CombinedResources.ClientState <> 0
+                                      WHERE BitMask &amp; CombinedResources.ClientState &lt;&gt; 0
                                       FOR XML PATH(N'')
                                   ),
                                   N' #!', N', '
@@ -434,8 +449,8 @@ ORDER BY Name</CommandText>
               , NextServiceWindow     = CONVERT(NVARCHAR(16), NextServiceWindow, 120)
               , ServiceWindowDuration = ServiceWindowDuration
               , ServiceWindowOpen     = IIF (
-                  DATEADD(mi, ServiceWindowDuration, NextServiceWindow) > CURRENT_TIMESTAMP
-                          AND NextServiceWindow < CURRENT_TIMESTAMP
+                  DATEADD(mi, ServiceWindowDuration, NextServiceWindow) &gt; CURRENT_TIMESTAMP
+                          AND NextServiceWindow &lt; CURRENT_TIMESTAMP
                           , 1, 0 -- 1 = Open, 2 = Closed
               )
               , IsUTCTime             = IsUTCTime
@@ -453,7 +468,7 @@ ORDER BY Name</CommandText>
                       FROM fn_rbac_RA_System_IPAddresses(@UserSIDs) AS IP
                       WHERE IP.ResourceID = Systems.ResourceID
                       -- Exclude IPv6 and 169.254.0.0 Class
-                          AND IIF(CHARINDEX(N':', IP.IP_Addresses0) > 0 OR CHARINDEX(N'169.254', IP.IP_Addresses0) = 1, 1, 0) = 0
+                          AND IIF(CHARINDEX(N':', IP.IP_Addresses0) &gt; 0 OR CHARINDEX(N'169.254', IP.IP_Addresses0) = 1, 1, 0) = 0
                       -- Aggregate results to one row
                       FOR XML PATH('')
                   )
@@ -466,7 +481,7 @@ ORDER BY Name</CommandText>
               AND (
                   CASE
                       WHEN Missing = 0 OR (Missing IS NULL AND Systems.Client0 = 1) THEN 1 -- Yes
-                      WHEN Missing > 0 AND Missing IS NOT NULL                      THEN 0 -- No
+                      WHEN Missing &gt; 0 AND Missing IS NOT NULL                   THEN 0 -- No
                       ELSE 2                                                               -- Unknown
                   END
               ) IN (@Compliant) -- Compliant (0 = No, 1 = Yes, 2 = Unknown)
@@ -478,7 +493,8 @@ ORDER BY Name</CommandText>
           /* #endregion */
           /*##=============================================*/
           /*## END QUERY BODY                              */
-          /*##=============================================*/</CommandText>
+          /*##=============================================*/
+</CommandText>
         <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
       <Fields>
@@ -5626,7 +5642,7 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       <DataType>String</DataType>
       <DefaultValue>
         <Values>
-          <Value>v5.0.0 - 2021-10-13</Value>
+          <Value>v5.1.3 - 2021-10-13</Value>
         </Values>
       </DefaultValue>
       <Hidden>true</Hidden>
