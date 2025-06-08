@@ -235,7 +235,7 @@ ORDER BY Name</CommandText>
                           JOIN fn_rbac_FullCollectionMembership(@UserSIDs) AS SWCollectionMembers ON SWCollectionMembers.ResourceID = CollectionMembers.ResourceID
                           JOIN vSMS_ServiceWindow AS ServiceWindow ON ServiceWindow.SiteID = SWCollectionMembers.CollectionID
                           CROSS APPLY ufn_CM_GetNextMaintenanceWindow(ServiceWindow.Schedules, ServiceWindow.RecurrenceType) AS NextServiceWindow
-                      WHERE ServiceWindowType <> 5                           -- OSD Maintenance Windows
+                      WHERE ServiceWindowType &lt;&gt; 5                           -- OSD Maintenance Windows
                           AND CollectionMembers.CollectionID = @CollectionID -- Filters on CollectionID
                           AND CollectionMembers.ResourceType = 5             -- Select devices only
                   )
