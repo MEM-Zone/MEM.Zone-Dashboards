@@ -1,5 +1,9 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 5.1.4 - 2025-06-08
+
+* Fixed `<>` typos in `Software Update - Compliance by Collection` (#45) @Zombierbone.
+
 ## 5.1.3 - 2025-06-03
 
 * Fixed `<` `>` typos in `Software Update - Compliance by Collection` (#45) @Zombierbone.
