@@ -1,6 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition">
+<Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition" xmlns:am="http://schemas.microsoft.com/sqlserver/reporting/authoringmetadata">
   <Description>Lists the software update compliance for a 'Device'. Queries 'All Updates' and can be filtered by 'Category', 'Superseded', 'Targeted' or 'ArticleID' csv list.  Hover to resolve  'Last Error Code' field. 'Aproved'/'Targeted' is refering to whether an update is targeting or not a specific device.</Description>
+  <am:AuthoringMetadata>
+    <am:CreatedBy>
+      <am:Name>MSRB</am:Name>
+      <am:Version>15.0.20283.0</am:Version>
+    </am:CreatedBy>
+    <am:UpdatedBy>
+      <am:Name>MSRB</am:Name>
+      <am:Version>15.0.20283.0</am:Version>
+    </am:UpdatedBy>
+    <am:LastModifiedTimestamp>2025-06-18T10:59:05.2056016Z</am:LastModifiedTimestamp>
+  </am:AuthoringMetadata>
   <Author>Ioan.Popovici@MEM.Zone</Author>
   <AutoRefresh>0</AutoRefresh>
   <DataSources>
@@ -34,14 +45,14 @@ SELECT dbo.fn_rbac_GetAdminIDsfromUserSIDs (@UserTokenSIDs) AS UserSIDs</Command
       <Query>
         <DataSourceName>CMSQLDatabase</DataSourceName>
         <QueryParameters>
-          <QueryParameter Name="@Locale">
-            <Value>=Parameters!Locale.Value</Value>
-          </QueryParameter>
           <QueryParameter Name="@NameOrResourceID">
             <Value>=Parameters!NameOrResourceID.Value</Value>
           </QueryParameter>
           <QueryParameter Name="@UserSIDs">
             <Value>=Parameters!UserSIDs.Value</Value>
+          </QueryParameter>
+          <QueryParameter Name="@Groups">
+            <Value>=Parameters!Groups.Value</Value>
           </QueryParameter>
           <QueryParameter Name="@Superseded">
             <Value>=Parameters!Superseded.Value</Value>
@@ -92,9 +103,10 @@ SELECT dbo.fn_rbac_GetAdminIDsfromUserSIDs (@UserTokenSIDs) AS UserSIDs</Command
 /* Testing variables !! Need to be commented for Production !! */
 --DECLARE @UserSIDs          AS NVARCHAR(10) = 'Disabled';
 --DECLARE @Locale            AS INT          = 2;
---DECLARE @NameOrResourceID  AS NVARCHAR(50) = 'no-swi-sc-0006';
---DECLARE @Categories        AS INT          = 16777247; -- Security Updates
---DECLARE @Vendors           AS INT          = 16777254; -- Microsoft
+--DECLARE @NameOrResourceID  AS NVARCHAR(50) = 'devicename';
+--DECLARE @Groups            AS INT          = 97508;
+--DECLARE @Categories        AS INT          = 31; -- Security Updates
+--DECLARE @Vendors           AS INT          = 37; -- Microsoft
 --DECLARE @Status            AS INT          = 2;
 --DECLARE @Targeted          AS INT          = 1;
 --DECLARE @Superseded        AS INT          = 0;
@@ -107,6 +119,25 @@ SELECT dbo.fn_rbac_GetAdminIDsfromUserSIDs (@UserTokenSIDs) AS UserSIDs</Command
 DECLARE @LCID              AS INT           = dbo.fn_LShortNameToLCID (@Locale);
 DECLARE @DeviceFQDN        AS NVARCHAR(50);
 DECLARE @ResourceID        AS INT;
+
+/* Perform cleanup */
+IF OBJECT_ID(N'tempdb..#GroupCIs', N'U') IS NOT NULL DROP TABLE #GroupCIs;
+
+/* Create temporary tables */
+CREATE TABLE #GroupCIs (CI_ID INT);
+
+/* Create indexes for performance */
+CREATE CLUSTERED INDEX ix_tempCIndexAft ON #GroupCIs (CI_ID);
+
+/* Populate GroupCIs table */
+INSERT INTO #GroupCIs (CI_ID)
+    SELECT
+        CI_ID = CIRelation.ReferencedCI_ID
+    FROM fn_rbac_CIRelation_All(@UserSIDs) AS CIRelation
+        JOIN fn_rbac_AuthListInfo(@LCID, @UserSIDs) AS AuthList ON AuthList.CI_ID = CIRelation.CI_ID
+    WHERE CIRelation.RelationType = 1
+        AND AuthList.CI_ID IN (@Groups)
+    ORDER BY CIRelation.ReferencedCI_ID
 
 /* Check if @NameOrResourceID is positive Integer (ResourceID) */
 IF @NameOrResourceID LIKE N'%[^0-9]%'
@@ -138,7 +169,7 @@ SET @DeviceFQDN = (
 
 SELECT DISTINCT
     DeviceFQDN            = @DeviceFQDN
-    , IPAddresses         = REPLACE(IPAddresses.Value, N' ', N',')
+    , IPAddresses         = IPAddress.Value
     , Title               = UpdateCIs.Title
     , Classification      = CICategoryClassification.CategoryInstanceName
     , Vendor              = CICategoryCompany.CategoryInstanceName
@@ -166,7 +197,7 @@ SELECT DISTINCT
     , InformationUrl      = UpdateCIs.InfoURL
 FROM fn_rbac_UpdateComplianceStatus(@UserSIDs) AS ComplianceStatus
     JOIN fn_rbac_UpdateInfo(@LCID, @UserSIDs) AS UpdateCIs ON UpdateCIs.CI_ID = ComplianceStatus.CI_ID
-        AND UpdateCIs.IsSuperseded IN (@Superseded)  -- Filter on Superseeded
+        AND UpdateCIs.IsSuperseded IN (@Superseded)  -- Filter on Superseded
         AND UpdateCIs.IsEnabled IN (@Enabled)        -- Filter on Deployment Enabled
         AND UpdateCIs.CIType_ID IN (1, 8)            -- Filter on 1 Software Updates, 8 Software Update Bundle (v_CITypes)
         AND UpdateCIs.ArticleID NOT IN (             -- Filter on ArticleID csv list
@@ -188,23 +219,19 @@ FROM fn_rbac_UpdateComplianceStatus(@UserSIDs) AS ComplianceStatus
                 AND AssignmentToCI.CI_ID = UpdateCIs.CI_ID
     ) AS EnforcementDeadline
     OUTER APPLY (
-        SELECT Value =  (
-            SELECT LTRIM(RTRIM(IP.IP_Addresses0)) AS [data()]
-            FROM fn_rbac_RA_System_IPAddresses(@UserSIDs) AS IP
-            WHERE IP.ResourceID = ComplianceStatus.ResourceID
-            -- Exclude IPv6 and 169.254.0.0 Class
-                AND IIF(CHARINDEX(N':', IP.IP_Addresses0) &gt; 0 OR CHARINDEX(N'169.254', IP.IP_Addresses0) = 1, 1, 0) = 0
-            -- Aggregate results to one row
-            FOR XML PATH(N'')
-        )
-    ) AS IPAddresses
+        SELECT Value = IPAddress FROM dbo.[ufn_CM_DeviceIPAddress](@UserSIDs, @ResourceID)
+    ) AS IPAddress
 WHERE ComplianceStatus.ResourceID = @ResourceID
-    AND ComplianceStatus.Status IN (@Status)                  -- Filter on 'Unknown', 'Required' or 'Installed' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
-    AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted) -- Filter on 'Targeted' or 'NotTargeted'
+    AND ComplianceStatus.CI_ID IN (SELECT CI_ID FROM #GroupCIs) -- Filter on Selected Update Groups
+    AND ComplianceStatus.Status IN (@Status)                    -- Filter on 'Unknown', 'Required' or 'Installed' (0 = Unknown, 1 = NotRequired, 2 = Required, 3 = Installed)
+    AND IIF(Targeted.ResourceID IS NULL, 0, 1) IN (@Targeted)   -- Filter on 'Targeted' or 'NotTargeted'
     AND IIF(
             NULLIF(@ArticleID, N'') IS NULL
             , UpdateCIs.ArticleID, @ArticleID
-        ) = UpdateCIs.ArticleID                               -- Filter by ArticleID
+        ) = UpdateCIs.ArticleID                                 -- Filter by ArticleID
+
+/* Perform cleanup */
+IF OBJECT_ID(N'tempdb..#GroupCIs', N'U') IS NOT NULL DROP TABLE #GroupCIs;
 
 /* #endregion */
 /*##=============================================*/
@@ -402,6 +429,41 @@ ORDER BY CategoryInstanceName</CommandText>
         <Field Name="CategoryInstanceName">
           <DataField>CategoryInstanceName</DataField>
           <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="UpdateGroups">
+      <Query>
+        <DataSourceName>CMSQLDatabase</DataSourceName>
+        <QueryParameters>
+          <QueryParameter Name="Locale">
+            <Value>=Parameters!Locale.Value</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+          <QueryParameter Name="UserSIDs">
+            <Value>=Parameters!UserSIDs.Value</Value>
+            <rd:UserDefined>true</rd:UserDefined>
+          </QueryParameter>
+        </QueryParameters>
+        <CommandText>/* Get Update Groups */
+
+/* Variable declaration */
+DECLARE @LCID AS INT = dbo.fn_LShortNameToLCID (@Locale);
+
+SELECT DISTINCT
+    CI_ID
+    , Title
+FROM fn_rbac_AuthListInfo(@LCID, @UserSIDs)
+ORDER BY Title</CommandText>
+      </Query>
+      <Fields>
+        <Field Name="CI_ID">
+          <DataField>CI_ID</DataField>
+          <rd:UserDefined>true</rd:UserDefined>
+        </Field>
+        <Field Name="Title">
+          <DataField>Title</DataField>
+          <rd:UserDefined>true</rd:UserDefined>
         </Field>
       </Fields>
     </DataSet>
@@ -5994,18 +6056,40 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       </DefaultValue>
       <Hidden>true</Hidden>
     </ReportParameter>
-    <ReportParameter Name="NameOrResourceID">
-      <DataType>String</DataType>
-      <Prompt>Device Name or ResourceID</Prompt>
+    <ReportParameter Name="Groups">
+      <DataType>Integer</DataType>
+      <Prompt>Update Groups (Multiple Selection)</Prompt>
+      <ValidValues>
+        <DataSetReference>
+          <DataSetName>UpdateGroups</DataSetName>
+          <ValueField>CI_ID</ValueField>
+          <LabelField>Title</LabelField>
+        </DataSetReference>
+      </ValidValues>
+      <MultiValue>true</MultiValue>
     </ReportParameter>
     <ReportParameter Name="Version">
       <DataType>String</DataType>
       <DefaultValue>
         <Values>
-          <Value>v5.0.0 - 2021-10-13</Value>
+          <Value>v6.0.0 - 2025-06-18</Value>
         </Values>
       </DefaultValue>
       <Hidden>true</Hidden>
+    </ReportParameter>
+    <ReportParameter Name="NameOrResourceID">
+      <DataType>String</DataType>
+      <Prompt>Device Name or ResourceID</Prompt>
+    </ReportParameter>
+    <ReportParameter Name="ArticleID">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value />
+        </Values>
+      </DefaultValue>
+      <AllowBlank>true</AllowBlank>
+      <Prompt>ArticleID (Ex: 4481252)</Prompt>
     </ReportParameter>
     <ReportParameter Name="Categories">
       <DataType>String</DataType>
@@ -6040,6 +6124,28 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
           <ValueField>CategoryInstanceID</ValueField>
           <LabelField>CategoryInstanceName</LabelField>
         </DataSetReference>
+      </ValidValues>
+      <MultiValue>true</MultiValue>
+    </ReportParameter>
+    <ReportParameter Name="Superseded">
+      <DataType>Integer</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>0</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>Superseded (Multiple Selection)</Prompt>
+      <ValidValues>
+        <ParameterValues>
+          <ParameterValue>
+            <Value>1</Value>
+            <Label>Yes</Label>
+          </ParameterValue>
+          <ParameterValue>
+            <Value>0</Value>
+            <Label>No</Label>
+          </ParameterValue>
+        </ParameterValues>
       </ValidValues>
       <MultiValue>true</MultiValue>
     </ReportParameter>
@@ -6114,38 +6220,6 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       </ValidValues>
       <MultiValue>true</MultiValue>
     </ReportParameter>
-    <ReportParameter Name="Superseded">
-      <DataType>Integer</DataType>
-      <DefaultValue>
-        <Values>
-          <Value>0</Value>
-        </Values>
-      </DefaultValue>
-      <Prompt>Superseded (Multiple Selection)</Prompt>
-      <ValidValues>
-        <ParameterValues>
-          <ParameterValue>
-            <Value>1</Value>
-            <Label>Yes</Label>
-          </ParameterValue>
-          <ParameterValue>
-            <Value>0</Value>
-            <Label>No</Label>
-          </ParameterValue>
-        </ParameterValues>
-      </ValidValues>
-      <MultiValue>true</MultiValue>
-    </ReportParameter>
-    <ReportParameter Name="ArticleID">
-      <DataType>String</DataType>
-      <DefaultValue>
-        <Values>
-          <Value />
-        </Values>
-      </DefaultValue>
-      <AllowBlank>true</AllowBlank>
-      <Prompt>ArticleID (Ex: 4481252)</Prompt>
-    </ReportParameter>
     <ReportParameter Name="ExcludeArticleIDs">
       <DataType>String</DataType>
       <DefaultValue>
@@ -6179,53 +6253,58 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
         </CellDefinition>
         <CellDefinition>
           <ColumnIndex>0</ColumnIndex>
-          <RowIndex>1</RowIndex>
+          <RowIndex>2</RowIndex>
           <ParameterName>NameOrResourceID</ParameterName>
-        </CellDefinition>
-        <CellDefinition>
-          <ColumnIndex>0</ColumnIndex>
-          <RowIndex>2</RowIndex>
-          <ParameterName>Categories</ParameterName>
-        </CellDefinition>
-        <CellDefinition>
-          <ColumnIndex>1</ColumnIndex>
-          <RowIndex>2</RowIndex>
-          <ParameterName>Vendors</ParameterName>
-        </CellDefinition>
-        <CellDefinition>
-          <ColumnIndex>0</ColumnIndex>
-          <RowIndex>3</RowIndex>
-          <ParameterName>Status</ParameterName>
-        </CellDefinition>
-        <CellDefinition>
-          <ColumnIndex>1</ColumnIndex>
-          <RowIndex>3</RowIndex>
-          <ParameterName>Targeted</ParameterName>
-        </CellDefinition>
-        <CellDefinition>
-          <ColumnIndex>1</ColumnIndex>
-          <RowIndex>4</RowIndex>
-          <ParameterName>Superseded</ParameterName>
-        </CellDefinition>
-        <CellDefinition>
-          <ColumnIndex>0</ColumnIndex>
-          <RowIndex>5</RowIndex>
-          <ParameterName>ArticleID</ParameterName>
-        </CellDefinition>
-        <CellDefinition>
-          <ColumnIndex>1</ColumnIndex>
-          <RowIndex>5</RowIndex>
-          <ParameterName>ExcludeArticleIDs</ParameterName>
-        </CellDefinition>
-        <CellDefinition>
-          <ColumnIndex>0</ColumnIndex>
-          <RowIndex>4</RowIndex>
-          <ParameterName>Enabled</ParameterName>
         </CellDefinition>
         <CellDefinition>
           <ColumnIndex>2</ColumnIndex>
           <RowIndex>1</RowIndex>
           <ParameterName>Version</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>0</ColumnIndex>
+          <RowIndex>1</RowIndex>
+          <ParameterName>Groups</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>0</ColumnIndex>
+          <RowIndex>3</RowIndex>
+          <ParameterName>Categories</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>1</ColumnIndex>
+          <RowIndex>3</RowIndex>
+          <ParameterName>Vendors</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>1</ColumnIndex>
+          <RowIndex>4</RowIndex>
+          <ParameterName>Status</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>0</ColumnIndex>
+          <RowIndex>5</RowIndex>
+          <ParameterName>Targeted</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>1</ColumnIndex>
+          <RowIndex>5</RowIndex>
+          <ParameterName>Enabled</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>0</ColumnIndex>
+          <RowIndex>4</RowIndex>
+          <ParameterName>Superseded</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>1</ColumnIndex>
+          <RowIndex>2</RowIndex>
+          <ParameterName>ArticleID</ParameterName>
+        </CellDefinition>
+        <CellDefinition>
+          <ColumnIndex>2</ColumnIndex>
+          <RowIndex>5</RowIndex>
+          <ParameterName>ExcludeArticleIDs</ParameterName>
         </CellDefinition>
       </CellDefinitions>
     </GridLayoutDefinition>

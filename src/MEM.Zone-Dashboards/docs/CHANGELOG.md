@@ -1,5 +1,12 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 6.0.0 - 2025-06-18
+
+* Updated `Software Update - Compliance by Collection` with optimized query and performance improvements.
+* Updated `Software Update - Compliance by Device` with optimized query and performance improvements.
+* Added `Software Update Groups` to `Software Update - Compliance by Collection` report.
+* Added `Software Update Groups` to `Software Update - Compliance by Device` report.
+
 ## 5.1.4 - 2025-06-08
 
 * Fixed `<>` typos in `Software Update - Compliance by Collection` (#45) @Zombierbone.
