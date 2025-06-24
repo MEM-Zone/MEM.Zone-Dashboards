@@ -453,18 +453,18 @@ FROM fn_rbac_R_System(@UserSIDs) AS Systems
         AND LogicalDisk.DriveType0 = 3     -- Local Disk
         AND LogicalDisk.Name0      = N'C:' -- System Drive Only
     OUTER APPLY (
-        SELECT Value = IPAddress FROM dbo.[ufn_CM_DeviceIPAddress](@UserSIDs, Systems.ResourceID)
+        SELECT Value = IPAddress FROM [dbo].[ufn_CM_DeviceIPAddress](@UserSIDs, Systems.ResourceID)
     ) AS IPAddress
     LEFT JOIN fn_rbac_CH_ClientSummary(@UserSIDs) AS ClientSummary ON ClientSummary.ResourceID = CollectionMembers.ResourceID
     LEFT JOIN fn_rbac_UpdateScanStatus(@UserSIDs) AS UpdateScan ON UpdateScan.ResourceID = CollectionMembers.ResourceID
-    OUTER APPLY [CM_Custom].[dbo].[ufn_CM_GetNextMaintenanceWindowForDevice](@UserSIDs,CollectionMembers.ResourceID) AS Maintenance
+    OUTER APPLY [dbo].[ufn_CM_GetNextMaintenanceWindowForDevice](@UserSIDs,CollectionMembers.ResourceID) AS Maintenance
     LEFT JOIN UpdateInfo_CTE AS UpdateInfo ON UpdateInfo.ResourceID = CollectionMembers.ResourceID
     OUTER APPLY (
         SELECT
             Version
             , ServicingStateNumber
             , ServicingStateName
-        FROM dbo.[ufn_CM_DeviceOSInfo](Systems.ResourceID, Systems.Build01, Systems.OSBranch01)
+        FROM [dbo].[ufn_CM_DeviceOSInfo](Systems.ResourceID, Systems.Build01, Systems.OSBranch01)
     ) AS OSInfo
 WHERE CollectionMembers.CollectionID = @CollectionID
     AND (

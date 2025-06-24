@@ -27,16 +27,14 @@
 /* #endregion */
 
 /* #region Grant Permissions */
-/* Grant select rights for this function to CM reporting users */
+/* Grant select rights to CM reporting users */
 GRANT SELECT ON OBJECT::dbo.ufn_CM_GetNextMaintenanceWindow TO smsschm_users;
-
-/* Grant select right for the fnListAlerts function to CM reporting users */
+GRANT SELECT ON OBJECT::dbo.ufn_CM_GetNextMaintenanceWindowForDevice TO smsschm_users;
+GRANT SELECT ON OBJECT::dbo.ufn_CM_GetNextMaintenanceWindowForCollection TO smsschm_users;
+GRANT SELECT ON OBJECT::dbo.ufn_CM_DeviceIPAddress TO smsschm_users;
+GRANT SELECT ON OBJECT::dbo.ufn_CM_DeviceOSInfo TO smsschm_users;
 GRANT SELECT ON OBJECT::dbo.fnListAlerts TO smsschm_users;
-
-/* Grant select right for the vSMS_ServiceWindow view to CM reporting users */
 GRANT SELECT ON OBJECT::dbo.vSMS_ServiceWindow TO smsschm_users;
-
-/* Grant select right for the vSMS_SUPSyncStatus view to CM reporting users */
 GRANT SELECT ON OBJECT::dbo.vSMS_SUPSyncStatus TO smsschm_users;
 /* #endregion */
 

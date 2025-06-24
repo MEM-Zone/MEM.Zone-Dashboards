@@ -1,5 +1,14 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 6.1.0 - 2025-06-24
+
+* Updated `Software Update - Compliance by Collection` with optimized query and performance improvements.
+* Updated `Software Update - Compliance by Device` with optimized query and performance improvements.
+* Added `ufn_CM_DeviceIPAddress` extension function to retrieve device IP addresses.
+* Added `ufn_CM_DeviceOSInfo` extension function to retrieve device OS information.
+* Added `ufn_CM_GetNextMaintenanceWindowForCollection` function to retrieve the next maintenance window for a collection.
+* Added `ufn_CM_GetNextMaintenanceWindowForDevice` function to retrieve the next maintenance window for a device.
+
 ## 6.0.0 - 2025-06-18
 
 * Updated `Software Update - Compliance by Collection` with optimized query and performance improvements.
