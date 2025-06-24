@@ -219,7 +219,7 @@ FROM fn_rbac_UpdateComplianceStatus(@UserSIDs) AS ComplianceStatus
                 AND AssignmentToCI.CI_ID = UpdateCIs.CI_ID
     ) AS EnforcementDeadline
     OUTER APPLY (
-        SELECT Value = IPAddress FROM dbo.[ufn_CM_DeviceIPAddress](@UserSIDs, @ResourceID)
+        SELECT Value = IPAddress FROM [dbo].[ufn_CM_DeviceIPAddress](@UserSIDs, @ResourceID)
     ) AS IPAddress
 WHERE ComplianceStatus.ResourceID = @ResourceID
     AND ComplianceStatus.CI_ID IN (SELECT CI_ID FROM #GroupCIs) -- Filter on Selected Update Groups
