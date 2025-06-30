@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition" xmlns:am="http://schemas.microsoft.com/sqlserver/reporting/authoringmetadata">
   <Description>Lists the software update compliance for a 'Collection'. Queries 'Updates' and can be filtered by 'Groups', 'Category', 'Superseded', 'Targeted' or 'ArticleID' csv list.  Hover to resolve 'Pending Restart', 'Last Scan Error' codes or detailed 'Health States'. 'Health Thresholds' must be specified as a csv value.</Description>
   <am:AuthoringMetadata>
@@ -137,7 +137,7 @@ ORDER BY Name</CommandText>
 
 /* Testing variables !! Need to be commented for Production !! */
 --DECLARE @UserSIDs          AS NVARCHAR(10) = 'Disabled';
---DECLARE @CollectionID      AS NVARCHAR(10) = 'XXX08EEB';
+--DECLARE @CollectionID      AS NVARCHAR(10) = 'SMS0001';
 --DECLARE @Locale            AS INT          = 2;
 --DECLARE @Groups            AS INT          = 97508;
 --DECLARE @Categories        AS INT          = 31; -- Security Updates
@@ -9574,7 +9574,7 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       <DataType>String</DataType>
       <DefaultValue>
         <Values>
-          <Value>v6.0.0 - 2025-06-18</Value>
+          <Value>v7.0.0 - 2025-06-30</Value>
         </Values>
       </DefaultValue>
       <Hidden>true</Hidden>

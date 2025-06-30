@@ -1,0 +1,27 @@
+{
+  "ProjectName": "MEM.Zone-Dashboards",
+  "Author": "Ioan Popovici",
+  "SourcePath": "src",
+  "OutputPath": "MEM.Zone-Dashboards",
+  "OutputFileName": "MEM.Zone-Dashboards.zip",
+  "Version": "7.0.0",
+  "IncludeVersion": true,
+  "Clean": true,
+  "ExcludePatterns": [
+    "*.bak",
+    "*.DS_Store*",
+    "Thumbs.db",
+    "desktop.ini",
+    "*.tmp",
+    "*.temp",
+    "Development",
+    "Private",
+    "Public",
+    "temp"
+  ],
+  "InstallScriptUrl": "https://raw.githubusercontent.com/MEM-Zone/MEM.Zone-Install-SRSReport/master/src/Install-SRSReport/Install-SRSReport.ps1",
+  "InstallScriptPath": "Install-SRSReport.ps1",
+  "Dependencies": [
+    { "Name": "ReportingServicesTools", "Version": "" }
+  ]
+}

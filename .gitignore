@@ -1,3 +1,5 @@
-.vscode/settings.json
-MEM.Zone-Dashboards/Development
 .DS_Store
+.vscode
+.cursor
+/Development
+/output

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition">
   <Description>Displays the overall software update compliance as an actionable dashboard.</Description>
   <Author>Ioan.Popovici@MEM.Zone</Author>
@@ -113,7 +113,7 @@ ORDER BY Name</CommandText>
 
 /* Testing variables !! Need to be commented for Production !! */
 --DECLARE @UserSIDs          AS NVARCHAR(10) = 'Disabled';
---DECLARE @CollectionID      AS NVARCHAR(10) = 'SMS00001';
+--DECLARE @CollectionID      AS NVARCHAR(10) = 'SMS0001';
 --DECLARE @Locale            AS INT          = 2;
 --DECLARE @Categories        AS INT          = 16777247; -- Security Updates
 --DECLARE @Vendors           AS INT          = 16777254; -- Microsoft
@@ -527,7 +527,7 @@ WHERE CategoryTypeName = N'UpdateClassification'
 
 /* Testing variables !! Need to be commented for Production !! */
 --DECLARE @UserSIDs     AS NVARCHAR(10)  = 'Disabled';
---DECLARE @CollectionID AS NVARCHAR(10)  = 'SMS00001';
+--DECLARE @CollectionID AS NVARCHAR(10)  = 'SMS0001';
 
 /* Variable declaration */
 DECLARE @UpdateSearchID INT  = (
@@ -623,7 +623,7 @@ GROUP BY
 
 /* Testing variables !! Need to be commented for Production !! */
 --DECLARE @UserSIDs     AS NVARCHAR(10) = 'Disabled';
---DECLARE @CollectionID AS NVARCHAR(10) = 'SMS00001';
+--DECLARE @CollectionID AS NVARCHAR(10) = 'SMS0001';
 --DECLARE @Locale       AS INT          = 2;
 
 /* Variable declaration */
@@ -4162,7 +4162,7 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       <DataType>String</DataType>
       <DefaultValue>
         <Values>
-          <Value>v5.0.0 - 2021-10-13</Value>
+          <Value>v7.0.0 - 2025-06-30</Value>
         </Values>
       </DefaultValue>
       <Hidden>true</Hidden>

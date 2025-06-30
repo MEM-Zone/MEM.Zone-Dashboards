@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition">
   <Description>Lists Site Alerts.  Queries 'All Alerts' and can be filtered by 'Feature Area' or 'Alert State'.</Description>
   <Author>Ioan.Popovici@MEM.Zone</Author>
@@ -5088,7 +5088,7 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       <DataType>String</DataType>
       <DefaultValue>
         <Values>
-          <Value>v5.0.0 - 2021-10-13</Value>
+          <Value>v7.0.0 - 2025-06-30</Value>
         </Values>
       </DefaultValue>
       <Hidden>true</Hidden>
