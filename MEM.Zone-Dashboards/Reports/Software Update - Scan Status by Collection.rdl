@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition">
   <Description>Lists the windows update agent scan status for a 'Collection'. Can be filtered by 'State Names'.  Hover to resolve 'State' , 'Last Scan Error' codes or detailed 'Health Thresholds'. 'Health Thresholds' must be specified as a csv value.</Description>
   <Author>Ioan.Popovici@MEM.Zone</Author>
@@ -98,7 +98,7 @@ ORDER BY Name</CommandText>
 
 /* Testing variables !! Need to be commented for Production !! */
 --DECLARE @UserSIDs             AS NVARCHAR(10)  = 'Disabled';
---DECLARE @CollectionID         AS NVARCHAR(10)  = 'SMS00001';
+--DECLARE @CollectionID         AS NVARCHAR(10)  = 'SMS0001';
 --DECLARE @ScanStates           AS INT           = 3; -- Completed
 --DECLARE @HealthThresholds     AS NVARCHAR(20) = '14,14';
 
@@ -4873,7 +4873,7 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       <DataType>String</DataType>
       <DefaultValue>
         <Values>
-          <Value>v5.0.0 - 2021-10-13</Value>
+          <Value>v7.0.0 - 2025-06-30</Value>
         </Values>
       </DefaultValue>
       <Hidden>true</Hidden>

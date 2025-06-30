@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner" xmlns:cl="http://schemas.microsoft.com/sqlserver/reporting/2010/01/componentdefinition" xmlns:am="http://schemas.microsoft.com/sqlserver/reporting/authoringmetadata">
   <Description>Lists the software update compliance for a 'Device'. Queries 'All Updates' and can be filtered by 'Category', 'Superseded', 'Targeted' or 'ArticleID' csv list.  Hover to resolve  'Last Error Code' field. 'Aproved'/'Targeted' is refering to whether an update is targeting or not a specific device.</Description>
   <am:AuthoringMetadata>
@@ -6072,7 +6072,7 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       <DataType>String</DataType>
       <DefaultValue>
         <Values>
-          <Value>v6.0.0 - 2025-06-18</Value>
+          <Value>v7.0.0 - 2025-06-30</Value>
         </Values>
       </DefaultValue>
       <Hidden>true</Hidden>
