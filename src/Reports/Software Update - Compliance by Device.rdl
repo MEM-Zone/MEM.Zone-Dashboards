@@ -10,7 +10,7 @@
       <am:Name>MSRB</am:Name>
       <am:Version>15.0.20283.0</am:Version>
     </am:UpdatedBy>
-    <am:LastModifiedTimestamp>2025-06-18T10:59:05.2056016Z</am:LastModifiedTimestamp>
+    <am:LastModifiedTimestamp>2025-07-01T12:23:00.9657988Z</am:LastModifiedTimestamp>
   </am:AuthoringMetadata>
   <Author>Ioan.Popovici@MEM.Zone</Author>
   <AutoRefresh>0</AutoRefresh>
@@ -44,41 +44,6 @@ SELECT dbo.fn_rbac_GetAdminIDsfromUserSIDs (@UserTokenSIDs) AS UserSIDs</Command
     <DataSet Name="DeviceUpdateInfo">
       <Query>
         <DataSourceName>CMSQLDatabase</DataSourceName>
-        <QueryParameters>
-          <QueryParameter Name="@NameOrResourceID">
-            <Value>=Parameters!NameOrResourceID.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@UserSIDs">
-            <Value>=Parameters!UserSIDs.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@Groups">
-            <Value>=Parameters!Groups.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@Superseded">
-            <Value>=Parameters!Superseded.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@Enabled">
-            <Value>=Parameters!Enabled.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@ExcludeArticleIDs">
-            <Value>=Parameters!ExcludeArticleIDs.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@Vendors">
-            <Value>=Parameters!Vendors.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@Categories">
-            <Value>=Parameters!Categories.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@Status">
-            <Value>=Parameters!Status.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@Targeted">
-            <Value>=Parameters!Targeted.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@ArticleID">
-            <Value>=Parameters!ArticleID.Value</Value>
-          </QueryParameter>
-        </QueryParameters>
         <CommandText>/*
 .SYNOPSIS
     Gets the software update compliance for a device in ConfigMgr.
@@ -116,7 +81,7 @@ SELECT dbo.fn_rbac_GetAdminIDsfromUserSIDs (@UserTokenSIDs) AS UserSIDs</Command
 
 
 /* Variable declaration */
-DECLARE @LCID              AS INT           = dbo.fn_LShortNameToLCID (@Locale);
+DECLARE @LCID              AS INT            = dbo.fn_LShortNameToLCID (@Locale);
 DECLARE @DeviceFQDN        AS NVARCHAR(50);
 DECLARE @ResourceID        AS INT;
 
@@ -239,92 +204,6 @@ IF OBJECT_ID(N'tempdb..#GroupCIs', N'U') IS NOT NULL DROP TABLE #GroupCIs;
 /*##=============================================*/</CommandText>
         <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
-      <Fields>
-        <Field Name="DeviceFQDN">
-          <DataField>DeviceFQDN</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="IPAddresses">
-          <DataField>IPAddresses</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="Title">
-          <DataField>Title</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="Classification">
-          <DataField>Classification</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="Vendor">
-          <DataField>Vendor</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="ArticleID">
-          <DataField>ArticleID</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="IsTargeted">
-          <DataField>IsTargeted</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="IsDeployed">
-          <DataField>IsDeployed</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="IsRequired">
-          <DataField>IsRequired</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="IsInstalled">
-          <DataField>IsInstalled</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="IsDownloaded">
-          <DataField>IsDownloaded</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="IsEnabled">
-          <DataField>IsEnabled</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="IsSuperseded">
-          <DataField>IsSuperseded</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="IsExpired">
-          <DataField>IsExpired</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="EnforcementDeadline">
-          <DataField>EnforcementDeadline</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="EnforcementSource">
-          <DataField>EnforcementSource</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="LastErrorCode">
-          <DataField>LastErrorCode</DataField>
-          <rd:TypeName>System.Int32</rd:TypeName>
-        </Field>
-        <Field Name="MaxExecutionTime">
-          <DataField>MaxExecutionTime</DataField>
-          <rd:TypeName>System.Int32</rd:TypeName>
-        </Field>
-        <Field Name="DateRevised">
-          <DataField>DateRevised</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="UpdateUniqueID">
-          <DataField>UpdateUniqueID</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="InformationUrl">
-          <DataField>InformationUrl</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-      </Fields>
     </DataSet>
     <DataSet Name="UpdateCategories">
       <Query>
@@ -6072,7 +5951,7 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       <DataType>String</DataType>
       <DefaultValue>
         <Values>
-          <Value>v7.0.0 - 2025-06-30</Value>
+          <Value>v7.1.0 - 2025-07-02</Value>
         </Values>
       </DefaultValue>
       <Hidden>true</Hidden>

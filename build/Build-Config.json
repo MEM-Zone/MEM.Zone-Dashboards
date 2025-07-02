@@ -4,7 +4,7 @@
   "SourcePath": "src",
   "OutputPath": "MEM.Zone-Dashboards",
   "OutputFileName": "MEM.Zone-Dashboards.zip",
-  "Version": "7.0.0",
+  "Version": "7.1.0",
   "IncludeVersion": true,
   "Clean": true,
   "ExcludePatterns": [

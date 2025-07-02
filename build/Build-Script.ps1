@@ -396,9 +396,12 @@ function Clear-SensitiveData {
 
             }
 
-            # Clean both .rdl and .sql files
+                                                            # Clean both .rdl and .sql files
             # Replace CollectionID values with generic SMS0001 (case-insensitive)
-            $Content = $Content -replace "(?i)(@collectionid\s+AS\s+NVARCHAR\(\d+\)\s*=\s*')([^']*)(')", "`$1SMS0001`$3"
+
+            # Simple approach: Find DECLARE @CollectionID and replace the value between quotes
+            # This handles all variations: DECLARE, --DECLARE, with/without AS, VARCHAR/NVARCHAR, etc.
+            $Content = $Content -replace "(?i)(DECLARE\s+@collectionid[^=]*=\s*')([^']*)(')", "`$1SMS0001`$3"
 
             # Write the cleaned content back to the file if changes were made
             if ($Content -ne $OriginalContent) {

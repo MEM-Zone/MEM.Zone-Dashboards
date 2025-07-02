@@ -48,81 +48,10 @@
         </TN>
         <DCT>
           <En>
-            <S N="Key">Command</S>
+            <S N="Key">DscResource</S>
             <Obj N="Value" RefId="4">
               <TNRef RefId="1" />
-              <LST>
-                <S>Backup-RsEncryptionKey</S>
-                <S>Connect-RsReportServer</S>
-                <S>Copy-RsSubscription</S>
-                <S>Export-RsSubscriptionXml</S>
-                <S>Get-RsCatalogItemRole</S>
-                <S>Get-RsDataSource</S>
-                <S>Get-RsDeploymentConfig</S>
-                <S>Get-RsFolderContent</S>
-                <S>Get-RsRestFolderContent</S>
-                <S>Get-RsItemDataSource</S>
-                <S>Get-RsItemReference</S>
-                <S>Get-RsRestCacheRefreshPlan</S>
-                <S>Get-RsRestCacheRefreshPlanHistory</S>
-                <S>Get-RsRestDataSource</S>
-                <S>Get-RsRestItemDataSource</S>
-                <S>Get-RsRestItemDataModelParameter</S>
-                <S>Get-RsRestItem</S>
-                <S>Get-RsRestItemAccessPolicy</S>
-                <S>Get-RsRestPublicServerSetting</S>
-                <S>Get-RsSubscription</S>
-                <S>Grant-RsCatalogItemRole</S>
-                <S>Grant-RsRestItemAccessPolicy</S>
-                <S>Grant-RsSystemRole</S>
-                <S>Import-RsSubscriptionXml</S>
-                <S>Initialize-Rs</S>
-                <S>New-RsRestCacheRefreshPlan</S>
-                <S>New-RsConfigurationSettingObject</S>
-                <S>New-RsDataSource</S>
-                <S>New-RsFolder</S>
-                <S>New-RsRestCredentialsByUserObject</S>
-                <S>New-RsRestCredentialsInServerObject</S>
-                <S>New-RsRestFolder</S>
-                <S>New-RsRestSession</S>
-                <S>New-RsSubscription</S>
-                <S>New-RsScheduleXML</S>
-                <S>New-RsWebServiceProxy</S>
-                <S>Out-RsCatalogItem</S>
-                <S>Out-RsFolderContent</S>
-                <S>Out-RsRestCatalogItem</S>
-                <S>Out-RsRestFolderContent</S>
-                <S>Publish-RsProject</S>
-                <S>Register-RsPowerBI</S>
-                <S>Remove-RsCatalogItem</S>
-                <S>Remove-RsRestFolder</S>
-                <S>Remove-RsRestCatalogItem</S>
-                <S>Remove-RsSubscription</S>
-                <S>Remove-RsRestCacheRefreshPlan</S>
-                <S>Restore-RsEncryptionKey</S>
-                <S>Revoke-RsCatalogItemAccess</S>
-                <S>Revoke-RsRestItemAccessPolicy</S>
-                <S>Revoke-RsSystemAccess</S>
-                <S>Set-RsDatabase</S>
-                <S>Set-RsDatabaseCredentials</S>
-                <S>Set-RsDataSetReference</S>
-                <S>Set-RsDataSource</S>
-                <S>Set-RsDataSourcePassword</S>
-                <S>Set-RsDataSourceReference</S>
-                <S>Set-RsEmailSettings</S>
-                <S>Set-RsItemDataSource</S>
-                <S>Set-RsRestItemDataModelParameter</S>
-                <S>Set-RsRestItemDataSource</S>
-                <S>Set-RsSubscription</S>
-                <S>Set-RsUrlReservation</S>
-                <S>Set-PbiRsUrlReservation</S>
-                <S>Start-RsRestCacheRefreshPlan</S>
-                <S>Test-RsRestItemDataSource</S>
-                <S>Write-RsCatalogItem</S>
-                <S>Write-RsFolderContent</S>
-                <S>Write-RsRestCatalogItem</S>
-                <S>Write-RsRestFolderContent</S>
-              </LST>
+              <LST />
             </Obj>
           </En>
           <En>
@@ -204,23 +133,94 @@
             </Obj>
           </En>
           <En>
-            <S N="Key">DscResource</S>
+            <S N="Key">Command</S>
             <Obj N="Value" RefId="6">
               <TNRef RefId="1" />
-              <LST />
+              <LST>
+                <S>Backup-RsEncryptionKey</S>
+                <S>Connect-RsReportServer</S>
+                <S>Copy-RsSubscription</S>
+                <S>Export-RsSubscriptionXml</S>
+                <S>Get-RsCatalogItemRole</S>
+                <S>Get-RsDataSource</S>
+                <S>Get-RsDeploymentConfig</S>
+                <S>Get-RsFolderContent</S>
+                <S>Get-RsRestFolderContent</S>
+                <S>Get-RsItemDataSource</S>
+                <S>Get-RsItemReference</S>
+                <S>Get-RsRestCacheRefreshPlan</S>
+                <S>Get-RsRestCacheRefreshPlanHistory</S>
+                <S>Get-RsRestDataSource</S>
+                <S>Get-RsRestItemDataSource</S>
+                <S>Get-RsRestItemDataModelParameter</S>
+                <S>Get-RsRestItem</S>
+                <S>Get-RsRestItemAccessPolicy</S>
+                <S>Get-RsRestPublicServerSetting</S>
+                <S>Get-RsSubscription</S>
+                <S>Grant-RsCatalogItemRole</S>
+                <S>Grant-RsRestItemAccessPolicy</S>
+                <S>Grant-RsSystemRole</S>
+                <S>Import-RsSubscriptionXml</S>
+                <S>Initialize-Rs</S>
+                <S>New-RsRestCacheRefreshPlan</S>
+                <S>New-RsConfigurationSettingObject</S>
+                <S>New-RsDataSource</S>
+                <S>New-RsFolder</S>
+                <S>New-RsRestCredentialsByUserObject</S>
+                <S>New-RsRestCredentialsInServerObject</S>
+                <S>New-RsRestFolder</S>
+                <S>New-RsRestSession</S>
+                <S>New-RsSubscription</S>
+                <S>New-RsScheduleXML</S>
+                <S>New-RsWebServiceProxy</S>
+                <S>Out-RsCatalogItem</S>
+                <S>Out-RsFolderContent</S>
+                <S>Out-RsRestCatalogItem</S>
+                <S>Out-RsRestFolderContent</S>
+                <S>Publish-RsProject</S>
+                <S>Register-RsPowerBI</S>
+                <S>Remove-RsCatalogItem</S>
+                <S>Remove-RsRestFolder</S>
+                <S>Remove-RsRestCatalogItem</S>
+                <S>Remove-RsSubscription</S>
+                <S>Remove-RsRestCacheRefreshPlan</S>
+                <S>Restore-RsEncryptionKey</S>
+                <S>Revoke-RsCatalogItemAccess</S>
+                <S>Revoke-RsRestItemAccessPolicy</S>
+                <S>Revoke-RsSystemAccess</S>
+                <S>Set-RsDatabase</S>
+                <S>Set-RsDatabaseCredentials</S>
+                <S>Set-RsDataSetReference</S>
+                <S>Set-RsDataSource</S>
+                <S>Set-RsDataSourcePassword</S>
+                <S>Set-RsDataSourceReference</S>
+                <S>Set-RsEmailSettings</S>
+                <S>Set-RsItemDataSource</S>
+                <S>Set-RsRestItemDataModelParameter</S>
+                <S>Set-RsRestItemDataSource</S>
+                <S>Set-RsSubscription</S>
+                <S>Set-RsUrlReservation</S>
+                <S>Set-PbiRsUrlReservation</S>
+                <S>Start-RsRestCacheRefreshPlan</S>
+                <S>Test-RsRestItemDataSource</S>
+                <S>Write-RsCatalogItem</S>
+                <S>Write-RsFolderContent</S>
+                <S>Write-RsRestCatalogItem</S>
+                <S>Write-RsRestFolderContent</S>
+              </LST>
             </Obj>
           </En>
           <En>
             <S N="Key">Cmdlet</S>
-            <Ref N="Value" RefId="6" />
+            <Ref N="Value" RefId="4" />
           </En>
           <En>
             <S N="Key">RoleCapability</S>
-            <Ref N="Value" RefId="6" />
+            <Ref N="Value" RefId="4" />
           </En>
           <En>
             <S N="Key">Workflow</S>
-            <Ref N="Value" RefId="6" />
+            <Ref N="Value" RefId="4" />
           </En>
         </DCT>
       </Obj>
@@ -244,15 +244,15 @@
           <S N="requireLicenseAcceptance">False</S>
           <S N="isLatestVersion">True</S>
           <S N="isAbsoluteLatestVersion">True</S>
-          <S N="versionDownloadCount">62792</S>
-          <S N="downloadCount">1104010</S>
+          <S N="versionDownloadCount">64370</S>
+          <S N="downloadCount">1105648</S>
           <S N="packageSize">137303</S>
           <S N="published">4/3/2025 5:03:39 PM +03:00</S>
           <S N="created">4/3/2025 5:03:39 PM +03:00</S>
-          <S N="lastUpdated">6/30/2025 5:10:00 PM +03:00</S>
+          <S N="lastUpdated">7/2/2025 12:50:00 PM +03:00</S>
           <S N="tags">sqlserver reportingservices sql dba databases reporting PSModule PSFunction_Backup-RsEncryptionKey PSCommand_Backup-RsEncryptionKey PSFunction_Connect-RsReportServer PSCommand_Connect-RsReportServer PSFunction_Copy-RsSubscription PSCommand_Copy-RsSubscription PSFunction_Export-RsSubscriptionXml PSCommand_Export-RsSubscriptionXml PSFunction_Get-RsCatalogItemRole PSCommand_Get-RsCatalogItemRole PSFunction_Get-RsDataSource PSCommand_Get-RsDataSource PSFunction_Get-RsDeploymentConfig PSCommand_Get-RsDeploymentConfig PSFunction_Get-RsFolderContent PSCommand_Get-RsFolderContent PSFunction_Get-RsRestFolderContent PSCommand_Get-RsRestFolderContent PSFunction_Get-RsItemDataSource PSCommand_Get-RsItemDataSource PSFunction_Get-RsItemReference PSCommand_Get-RsItemReference PSFunction_Get-RsRestCacheRefreshPlan PSCommand_Get-RsRestCacheRefreshPlan PSFunction_Get-RsRestCacheRefreshPlanHistory PSCommand_Get-RsRestCacheRefreshPlanHistory PSFunction_Get-RsRestDataSource PSCommand_Get-RsRestDataSource PSFunction_Get-RsRestItemDataSource PSCommand_Get-RsRestItemDataSource PSFunction_Get-RsRestItemDataModelParameter PSCommand_Get-RsRestItemDataModelParameter PSFunction_Get-RsRestItem PSCommand_Get-RsRestItem PSFunction_Get-RsRestItemAccessPolicy PSCommand_Get-RsRestItemAccessPolicy PSFunction_Get-RsRestPublicServerSetting PSCommand_Get-RsRestPublicServerSetting PSFunction_Get-RsSubscription PSCommand_Get-RsSubscription PSFunction_Grant-RsCatalogItemRole PSCommand_Grant-RsCatalogItemRole PSFunction_Grant-RsRestItemAccessPolicy PSCommand_Grant-RsRestItemAccessPolicy PSFunction_Grant-RsSystemRole PSCommand_Grant-RsSystemRole PSFunction_Import-RsSubscriptionXml PSCommand_Import-RsSubscriptionXml PSFunction_Initialize-Rs PSCommand_Initialize-Rs PSFunction_New-RsRestCacheRefreshPlan PSCommand_New-RsRestCacheRefreshPlan PSFunction_New-RsConfigurationSettingObject PSCommand_New-RsConfigurationSettingObject PSFunction_New-RsDataSource PSCommand_New-RsDataSource PSFunction_New-RsFolder PSCommand_New-RsFolder PSFunction_New-RsRestCredentialsByUserObject PSCommand_New-RsRestCredentialsByUserObject PSFunction_New-RsRestCredentialsInServerObject PSCommand_New-RsRestCredentialsInServerObject PSFunction_New-RsRestFolder PSCommand_New-RsRestFolder PSFunction_New-RsRestSession PSCommand_New-RsRestSession PSFunction_New-RsSubscription PSCommand_New-RsSubscription PSFunction_New-RsScheduleXML PSCommand_New-RsScheduleXML PSFunction_New-RsWebServiceProxy PSCommand_New-RsWebServiceProxy PSFunction_Out-RsCatalogItem PSCommand_Out-RsCatalogItem PSFunction_Out-RsFolderContent PSCommand_Out-RsFolderContent PSFunction_Out-RsRestCatalogItem PSCommand_Out-RsRestCatalogItem PSFunction_Out-RsRestFolderContent PSCommand_Out-RsRestFolderContent PSFunction_Publish-RsProject PSCommand_Publish-RsProject PSFunction_Register-RsPowerBI PSCommand_Register-RsPowerBI PSFunction_Remove-RsCatalogItem PSCommand_Remove-RsCatalogItem PSFunction_Remove-RsRestFolder PSCommand_Remove-RsRestFolder PSFunction_Remove-RsRestCatalogItem PSCommand_Remove-RsRestCatalogItem PSFunction_Remove-RsSubscription PSCommand_Remove-RsSubscription PSFunction_Remove-RsRestCacheRefreshPlan PSCommand_Remove-RsRestCacheRefreshPlan PSFunction_Restore-RsEncryptionKey PSCommand_Restore-RsEncryptionKey PSFunction_Revoke-RsCatalogItemAccess PSCommand_Revoke-RsCatalogItemAccess PSFunction_Revoke-RsRestItemAccessPolicy PSCommand_Revoke-RsRestItemAccessPolicy PSFunction_Revoke-RsSystemAccess PSCommand_Revoke-RsSystemAccess PSFunction_Set-RsDatabase PSCommand_Set-RsDatabase PSFunction_Set-RsDatabaseCredentials PSCommand_Set-RsDatabaseCredentials PSFunction_Set-RsDataSetReference PSCommand_Set-RsDataSetReference PSFunction_Set-RsDataSource PSCommand_Set-RsDataSource PSFunction_Set-RsDataSourcePassword PSCommand_Set-RsDataSourcePassword PSFunction_Set-RsDataSourceReference PSCommand_Set-RsDataSourceReference PSFunction_Set-RsEmailSettings PSCommand_Set-RsEmailSettings PSFunction_Set-RsItemDataSource PSCommand_Set-RsItemDataSource PSFunction_Set-RsRestItemDataModelParameter PSCommand_Set-RsRestItemDataModelParameter PSFunction_Set-RsRestItemDataSource PSCommand_Set-RsRestItemDataSource PSFunction_Set-RsSubscription PSCommand_Set-RsSubscription PSFunction_Set-RsUrlReservation PSCommand_Set-RsUrlReservation PSFunction_Set-PbiRsUrlReservation PSCommand_Set-PbiRsUrlReservation PSFunction_Start-RsRestCacheRefreshPlan PSCommand_Start-RsRestCacheRefreshPlan PSFunction_Test-RsRestItemDataSource PSCommand_Test-RsRestItemDataSource PSFunction_Write-RsCatalogItem PSCommand_Write-RsCatalogItem PSFunction_Write-RsFolderContent PSCommand_Write-RsFolderContent PSFunction_Write-RsRestCatalogItem PSCommand_Write-RsRestCatalogItem PSFunction_Write-RsRestFolderContent PSCommand_Write-RsRestFolderContent PSIncludes_Function</S>
           <S N="developmentDependency">False</S>
-          <S N="updated">2025-06-30T17:10:00Z</S>
+          <S N="updated">2025-07-02T12:50:00Z</S>
           <S N="NormalizedVersion">0.0.9.3</S>
           <S N="Authors">Microsoft Corporation</S>
           <S N="IsPrerelease">false</S>

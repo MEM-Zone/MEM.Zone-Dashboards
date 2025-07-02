@@ -10,7 +10,7 @@
       <am:Name>MSRB</am:Name>
       <am:Version>15.0.20283.0</am:Version>
     </am:UpdatedBy>
-    <am:LastModifiedTimestamp>2025-06-18T10:41:30.8251768Z</am:LastModifiedTimestamp>
+    <am:LastModifiedTimestamp>2025-07-01T12:16:52.3016620Z</am:LastModifiedTimestamp>
   </am:AuthoringMetadata>
   <Author>Ioan.Popovici@MEM.Zone</Author>
   <AutoRefresh>0</AutoRefresh>
@@ -72,44 +72,6 @@ ORDER BY Name</CommandText>
     <DataSet Name="DevicesInfo">
       <Query>
         <DataSourceName>CMSQLDatabase</DataSourceName>
-        <QueryParameters>
-          <QueryParameter Name="@HealthThresholds">
-            <Value>=Parameters!HealthThresholds.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@UserSIDs">
-            <Value>=Parameters!UserSIDs.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@Groups">
-            <Value>=Parameters!Groups.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@Superseded">
-            <Value>=Parameters!Superseded.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@Enabled">
-            <Value>=Parameters!Enabled.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@ExcludeArticleIDs">
-            <Value>=Parameters!ExcludeArticleIDs.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@Vendors">
-            <Value>=Parameters!Vendors.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@Categories">
-            <Value>=Parameters!Categories.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@CollectionID">
-            <Value>=Parameters!CollectionID.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@Targeted">
-            <Value>=Parameters!Targeted.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@ArticleID">
-            <Value>=Parameters!ArticleID.Value</Value>
-          </QueryParameter>
-          <QueryParameter Name="@Compliant">
-            <Value>=Parameters!Compliant.Value</Value>
-          </QueryParameter>
-        </QueryParameters>
         <CommandText>/*
 .SYNOPSIS
     Gets the software update compliance for a Collection in ConfigMgr.
@@ -245,7 +207,7 @@ AS (
             AND UpdateCIs.IsEnabled IN (@Enabled)                                -- Filter on Deployment Enabled
             AND UpdateCIs.CIType_ID IN (1, 8)                                 -- Filter on 1 Software Updates, 8 Software Update Bundle (v_CITypes)
             AND UpdateCIs.ArticleID NOT IN (                                  -- Filter on ArticleID csv list
-              SELECT VALUE FROM STRING_SPLIT(@ExcludeArticleIDs, N',')
+                SELECT VALUE FROM STRING_SPLIT(@ExcludeArticleIDs, N',')
             )
         JOIN fn_rbac_CICategoryInfo_All(@LCID, @UserSIDs) AS CICategoryCompany ON CICategoryCompany.CI_ID = UpdateCIs.CI_ID
             AND CICategoryCompany.CategoryTypeName = N'Company'
@@ -486,100 +448,6 @@ IF OBJECT_ID(N'tempdb..#GroupCIs', N'U')         IS NOT NULL DROP TABLE #GroupCI
 /*##=============================================*/</CommandText>
         <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
-      <Fields>
-        <Field Name="ResourceID">
-          <DataField>ResourceID</DataField>
-          <rd:TypeName>System.Int32</rd:TypeName>
-        </Field>
-        <Field Name="HealthStates">
-          <DataField>HealthStates</DataField>
-          <rd:TypeName>System.Int32</rd:TypeName>
-        </Field>
-        <Field Name="Missing">
-          <DataField>Missing</DataField>
-          <rd:TypeName>System.Int32</rd:TypeName>
-        </Field>
-        <Field Name="Device">
-          <DataField>Device</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="OperatingSystem">
-          <DataField>OperatingSystem</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="OSVersion">
-          <DataField>OSVersion</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="OSBuild">
-          <DataField>OSBuild</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="OSServicingState">
-          <DataField>OSServicingState</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="IPAddresses">
-          <DataField>IPAddresses</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="Uptime">
-          <DataField>Uptime</DataField>
-          <rd:TypeName>System.Int32</rd:TypeName>
-        </Field>
-        <Field Name="LastBootTime">
-          <DataField>LastBootTime</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="PendingRestart">
-          <DataField>PendingRestart</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="FreeSpace">
-          <DataField>FreeSpace</DataField>
-          <rd:TypeName>System.Decimal</rd:TypeName>
-        </Field>
-        <Field Name="ClientState">
-          <DataField>ClientState</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="ClientVersion">
-          <DataField>ClientVersion</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="LastUpdateScan">
-          <DataField>LastUpdateScan</DataField>
-          <rd:TypeName>System.Int32</rd:TypeName>
-        </Field>
-        <Field Name="LastUpdateScanTime">
-          <DataField>LastUpdateScanTime</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="LastScanLocation">
-          <DataField>LastScanLocation</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="LastScanError">
-          <DataField>LastScanError</DataField>
-          <rd:TypeName>System.Int32</rd:TypeName>
-        </Field>
-        <Field Name="NextServiceWindow">
-          <DataField>NextServiceWindow</DataField>
-          <rd:TypeName>System.String</rd:TypeName>
-        </Field>
-        <Field Name="ServiceWindowDuration">
-          <DataField>ServiceWindowDuration</DataField>
-          <rd:TypeName>System.Int32</rd:TypeName>
-        </Field>
-        <Field Name="ServiceWindowOpen">
-          <DataField>ServiceWindowOpen</DataField>
-          <rd:TypeName>System.Boolean</rd:TypeName>
-        </Field>
-        <Field Name="IsUTCTime">
-          <DataField>IsUTCTime</DataField>
-          <rd:TypeName>System.Boolean</rd:TypeName>
-        </Field>
-      </Fields>
     </DataSet>
     <DataSet Name="UpdateCategories">
       <Query>
@@ -618,17 +486,11 @@ ORDER BY CategoryInstanceName</CommandText>
         <DataSourceName>CMSQLDatabase</DataSourceName>
         <CommandText>/* Check for helper function */
 DECLARE @HelperFunctionExists     AS INT = 0;
-IF OBJECT_ID(N'[dbo].[ufn_CM_GetNextMaintenanceWindow]') IS NOT NULL
+IF OBJECT_ID(N'[dbo].[ufn_CM_GetNextMaintenanceWindow]') IS NOT NULL -- Stupidity Workaround
     SET @HelperFunctionExists = 1;
 SELECT HelperFunctionExists = @HelperFunctionExists</CommandText>
         <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
-      <Fields>
-        <Field Name="HelperFunctionExists">
-          <DataField>HelperFunctionExists</DataField>
-          <rd:TypeName>System.Int32</rd:TypeName>
-        </Field>
-      </Fields>
     </DataSet>
     <DataSet Name="TotalDevicesInfo">
       <Query>
@@ -9574,7 +9436,7 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       <DataType>String</DataType>
       <DefaultValue>
         <Values>
-          <Value>v7.0.0 - 2025-06-30</Value>
+          <Value>v7.1.0 - 2025-07-02</Value>
         </Values>
       </DefaultValue>
       <Hidden>true</Hidden>
