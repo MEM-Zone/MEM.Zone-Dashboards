@@ -21,7 +21,7 @@
 
 /* Testing variables !! Need to be commented for Production !! */
 DECLARE @UserSIDs     NVARCHAR(16) = 'Disabled';
-DECLARE @CollectionID NVARCHAR(16) = 'JNJ0AA4D';
+DECLARE @CollectionID NVARCHAR(16) = 'SMS0001';
 DECLARE @PackageID    NVARCHAR(16) = 'JNJ01B7D';
 DECLARE @Locale       INT          = 2;
 

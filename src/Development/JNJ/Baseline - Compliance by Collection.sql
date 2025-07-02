@@ -21,7 +21,7 @@
 
 /* Testing variables !! Need to be commented for Production !! */
 --DECLARE @UserSIDs     NVARCHAR(16) = 'Disabled';
---DECLARE @CollectionID NVARCHAR(16) = 'JNJ0AC26';
+--DECLARE @CollectionID NVARCHAR(16) = 'SMS0001';
 --DECLARE @Compliant    NVARCHAR(10) = 'Yes';
 --DECLARE @LocaleID     INT          = 2;
 --DECLARE @BaselineID   INT          = 558758

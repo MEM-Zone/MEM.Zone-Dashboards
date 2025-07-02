@@ -23,8 +23,8 @@
 /* Testing variables !! Need to be commented for Production !! */
 
 DECLARE @UserSIDs VARCHAR(16)= 'Disabled';
-DECLARE @CollectionID VARCHAR(16)= 'JNJ08EB8';
---DECLARE @CollectionID VARCHAR(16)= 'PC100025';
+DECLARE @CollectionID VARCHAR(16)= 'SMS0001';
+--DECLARE @CollectionID VARCHAR(16)= 'SMS0001';
 DECLARE @SelectBy VARCHAR(16);
 DECLARE @CollectionType VARCHAR(16);
 SELECT @SelectBy = ResourceID

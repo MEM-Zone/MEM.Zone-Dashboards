@@ -24,9 +24,10 @@
 --DECLARE @CollectionID    NVARCHAR(16) = 'SMS0001';
 --DECLARE @Compliant       NVARCHAR(10) = 'Yes';
 --DECLARE @Locale          INT          = 2;
---DECLARE @AdvertisementID NVARCHAR(16) = 'JNJ26F1A'
-
-USE CM_JNJ --Stupidity Workaround
+--DECLARE @AdvertisementID NVARCHAR(16) = (
+--    SELECT Advertisement.AdvertisementID FROM v_AdvertisementInfo AS Advertisement
+--    WHERE Advertisement.CollectionID = @CollectionID
+--)
 
 /* Perform cleanup */
 IF OBJECT_ID(N'tempdb..#DeploymentStatus', N'U')  IS NOT NULL DROP TABLE #DeploymentStatus;
@@ -66,19 +67,18 @@ WHERE CollectionMembers.CollectionID  = @CollectionID
 /* Device information query */
 SELECT
     ResourceID         = Systems.ResourceID
-    , Compliant        = ISNULL(DeploymentStatus.Compliant, 'Unknown')
+    , Compliant        = DeploymentStatus.Compliant
     , ClientState      = IIF(Systems.Client0 = 1, ISNULL(ClientSummary.ClientStateDescription, 'Unknown'), 'Unmanaged')
     , ClientVersion    = Systems.Client_Version0
-    , ADSite           = Systems.AD_Site_Name0
     , Device           = (
-      IIF (
-          SystemNames.Resource_Names0 IS NULL
-          , IIF(Systems.Full_Domain_Name0 IS NULL, Systems.Name0, Systems.Name0 + N'.' + Systems.Full_Domain_Name0)
-          , UPPER(SystemNames.Resource_Names0)
-      )
+        IIF (
+            SystemNames.Resource_Names0 IS NULL
+            , IIF(Systems.Full_Domain_Name0 IS NULL, Systems.Name0, Systems.Name0 + N'.' + Systems.Full_Domain_Name0)
+            , UPPER(SystemNames.Resource_Names0)
+        )
     )
-    , LastStatus        = ISNULL(DeploymentStatus.LastStatus, IIF(Systems.Client0 = 1, 'Not Deployed', NULL))
-    , LastStatusDetail  = ISNULL(DeploymentStatus.LastStatusDetail, IIF(Systems.Client0 = 1, 'Program Not Deployed', NULL))
+    , LastStatus        = DeploymentStatus.LastStatus
+    , LastStatusDetail  = DeploymentStatus.LastStatusDetail
     , LastStatusTime    = CONVERT(NVARCHAR(16), DeploymentStatus.LastStatusTime, 120)
 FROM fn_rbac_R_System(@UserSIDs) AS Systems
     INNER JOIN fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = Systems.ResourceID
@@ -87,7 +87,7 @@ FROM fn_rbac_R_System(@UserSIDs) AS Systems
     LEFT JOIN #DeploymentStatus AS DeploymentStatus ON DeploymentStatus.ResourceID = CollectionMembers.ResourceID
 WHERE
     CollectionMembers.CollectionID = @CollectionID
-        AND ISNULL(DeploymentStatus.Compliant, 'Unknown') IN (@Compliant) -- Compliant (Yes, No, Unknown)
+        AND DeploymentStatus.Compliant IN (@Compliant) -- Compliant (Yes, No, Unknown)
 
 /* #endregion */
 /*##=============================================*/
