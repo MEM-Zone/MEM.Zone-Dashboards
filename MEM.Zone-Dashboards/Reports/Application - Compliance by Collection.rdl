@@ -52,7 +52,7 @@ SELECT dbo.fn_rbac_GetAdminIDsfromUserSIDs (@UserTokenSIDs) AS UserSIDs</Command
           </QueryParameter>
         </QueryParameters>
         <CommandText>/* Get Collection with Application Assignments Info  */
-SELECT
+SELECT DISTINCT
     CollectionID     = ApplicationAssignment.CollectionID
     , CollectionName = ApplicationAssignment.CollectionName
 FROM fn_rbac_Collection(@UserSIDs) AS Collections
@@ -5253,7 +5253,7 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       <DataType>String</DataType>
       <DefaultValue>
         <Values>
-          <Value>v7.1.0 - 2025-07-02</Value>
+          <Value>v7.1.1 - 2025-07-03</Value>
         </Values>
       </DefaultValue>
       <Hidden>true</Hidden>

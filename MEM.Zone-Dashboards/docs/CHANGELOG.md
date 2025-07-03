@@ -1,14 +1,9 @@
 # Changelog for MEM.Zone-Dashboards
 
-## 7.1.0 - 2025-07-30
+## 7.1.1 - 2025-07-03
 
-* Added `Application - Compliance by Collection` report.
-* Added `Package - Compliance by Collection` report.
-* Added `Package - Compliance by Deployment` report.
-* Added `Baseline - Compliance by Collection` report.
-* Added `Software Update - CU Compliance by Collection` report.
-* Fixed and optimized `Clean-SensitveData` build function.
-* Some other minor changes and fixes.
+* Fixed `Application - Compliance by Collection` collection name duplication.
+* Updated `README.md`.
 
 ## 7.0.0 - 2025-06-30
 

@@ -10,10 +10,20 @@
 This is a solution of dashboards and reports, for Microsoft Endpoint Configuration Manager.
 
 `_Dashboard - Software Updates` dashboard is navigable, independent of `Software Update Groups` and comes with an array of filtering options and sub-reports. All sub-reports can be run standalone.
+`Application - Compliance by Collection` report is a standalone solution for monitoring application compliance by collection.
+`Baseline - Compliance by Collection` report is a standalone solution for monitoring baseline compliance by collection.
 `Bitlocker - Compliance by Collection (MBAM)` report is a standalone complete solution for monitoring Bitlocker (MBAM) compliance and non-compliance reasons.
 `Bitlocker - Compliance by Collection` report is a standalone complete solution for monitoring Bitlocker compliance, key upload and non-compliance reasons.
 `Operating System - Version Compliance by Collection` report is a standalone solution for monitoring Feature Update or Windows Version Compliance.
 `Operating System - Windows 11 Readiness by Collection` report is a standalone solution for checking Windows 11 Upgrade Readiness.
+`Package - Compliance by Collection` report is a standalone solution for monitoring package compliance by collection.
+`Package - Compliance by Deployment` report is a standalone solution for monitoring package compliance by deployment.
+`Site - Alerts` report is a standalone solution for monitoring critical alerts.
+`Software Update - Compliance by Collection` report is a standalone solution for monitoring software update compliance by collection.
+`Software Update - Compliance by Device` report is a standalone solution for monitoring software update compliance by device.
+`Software Update - Scan Status by Collection` report is a standalone solution for monitoring software update scan status by collection.
+`Software Update - Update Point Sync Status` report is a standalone solution for monitoring software update update point sync status.
+`Software Update - CU Compliance by Collection` report is a standalone solution for monitoring software update compliance by collection.
 
 The installation can be done manually or via the included PowerShell installer.
 
@@ -40,11 +50,16 @@ See [help](https://MEMZ.one/Dashboards-Help).
 ## Dashboards and Reports
 
 * _Dashboard - Software Updates (Main Dashboard Report)
+* Application - Compliance by Collection
+* Baseline - Compliance by Collection
 * Bitlocker - Compliance by Collection (MBAM)
 * Bitlocker - Compliance by Collection
 * Operating System - Version Compliance by Collection
 * Operating System - Windows 11 Readiness by Collection
+* Package - Compliance by Collection
+* Package - Compliance by Deployment
 * Site - Alerts
+* Software Update - CU Compliance by Collection
 * Software Update - Compliance by Collection
 * Software Update - Compliance by Device
 * Software Update - Scan Status by Collection
@@ -77,10 +92,15 @@ See [help](https://MEMZ.one/Dashboards-Help).
     |
     +-- (T) Last Successful Synchronization Time
         +-- (R) Software Update - Update Point Sync Status
++-- (R) Application - Compliance by Collection
++-- (R) Baseline - Compliance by Collection
 +-- (R) Bitlocker - Compliance by Collection * Bitlocker (MBAM)
 +-- (R) Bitlocker - Compliance by Collection * Bitlocker
 +-- (R) Operating System - Version Compliance by Collection
 +-- (R) Operating System - Windows 11 Readiness by Collection
++-- (R) Package - Compliance by Collection
++-- (R) Package - Compliance by Deployment
++-- (R) Software Update - CU Compliance by Collection
 
 ## Legend
 '()'  - 'to' or 'from' navigation element
