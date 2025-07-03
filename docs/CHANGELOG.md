@@ -1,5 +1,13 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 7.1.2 - 2025-07-03
+
+* Updated `README.md` documentation.
+* Fixed `Version` in `Build-Config.json`.
+
+>**Notes**
+> No changes to the reports in this fix release.
+
 ## 7.1.1 - 2025-07-03
 
 * Fixed `Application - Compliance by Collection` collection name duplication.
