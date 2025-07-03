@@ -9,23 +9,25 @@
 
 This is a solution of dashboards and reports, for Microsoft Endpoint Configuration Manager.
 
-`_Dashboard - Software Updates` dashboard is navigable, independent of `Software Update Groups` and comes with an array of filtering options and sub-reports. All sub-reports can be run standalone.
-`Application - Compliance by Collection` report is a standalone solution for monitoring application compliance by collection.
-`Baseline - Compliance by Collection` report is a standalone solution for monitoring baseline compliance by collection.
-`Bitlocker - Compliance by Collection (MBAM)` report is a standalone complete solution for monitoring Bitlocker (MBAM) compliance and non-compliance reasons.
-`Bitlocker - Compliance by Collection` report is a standalone complete solution for monitoring Bitlocker compliance, key upload and non-compliance reasons.
-`Operating System - Version Compliance by Collection` report is a standalone solution for monitoring Feature Update or Windows Version Compliance.
-`Operating System - Windows 11 Readiness by Collection` report is a standalone solution for checking Windows 11 Upgrade Readiness.
-`Package - Compliance by Collection` report is a standalone solution for monitoring package compliance by collection.
-`Package - Compliance by Deployment` report is a standalone solution for monitoring package compliance by deployment.
-`Site - Alerts` report is a standalone solution for monitoring critical alerts.
-`Software Update - Compliance by Collection` report is a standalone solution for monitoring software update compliance by collection.
-`Software Update - Compliance by Device` report is a standalone solution for monitoring software update compliance by device.
-`Software Update - Scan Status by Collection` report is a standalone solution for monitoring software update scan status by collection.
-`Software Update - Update Point Sync Status` report is a standalone solution for monitoring software update update point sync status.
-`Software Update - CU Compliance by Collection` report is a standalone solution for monitoring software update compliance by collection.
+* `_Dashboard - Software Updates` dashboard is navigable, independent of `Software Update Groups` and comes with an array of filtering options and sub-reports.
+* `Application - Compliance by Collection` standalone report is used to monitor application compliance by collection.
+* `Baseline - Compliance by Collection` standalone report is used to monitor baseline compliance by collection.
+* `Bitlocker - Compliance by Collection (MBAM)` standalone report is used to monitor Bitlocker (MBAM) compliance and non-compliance reasons.
+* `Bitlocker - Compliance by Collection` standalone report is used to monitor Bitlocker compliance, key upload and non-compliance reasons.
+* `Operating System - Version Compliance by Collection` standalone report is used to monitor Feature Update or Windows Version Compliance.
+* `Operating System - Windows 11 Readiness by Collection` standalone report is used to check Windows 11 Upgrade Readiness.
+* `Package - Compliance by Collection` standalone report is used to monitor package compliance by collection.
+* `Package - Compliance by Deployment` standalone report is used to monitor package compliance by deployment.
+* `Site - Alerts` sub-report is used to monitor critical alerts.
+* `Software Update - Compliance by Collection` sub-report is used to monitor software update compliance by collection.
+* `Software Update - Compliance by Device` sub-report is used to monitor software update compliance by device.
+* `Software Update - Scan Status by Collection` sub-report is used to monitor software update scan status by collection.
+* `Software Update - Update Point Sync Status` sub-report is used to monitor software update update point sync status.
+* `Software Update - CU Compliance by Collection` standalone report is used to monitor software update compliance by collection.
 
-The installation can be done manually or via the included PowerShell installer.
+>**Notes**
+>All sub-reports can be run standalone.
+>The installation can be done manually or via the included PowerShell installer.
 
 ## Main page
 
@@ -114,7 +116,7 @@ See [help](https://MEMZ.one/Dashboards-Help).
 
 This preview is not up-to-date, it represents version 2.0.0. A new preview will be available shortly.
 
-[![](https://s3.ioan.in/Screen-Shot-2020-01-16-at-18.01.39/Screen-Shot-2020-01-16-at-18.01.39.png)](http://www.youtube.com/watch?v=MOHxb8me4IM "MEM.Zone Dashboards")
+[![](https://img.youtube.com/vi/3Ni-DZVA_40/0.jpg)](http://www.youtube.com/watch?v=3Ni-DZVA_40 "MEM.Zone Dashboards")
 
 ## Prerequisites
 
@@ -139,6 +141,10 @@ This preview is not up-to-date, it represents version 2.0.0. A new preview will 
 ### SQL SELECT Rights for smsschm_users (CM Reporting)
 
 * `ufn_CM_GetNextMaintenanceWindow`
+* `ufn_CM_GetNextMaintenanceWindowForDevice`
+* `ufn_CM_GetNextMaintenanceWindowForCollection`
+* `ufn_CM_DeviceIPAddress`
+* `ufn_CM_DeviceOSInfo`
 * `fnListAlerts`
 * `vSMS_ServiceWindow`
 * `vSMS_SUPSyncStatus`
@@ -203,7 +209,7 @@ The `ufn_CM_GetNextMaintenanceWindow` is needed in order to display the next mai
 
 This repository includes a build script that automates the process of preparing the dashboards and reports for distribution
 
-### Prerequisites
+### Build Prerequisites
 
 * PowerShell 5.0 or later
 * Internet connection (for downloading latest `Install-SRSReport.ps1` and `Dependencies`)
