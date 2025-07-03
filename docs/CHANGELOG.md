@@ -1,5 +1,10 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 7.1.1 - 2025-07-03
+
+* Fixed `Application - Compliance by Collection` collection name duplication.
+* Updated `README.md`.
+
 ## 7.0.0 - 2025-06-30
 
 * Fixed `ufn_CM_GetNextMaintenanceWindowForDevice` function `has too many parameters` error [#36](https://github.com/MEM-Zone/MEM.Zone-Dashboards/issues/36). @Zombierbone
