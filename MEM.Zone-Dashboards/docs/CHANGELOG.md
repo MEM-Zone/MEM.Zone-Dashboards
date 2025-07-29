@@ -1,5 +1,9 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 7.1.4 - 2025-07-29
+
+* Fixed incomplete data in `Package - Compliance by Collection` report.
+
 ## 7.1.3 - 2025-07-29
 
 * Fixed duplication and incomplete data in `Package - Compliance by Collection` report.
