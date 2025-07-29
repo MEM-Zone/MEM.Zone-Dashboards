@@ -81,7 +81,7 @@ FROM fn_rbac_R_System(@UserSIDs) AS Systems
     LEFT JOIN #DeploymentStatus AS DeploymentStatus ON DeploymentStatus.ResourceID = CollectionMembers.ResourceID
 WHERE
     CollectionMembers.CollectionID = @CollectionID
-        AND DeploymentStatus.Compliant IN (@Compliant) -- Compliant (Yes, No, Unknown)
+        AND ISNULL(DeploymentStatus.Compliant, N'Unknown') IN (@Compliant) -- Compliant (Yes, No, Unknown)
 
 /* #endregion */
 /*##=============================================*/
