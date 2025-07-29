@@ -1,5 +1,10 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 7.1.3 - 2025-07-29
+
+* Fixed duplication and incomplete data in `Package - Compliance by Collection` report.
+* Fixed upload error in `Baseline - Compliance by Collection` report.
+
 ## 7.1.2 - 2025-07-03
 
 * Updated `README.md` documentation.

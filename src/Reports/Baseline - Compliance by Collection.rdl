@@ -10,7 +10,7 @@
       <am:Name>MSRB</am:Name>
       <am:Version>15.0.20283.0</am:Version>
     </am:UpdatedBy>
-    <am:LastModifiedTimestamp>2025-07-01T09:59:23.6136235Z</am:LastModifiedTimestamp>
+    <am:LastModifiedTimestamp>2025-07-29T09:51:15.6895085Z</am:LastModifiedTimestamp>
   </am:AuthoringMetadata>
   <Author>Ioan.Popovici@MEM.Zone</Author>
   <AutoRefresh>0</AutoRefresh>
@@ -34,6 +34,12 @@
 SELECT dbo.fn_rbac_GetAdminIDsfromUserSIDs (@UserTokenSIDs) AS UserSIDs</CommandText>
         <rd:UseGenericDesigner>true</rd:UseGenericDesigner>
       </Query>
+      <Fields>
+        <Field Name="UserSIDs">
+          <DataField>UserSIDs</DataField>
+          <rd:UserDefined>true</rd:UserDefined>
+        </Field>
+      </Fields>
     </DataSet>
     <DataSet Name="CollectionInfo">
       <Query>
@@ -5649,7 +5655,7 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       <DataType>String</DataType>
       <DefaultValue>
         <Values>
-          <Value>v7.1.2 - 2025-07-03</Value>
+          <Value>v7.1.3 - 2025-07-29</Value>
         </Values>
       </DefaultValue>
       <Hidden>true</Hidden>

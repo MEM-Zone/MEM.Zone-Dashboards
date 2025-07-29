@@ -47,9 +47,9 @@ SELECT
     ResourceID         = AdvertisementStatus.ResourceID
     , Compliant        = (
         CASE
-            WHEN AdvertisementStatus.LastStateName = 'Succeeded' THEN 'Yes'
-            WHEN ISNULL(AdvertisementStatus.LastStateName, 'Unknown') IN ('No Status', 'Unknown') THEN 'Unknown'
-            ELSE 'No'
+            WHEN AdvertisementStatus.LastStateName = N'Succeeded' THEN N'Yes'
+            WHEN ISNULL(AdvertisementStatus.LastStateName, N'Unknown') IN (N'No Status', N'Unknown') THEN N'Unknown'
+            ELSE N'No'
         END
     )
     , LastStatus       = AdvertisementStatus.LastStateName
@@ -60,23 +60,17 @@ FROM fn_rbac_Advertisement(@UserSIDs) AS Advertisement
     INNER JOIN fn_rbac_ClientAdvertisementStatus(@UserSIDs) AS AdvertisementStatus ON AdvertisementStatus.AdvertisementID = Advertisement.AdvertisementID
     INNER JOIN fn_rbac_FullCollectionMembership(@UserSIDs) AS CollectionMembers ON CollectionMembers.ResourceID = AdvertisementStatus.ResourceID
     INNER JOIN vClassicDeployments AS Deployments ON Deployments.CollectionID = Advertisement.CollectionID
-        AND Advertisement.ProgramName <> '*' --Only Programs
+        AND Advertisement.ProgramName <> N'*' --Only Programs
 WHERE CollectionMembers.CollectionID  = @CollectionID
     AND Advertisement.AdvertisementID = @AdvertisementID
 
 /* Device information query */
-SELECT
+SELECT DISTINCT
     ResourceID         = Systems.ResourceID
-    , Compliant        = DeploymentStatus.Compliant
-    , ClientState      = IIF(Systems.Client0 = 1, ISNULL(ClientSummary.ClientStateDescription, 'Unknown'), 'Unmanaged')
+    , Compliant        = ISNULL(DeploymentStatus.Compliant, N'Unknown')
+    , ClientState      = IIF(Systems.Client0 = 1, ISNULL(ClientSummary.ClientStateDescription, N'Unknown'), N'Unmanaged')
     , ClientVersion    = Systems.Client_Version0
-    , Device           = (
-        IIF (
-            SystemNames.Resource_Names0 IS NULL
-            , IIF(Systems.Full_Domain_Name0 IS NULL, Systems.Name0, Systems.Name0 + N'.' + Systems.Full_Domain_Name0)
-            , UPPER(SystemNames.Resource_Names0)
-        )
-    )
+    , Device           =  Systems.Name0 + N'.' + Systems.Full_Domain_Name0
     , LastStatus        = DeploymentStatus.LastStatus
     , LastStatusDetail  = DeploymentStatus.LastStatusDetail
     , LastStatusTime    = CONVERT(NVARCHAR(16), DeploymentStatus.LastStatusTime, 120)
