@@ -26,10 +26,7 @@
 /* #region QueryBody */
 
 /* #region SSMS */
---USE [CM_<SITE_CODE>]
-
-SET ANSI_NULLS ON
-GO
+--USE [CM_<SITE_CODE>]s
 
 /* Drop function if it exists */
 --IF OBJECT_ID('[dbo].[ufn_CM_GetNextMaintenanceWindowForDevice]') IS NOT NULL

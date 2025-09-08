@@ -1,5 +1,9 @@
 # Changelog for MEM.Zone-Dashboards
 
+## 7.1.5 - 2025-09-08
+
+* Fixed `Extensions` cannot be installed [#39](https://github.com/MEM-Zone/MEM.Zone-Dashboards/issues/39) (@Zombierbone).
+
 ## 7.1.4 - 2025-07-29
 
 * Fixed incomplete data in `Package - Compliance by Collection` report.

@@ -28,9 +28,6 @@
 /* #region SSMS */
 --USE [CM_<SITE_CODE>]
 
-SET ANSI_NULLS ON
-GO
-
 /* Drop function if it exists */
 --IF OBJECT_ID('[dbo].[ufn_CM_GetNextMaintenanceWindowForCollection]') IS NOT NULL
 --    BEGIN

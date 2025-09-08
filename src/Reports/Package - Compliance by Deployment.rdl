@@ -5523,7 +5523,7 @@ DateDiff(DateInterval.Second, Globals!ExecutionTime,  Now()) mod 60, 2) &amp; ")
       <DataType>String</DataType>
       <DefaultValue>
         <Values>
-          <Value>v7.1.4 - 2025-07-29</Value>
+          <Value>v7.1.5 - 2025-09-08</Value>
         </Values>
       </DefaultValue>
       <Hidden>true</Hidden>
